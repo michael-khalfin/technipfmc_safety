@@ -1,0 +1,9 @@
+# Core data handling
+pandas
+numpy
+scipy
+
+
+# Jupyter / notebooks (optional but useful)
+jupyter
+ipykernel

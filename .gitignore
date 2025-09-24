@@ -1,0 +1,30 @@
+# Data
+data/
+
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+.build/
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+
+
+# --- Env/secrets ---
+.env
+.env.*
+*.pem
+*.key
+
+
+# --- Editors/OS ---
+.DS_Store
+.vscode/
+.idea/
