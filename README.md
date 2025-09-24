@@ -10,7 +10,8 @@ To Submit Request For Resources:
 
 
 ## Setup
-1. python3 -m venv .venv 
-2. source .venv/bin/activate
-3. pip install -U pip
+1. cp -r /projects/dsci435/fmcsafetyevents_fa25/data . 
+2. python3 -m venv .venv 
+3. source .venv/bin/activate
+4. pip install -U pip
 4. pip install -r requirements.txt
