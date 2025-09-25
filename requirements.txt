@@ -3,6 +3,9 @@ pandas
 numpy
 scipy
 
+# Visualizations 
+matplotlib
+seaborn
 
 # Jupyter / notebooks (optional but useful)
 jupyter
