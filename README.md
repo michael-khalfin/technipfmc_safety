@@ -1,7 +1,7 @@
 
 ## Directory Structure
 - `src/` – core code and modules
-- `cleaning/` – EDA and general Data Cleaning
+- `eda/` – EDA and general Data Cleaning
 - `data/` – Incident Data (uncommited by gitignore)
 
 ## Setup
@@ -16,6 +16,6 @@ To Submit Request For Resources:
     sbatch submit.sbatch
 
 # Data Cleaning
-In order to view the EDA, you can run the following 'python3 cleaning/eda.py'
+In order to view the EDA, you can run the following 'python3 eda/main.py'
 
 
