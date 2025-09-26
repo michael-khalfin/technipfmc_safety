@@ -1,6 +1,9 @@
 # Data
 data/
 
+# Slurm output
+slurm_output/
+
 
 # --- Python ---
 __pycache__/
