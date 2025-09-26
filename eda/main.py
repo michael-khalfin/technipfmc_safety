@@ -116,7 +116,12 @@ if __name__ == "__main__":
     viz = DataVisualizer(df=combined_df, vis_dir=VIS_DIR)
 
     # General Visualization of Data Types and Missing Values
-    viz.visualizeDataTypes()
-    viz.visualizeMissingValues()
-    viz.visualizeCorrelationHeatmap()
-    viz.visualizeVariances(0.5)
+    #viz.visualizeDataTypes()
+    #viz.visualizeMissingValues()
+    #viz.visualizeCorrelationHeatmap()
+    #viz.visualizeVariances(0.5)
+
+    viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(1, 1))
+    viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(2, 2))
+    viz.visualizeTextNgrams(column_name='TITLE__NEAR_MISSES', ngram_range=(1, 1))
+    viz.visualizeTextNgrams(column_name='TITLE__NEAR_MISSES', ngram_range=(2, 2))

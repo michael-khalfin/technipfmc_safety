@@ -1,13 +1,24 @@
 #!/bin/bash
-#SBATCH --job-name=python_test
-#SBATCH --output=python_test_%j.out
-#SBATCH --error=python_test_%j.err
+
+#SBATCH --job-name=fmcsafety_eda
+#SBATCH --output=slurm_output/eda_job_%j.out   # Creates a folder for output files
+#SBATCH --error=slurm_output/eda_job_%j.err    # Creates a folder for error files
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
-#SBATCH --time=02:00:00
-#SBATCH --partition=nots
+#SBATCH --ntasks=1                             
+#SBATCH --cpus-per-task=1                      
+#SBATCH --time=00:15:00                        # A reasonable 15-minute runtime
+#SBATCH --mem-per-cpu=4G                       # A safe 4GB memory request for pandas
+#SBATCH --partition=commons                       
 
-# Load Python
+# Create a directory for slurm output files if it doesn't exist
+mkdir -p slurm_output
 
-# Run your script
-python my_script.py
+# Activate the Python virtual environment
+echo "Activating Python virtual environment..."
+source .venv/bin/activate
+
+# Run EDA script
+echo "Running the EDA script from eda/main.py..."
+python3 eda/main.py
+
+echo "Job finished."

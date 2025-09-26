@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np 
+import re
+from wordcloud import WordCloud
+from sklearn.feature_extraction.text import CountVectorizer, ENGLISH_STOP_WORDS
 
 sns.set_theme(style="whitegrid", palette="muted")
 
@@ -154,3 +157,63 @@ class DataVisualizer:
         plt.tight_layout()
         plt.savefig(os.path.join(self.vis_dir, "feature_variances.png"), dpi=300)
         plt.close()
+
+    def visualizeTextNgrams(self, column_name, ngram_range=(1, 1), top_n=30):
+        """
+        Analyzes n-grams (e.g., single words, bigrams) from a text column and
+        generates a high-contrast word cloud and a frequency bar chart.
+        
+        Args:
+            column_name (str): The name of the DataFrame column to analyze.
+            ngram_range (tuple): The n-gram range, e.g., (1, 1) for unigrams, (2, 2) for bigrams.
+            top_n (int): The number of top n-grams to display.
+        """
+        n = ngram_range[0]
+        ngram_type = "Unigrams" if n == 1 else "Bigrams" if n == 2 else f"{n}-grams"
+        
+        # Text Cleaning
+        text_data = self.df[column_name].dropna().astype(str)
+        def clean_text(text):
+            text = text.lower()
+            text = re.sub(r'[^\w\s]', '', text)
+            text = ' '.join([word for word in text.split() if word not in ENGLISH_STOP_WORDS and len(word) > 2])
+            return text
+        cleaned_text = text_data.apply(clean_text)
+
+        # Vectorize to get n-gram counts
+        vectorizer = CountVectorizer(ngram_range=ngram_range, max_features=top_n)
+        X = vectorizer.fit_transform(cleaned_text)
+        
+        # Create a dictionary of n-grams and their frequencies
+        # Replace spaces with underscores for multi-word n-grams in the word cloud
+        frequencies = {
+            ngram.replace(' ', '_'): count 
+            for ngram, count in zip(vectorizer.get_feature_names_out(), X.toarray().sum(axis=0))
+        }
+
+        if not frequencies:
+            print(f"[WARN] No {ngram_type} found in '{column_name}'. Skipping visualization.")
+            return
+
+        # Generate Word Cloud
+        wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='viridis').generate_from_frequencies(frequencies)
+        
+        plt.figure(figsize=(10, 5))
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis('off')
+        plt.title(f'Most Frequent {ngram_type} in {column_name}', fontsize=14, weight="bold")
+        plt.savefig(os.path.join(self.vis_dir, f'{column_name}_{n}gram_word_cloud.png'), dpi=300, bbox_inches='tight')
+        plt.close()
+
+        # Generate Bar Chart
+        ngram_counts = pd.DataFrame(frequencies.items(), columns=['ngram', 'count']).sort_values('count', ascending=False)
+
+        plt.figure(figsize=(12, 8))
+        sns.barplot(x='count', y='ngram', data=ngram_counts, palette='viridis')
+        plt.title(f'Top {top_n} {ngram_type} in {column_name}', fontsize=14, weight="bold")
+        plt.xlabel('Frequency', fontsize=12)
+        plt.ylabel(ngram_type[:-1], fontsize=12)
+        plt.tight_layout()
+        plt.savefig(os.path.join(self.vis_dir, f'{column_name}_{n}gram_frequency.png'), dpi=300)
+        plt.close()
+        print(f"Saved {ngram_type} visualizations for '{column_name}'.")

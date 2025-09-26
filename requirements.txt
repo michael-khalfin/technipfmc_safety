@@ -2,10 +2,12 @@
 pandas
 numpy
 scipy
+scikit-learn
 
 # Visualizations 
 matplotlib
 seaborn
+wordcloud
 
 # Jupyter / notebooks (optional but useful)
 jupyter
