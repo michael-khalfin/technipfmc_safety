@@ -8,6 +8,7 @@ from wordcloud import WordCloud
 from sklearn.feature_extraction.text import CountVectorizer, ENGLISH_STOP_WORDS
 
 sns.set_theme(style="whitegrid", palette="muted")
+BOOL, NUM, OBJ = "boolean", "number", "object"
 
 
 class DataFormatter:
@@ -16,7 +17,31 @@ class DataFormatter:
 
     def get_data_types(self):
         """Return value counts of data types"""
-        return self.df.dtypes.value_counts()
+        return self.df.dtypes.value_counts() 
+     
+    def get_column_cardinalities(self):
+        """
+        Returns a DataFrame with each column’s cardinality and inferred data type label.
+        """
+        df = self.df
+        card_series = df.nunique(dropna=True)
+
+        bool_cols = [c for c in df.columns if str(df[c].dtype) == "boolean"]
+        num_cols = df.select_dtypes(include=["number"]).columns.tolist()
+        obj_cols = df.select_dtypes(include=["object"]).columns.tolist()
+
+        data = {
+            "column": df.columns,
+            "cardinality": [card_series.get(c, 0) for c in df.columns],
+            "type": [
+                "boolean" if c in bool_cols else
+                "number" if c in num_cols else
+                "object" if c in obj_cols else
+                "other"
+                for c in df.columns
+            ]
+        }
+        return pd.DataFrame(data)
 
     def get_missing_counts(self, drop_zero=True):
         """Return missing value counts per column"""
@@ -108,6 +133,43 @@ class DataVisualizer:
         plt.tight_layout()
         plt.savefig(os.path.join(self.vis_dir, "missing_values_bar.png"), dpi=300)
         plt.close()
+
+
+    def visualizeCardinality(self):
+        """
+        Creates a horizontal barplot of cardinality (nunique) for each column, grouped by data type.
+        """
+        card_df = self.formatter.get_column_cardinalities()
+        card_df_sorted = card_df.sort_values("cardinality", ascending=True)
+
+        num_cols = len(card_df_sorted)
+        height_per_row = 0.4  
+        fig_height = max(6, num_cols * height_per_row)
+        fig_width = 14  
+        plt.figure(figsize=(fig_width, fig_height))
+        ax = sns.barplot(
+            data=card_df_sorted,
+            y="column",
+            x="cardinality",
+            hue="type",
+            dodge=False,
+            palette="pastel"
+        )
+
+        plt.title("Cardinality of All Columns", fontsize=14, weight="bold", pad=20)
+        plt.xlabel("Unique Non-Null Values", fontsize=12)
+        plt.ylabel("Column Name", fontsize=12)
+
+        # Force x-axis to show only integer ticks
+        ax.xaxis.get_major_locator().set_params(integer=True)
+
+        # Tighten layout and add space between bars
+        plt.tight_layout(pad=1.5)
+        plt.legend(title="Data Type", loc="lower right")
+
+        plt.savefig(os.path.join(self.vis_dir, "column_cardinalities.png"), dpi=300)
+        plt.close()
+
 
 
     

@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from dataVisualizer import DataVisualizer  
+from dataModifier import DataModifier
 from functools import reduce
 
 # General Path Variables 
@@ -110,16 +111,21 @@ if __name__ == "__main__":
     # Load Data and Describe it 
     combined_df = load_data()
     describe_data(combined_df)
-    #combined_df = combined_df.drop(columns=REMOVED_COLUMNS)
 
-    # Generate Visualizer and Remove Uneeded Columns
-    viz = DataVisualizer(df=combined_df, vis_dir=VIS_DIR)
+    # Change Data
+    modifier = DataModifier(df= combined_df)
+    modifier.set_dropped_names(["url_link", "url", "record_no"])
+    cleaned_df = modifier.clean()
+
+    # Generate Visualizer
+    viz = DataVisualizer(df=cleaned_df, vis_dir=VIS_DIR)
 
     # General Visualization of Data Types and Missing Values
-    #viz.visualizeDataTypes()
-    #viz.visualizeMissingValues()
-    #viz.visualizeCorrelationHeatmap()
-    #viz.visualizeVariances(0.5)
+    viz.visualizeDataTypes()
+    viz.visualizeMissingValues()
+    viz.visualizeCorrelationHeatmap()
+    viz.visualizeVariances(0.5)
+    viz.visualizeCardinality()
 
     viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(1, 1))
     viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(2, 2))
