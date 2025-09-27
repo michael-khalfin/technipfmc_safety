@@ -118,7 +118,7 @@ if __name__ == "__main__":
     cleaned_df = modifier.clean()
 
     # Generate Visualizer
-    viz = DataVisualizer(df=cleaned_df, vis_dir=VIS_DIR)
+    viz = DataVisualizer(df=cleaned_df, vis_dir=VIS_DIR, ignored_features= ["description", "date", "email", "title", "incident_no"])
 
     # General Visualization of Data Types and Missing Values
     viz.visualizeDataTypes()
