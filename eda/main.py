@@ -3,7 +3,7 @@ import pandas as pd
 from dataVisualizer import DataVisualizer  
 from dataModifier import DataModifier
 from functools import reduce
-import concat
+import eda.clean_data.concat as concat
 
 # General Path Variables 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
