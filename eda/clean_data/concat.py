@@ -1,9 +1,9 @@
 
 import pandas as pd
 import os 
-import utils
-import coalesce
-import equal
+import clean_data.utils as utils 
+import clean_data.coalesce as coalesce
+import clean_data.equal as equal
 
 
 SYS_RECORD_FIELD = "SYSTEM_OF_RECORD"
@@ -12,38 +12,40 @@ UNKNOWN = "unknown"
 
 
 #Helper to Find Desired Column Based On keyword
-def find_col(df, keyword):
-    columns, keyword = df.columns,  keyword.lower()
-    main_record = None
-
-    for col in columns:
-        col_parts = col.lower().split("_")
-        if any(p == keyword for p in col_parts) or col.lower() == keyword:
-            if main_record is None: 
-                main_record = col
-                print(f"Main Column: {main_record}")
-            else:
-                print(f"Found Another Potential Column : {col}")
-
-    if main_record is None: raise ValueError(f"Could not find column matching keyword '{keyword}'")
-    return main_record
-
-
 def get_common_columns(df1, df2):
     common_cols = set(df1.columns).intersection(set(df2.columns))
     if len(common_cols) == 0:
         print("No matching Cols")
     else:
         print(f"Common columns: {common_cols}")
-    return common_cols
+    return common_cols  
 
 
-def merge_file_to_main(main_df, main_record, file_path, overwrite_record = None, overwrite_system_field = None, to_drop = None):
-    print(f"Processing {file_path}")
+def subdf_to_maindf(main_df, main_record, sub_df, sub_record, file_path, safe):
+    ns = os.path.splitext(os.path.basename(file_path))[0].replace("DIM_CONSOLIDATED_", "")
 
-    sub_df = pd.read_csv(file_path, low_memory = False)
-    return coalesce.merge_df_to_main(main_df, main_record, sub_df, overwrite_record, overwrite_system_field, to_drop, file_path)
-    
+    merged = coalesce.merge_df_to_main(
+        main_df, main_record, sub_df,
+        overwrite_record=sub_record,
+        to_drop=[],
+        file_path=file_path,                # <<< ensures columns are named __{ns}
+    )
+
+    for col in safe:
+        src = f"{col}__{ns}"
+        if src in merged.columns and col in merged.columns:
+            fills = (merged[col].isna() & merged[src].notna()).sum()
+            print(f"[COALESCE] {col} <= {src}  filled={fills}")
+            merged = coalesce.coalesce_into(merged, dest_col=col, src_col=src, create_conflict_flag=True)
+            merged.drop(columns=[src], inplace=True, errors="ignore")
+        else:
+            print(f"[SKIP] {col}: dest? {col in merged.columns}  src? {src in merged.columns}")
+
+    # optional: drop right join key to keep table tidy
+    # merged.drop(columns=[f"{sub_record}_MUTATED"], inplace=True, errors="ignore")
+    return merged
+
+
 
 def print_df(target_df, record, name):
     rows, cols = target_df.shape
@@ -63,34 +65,6 @@ def print_df(target_df, record, name):
     print('\n')
 
 
-def merge_on_column(df1, df2, df1_col, df2_col, how='left', suffixes=('', '__R')):
-    # Work on copies to avoid mutating callers
-    df1 = df1.copy()
-    df2_renamed = df2.rename(columns={df1_col: df2_col}).copy()
-
-    if df2_col in df2_renamed.columns:
-        df2_renamed = df2_renamed.drop_duplicates(subset=[df2_col])
-
-
-    def _normalize_join_key(s: pd.Series) -> pd.Series:
-        s = s.astype('string')                 # preserves <NA>
-        s = s.str.strip()
-        s = s.str.replace(r'\.0+$', '', regex=True)  # "123.0" -> "123"
-        return s
-
-    # Ensure the join column exists on both sides (df1 must already have df2_col)
-    if df2_col not in df1.columns:
-        raise KeyError(f"Left DataFrame is missing join column '{df2_col}'")
-
-    df1[df2_col] = _normalize_join_key(df1[df2_col])
-    df2_renamed[df2_col] = _normalize_join_key(df2_renamed[df2_col])
-
-    merged = pd.merge(df1, df2_renamed, on=df2_col, how=how, suffixes=suffixes)
-
-    # If df1_col also exists post-merge (because of renaming), drop the duplicate
-    merged = merged.drop(columns=[c for c in [df1_col] if c in merged.columns], errors='ignore')
-    return merged
-
 
 def load_data_general(main_file, main_record, files, file_records):
     main_df = pd.read_csv(main_file, low_memory = False)
@@ -98,7 +72,7 @@ def load_data_general(main_file, main_record, files, file_records):
     main_df = utils.attach_system_to_record(main_df, main_record, SYS_RECORD_FIELD)
 
     for (path, record) in zip(files, file_records):
-        main_df = merge_file_to_main(main_df, main_record_mutated, path, record )
+        main_df = coalesce.merge_file_to_main(main_df, main_record_mutated, path, record )
         print_df(main_df, main_record_mutated, main_file)
     
     return main_df
@@ -112,7 +86,6 @@ def load_all_data_v1():
     loss_df = load_data_general("data/DIM_CONSOLIDATED_LOSS_POTENTIAL.csv", loss_main_record, loss_files, loss_records)
     #count_system_aware_matches(loss_df, show_conflicts=5)
 
-
     # Concatonate All Action Plans together 
     action_files = ["data/DIM_CONSOLIDATED_CAPA_ACTION_PLAN.csv"]
     action_main_record = "ACTION_NO"
@@ -122,7 +95,7 @@ def load_all_data_v1():
     
 
     # Merge Action To Loss Df (give action columns a clear suffix)
-    loss_df = merge_on_column(
+    loss_df = coalesce.merge_on_column(
         loss_df, action_df,
         df1_col="RECORD_NO", df2_col="RECORD_NO_MASTER",
         how="left", suffixes=('', '__ACTION')
@@ -137,7 +110,7 @@ def load_all_data_v1():
 
 
     #print_df(loss_df, "RECORD_NO_MASTER", "BEFORE")
-    loss_df = merge_on_column(
+    loss_df = coalesce.merge_on_column(
         loss_df, rem_df,
         df1_col="MASTER_RECORD_NO_MUTATED", df2_col="RECORD_NO_MASTER",
         how="left", suffixes=('', '__REM')
@@ -153,10 +126,10 @@ def load_all_data_v2():
 
     # Set the Main DF 
     main_file = "data/DIM_CONSOLIDATED_LOSS_POTENTIAL.csv"
-    column_match_record = "RECORD_NO_LOSS_POTENTIAL" 
+    loss_column_match_record = "RECORD_NO_LOSS_POTENTIAL" 
     main_df = pd.read_csv(main_file, low_memory = False)
-    main_record = f"{column_match_record}_{MUTATED}"
-    main_df = utils.attach_system_to_record(main_df, column_match_record, SYS_RECORD_FIELD, drop_sys= True)
+    main_record = f"{loss_column_match_record}_{MUTATED}"
+    main_df = utils.attach_system_to_record(main_df, loss_column_match_record, SYS_RECORD_FIELD, drop_sys= True)
 
     #Attach Consolidated Accidents First
     sub_file = "data/DIM_CONSOLIDATED_ACCIDENTS.csv"
@@ -165,7 +138,7 @@ def load_all_data_v2():
     matching_cols = get_common_columns(main_df, acc_df)
     print_df(main_df, main_record, "BEFORE")
     if len(matching_cols) == 0:
-        main_df = coalesce.merge_df_to_main(main_df, main_record, acc_df, overwrite_record="RECORD_NO_LOSS_POTENTIAL")
+        main_df = coalesce.merge_df_to_main(main_df, main_record, acc_df, overwrite_record=loss_column_match_record)
     else:
         main_df = coalesce.consolidated_matching_cols(main_df, acc_df)
     print_df(main_df, main_record, "After")
@@ -173,10 +146,37 @@ def load_all_data_v2():
 
     # Attach Hazard File 
     sub_file = "data/DIM_CONSOLIDATED_HAZARD_OBSERVATIONS.csv"
-    print(f"Processing File : {sub_file}")
+    ns = os.path.splitext(os.path.basename(sub_file))[0].replace("DIM_CONSOLIDATED_", "")
+    print(f"Processing File : {ns}")
     hazard_df = pd.read_csv(sub_file, low_memory= False)
-    matching_cols = get_common_columns(main_df, hazard_df)
+    common = get_common_columns(main_df, hazard_df)
+    safe, review, avoid = equal.propose_coalesce_columns(main_df, hazard_df, common)
+    print("\nSAFE to coalesce:", safe)
+    print("REVIEW first:", review)
+    print("AVOID:", avoid)
+    main_df = subdf_to_maindf(main_df, main_record, hazard_df, loss_column_match_record, sub_file, safe)
+    print_df(main_df, main_record, "After Hazard")
 
+
+    # Attach Near Misses
+    sub_file = "data/DIM_CONSOLIDATED_NEAR_MISSES.csv" 
+    ns = os.path.splitext(os.path.basename(sub_file))[0].replace("DIM_CONSOLIDATED_", "")
+    print(f"Processing File : {ns}")
+    misses_df = pd.read_csv(sub_file, low_memory= False)
+    common = get_common_columns(main_df, misses_df)
+    safe, review, avoid = equal.propose_coalesce_columns(main_df, misses_df, common)
+    print("\nSAFE to coalesce:", safe)
+    print("REVIEW first:", review)
+    print("AVOID:", avoid)
+    main_df = subdf_to_maindf(main_df, main_record, misses_df, loss_column_match_record, sub_file, safe)
+    print_df(main_df, main_record, "After Near Misses")
+
+
+
+    #Attach 
+
+
+    return main_df
 
 
 
@@ -195,7 +195,7 @@ def get_description_df(df):
 
 if __name__== "__main__":
 
-    all_data_df = load_all_data_v1()
+    all_data_df = load_all_data_v2()
     get_description_df(all_data_df)
 
 

@@ -1,4 +1,4 @@
-import utils
+import clean_data.utils as utils
 import pandas as pd
 import os
 from typing import Optional, List, Tuple
@@ -48,6 +48,41 @@ def merge_df_to_main(main_df, main_record, sub_df, overwrite_record = None, over
     utils.check_duplicates(merged_df)
 
     return merged_df
+
+def merge_on_column(df1, df2, df1_col, df2_col, how='left', suffixes=('', '__R')):
+    # Work on copies to avoid mutating callers
+    df1 = df1.copy()
+    df2_renamed = df2.rename(columns={df1_col: df2_col}).copy()
+
+    if df2_col in df2_renamed.columns:
+        df2_renamed = df2_renamed.drop_duplicates(subset=[df2_col])
+
+
+    def _normalize_join_key(s: pd.Series) -> pd.Series:
+        s = s.astype('string')                 # preserves <NA>
+        s = s.str.strip()
+        s = s.str.replace(r'\.0+$', '', regex=True)  # "123.0" -> "123"
+        return s
+
+    # Ensure the join column exists on both sides (df1 must already have df2_col)
+    if df2_col not in df1.columns:
+        raise KeyError(f"Left DataFrame is missing join column '{df2_col}'")
+
+    df1[df2_col] = _normalize_join_key(df1[df2_col])
+    df2_renamed[df2_col] = _normalize_join_key(df2_renamed[df2_col])
+
+    merged = pd.merge(df1, df2_renamed, on=df2_col, how=how, suffixes=suffixes)
+
+    # If df1_col also exists post-merge (because of renaming), drop the duplicate
+    merged = merged.drop(columns=[c for c in [df1_col] if c in merged.columns], errors='ignore')
+    return merged
+
+def merge_file_to_main(main_df, main_record, file_path, overwrite_record = None, overwrite_system_field = None, to_drop = None):
+    print(f"Processing {file_path}")
+
+    sub_df = pd.read_csv(file_path, low_memory = False)
+    return merge_df_to_main(main_df, main_record, sub_df, overwrite_record, overwrite_system_field, to_drop, file_path)
+  
 
 
 def coalesce_into(

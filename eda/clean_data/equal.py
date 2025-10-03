@@ -1,6 +1,157 @@
 import pandas as pd
-import utils
+from collections import Counter
+from typing import Dict
 
+def _normalize_series(s: pd.Series) -> pd.Series:
+    s = s.astype("string")
+    s = s.str.strip()
+    s = s.str.replace(r"\.0+$", "", regex=True)
+    s = s.str.lower()
+    return s
+
+def _value_multiset(s: pd.Series) -> Counter:
+    # normalize, drop NaNs, count frequencies
+    s = _normalize_series(s)
+    s = s.dropna()
+    return Counter(s.tolist())
+
+def columns_value_equivalence_report(
+    df_left: pd.DataFrame, col_left: str,
+    df_right: pd.DataFrame, col_right: str,
+    show_examples: int = 5
+) -> Dict[str, object]:
+    """
+    Compare two columns *as multisets of values* (order-agnostic, no join key).
+    Good for deciding if two columns across files are essentially the same field
+    despite different row orders and sparsity.
+    """
+    if col_left not in df_left.columns:
+        raise KeyError(f"Left missing column: {col_left}")
+    if col_right not in df_right.columns:
+        raise KeyError(f"Right missing column: {col_right}")
+
+    L = _value_multiset(df_left[col_left])
+    R = _value_multiset(df_right[col_right])
+
+    # Basic counts
+    nL = sum(L.values())
+    nR = sum(R.values())
+
+    # Intersection/union on *multisets*:
+    # multiset intersection count = sum(min(freq_L, freq_R))
+    # multiset union count       = sum(max(freq_L, freq_R))
+    keys = set(L) | set(R)
+    inter = sum(min(L[k], R[k]) for k in keys)
+    union = sum(max(L[k], R[k]) for k in keys) if keys else 0
+
+    # Jaccard on multisets; handle empty union
+    jaccard = (inter / union) if union else 1.0
+
+    # Coverage (how much of each side is explained by the other)
+    coverage_L_in_R = (inter / nL) if nL else 1.0
+    coverage_R_in_L = (inter / nR) if nR else 1.0
+
+    # Symmetric difference diagnostics (by frequency difference)
+    left_extra = Counter({k: max(L[k] - R.get(k, 0), 0) for k in L if L[k] > R.get(k, 0)})
+    right_extra = Counter({k: max(R[k] - L.get(k, 0), 0) for k in R if R[k] > L.get(k, 0)})
+
+    # Examples of disagreements (most frequent offenders)
+    left_examples = left_extra.most_common(show_examples)
+    right_examples = right_extra.most_common(show_examples)
+
+    # Unique counts (distinct values)
+    distinct_L = len(L)
+    distinct_R = len(R)
+    distinct_overlap = len(set(L) & set(R))
+
+    report = {
+        "left_col": col_left,
+        "right_col": col_right,
+        "left_non_null_count": nL,
+        "right_non_null_count": nR,
+        "distinct_left": distinct_L,
+        "distinct_right": distinct_R,
+        "distinct_overlap": distinct_overlap,
+        "multiset_intersection": inter,
+        "multiset_union": union,
+        "jaccard_multiset": jaccard,                # 1.0 means identical multiset
+        "coverage_left_in_right": coverage_L_in_R,  # % of left values explained by right
+        "coverage_right_in_left": coverage_R_in_L,  # % of right values explained by left
+        "top_left_only_examples": left_examples,    # [(value, extra_count), ...]
+        "top_right_only_examples": right_examples,
+    }
+
+    # Friendly printout (optional)
+    print(f"\n[CONTENT EQUIVALENCE] {col_left} (left) vs {col_right} (right)")
+    print(f"  Non-null counts: L={nL}, R={nR}")
+    print(f"  Distinct values: L={distinct_L}, R={distinct_R}, overlap={distinct_overlap}")
+    print(f"  Multiset Jaccard: {jaccard:.4f}")
+    print(f"  Coverage L in R:  {coverage_L_in_R:.4%}   | Coverage R in L: {coverage_R_in_L:.4%}")
+
+    if left_examples:
+        print("  Left extras (value, extra_count):", left_examples)
+    if right_examples:
+        print("  Right extras (value, extra_count):", right_examples)
+
+    return report
+
+def columns_essentially_equal_by_values(
+    df_left: pd.DataFrame, col_left: str,
+    df_right: pd.DataFrame, col_right: str,
+    jaccard_tol: float = 0.995,
+    coverage_tol: float = 0.99
+) -> bool:
+    """
+    Boolean helper over the report. Tunable thresholds.
+    """
+    rep = columns_value_equivalence_report(df_left, col_left, df_right, col_right, show_examples=0)
+    return (
+        rep["jaccard_multiset"] >= jaccard_tol and
+        rep["coverage_left_in_right"] >= coverage_tol and
+        rep["coverage_right_in_left"] >= coverage_tol
+    )
+
+
+def propose_coalesce_columns(main_df, sub_df, common_cols,
+                             min_coverage=0.95, review_band=(0.85, 0.95),
+                             max_distinct=64):
+    """
+    Returns (safe, review, avoid) lists based on columns_value_equivalence_report.
+    Uses coverage L in R as the primary signal. Limits to modest cardinality by default.
+    """
+    from collections import defaultdict
+    safe, review, avoid = [], [], []
+    for col in sorted(common_cols):
+        rep = columns_value_equivalence_report(main_df, col, sub_df, col, show_examples=0)
+
+        # basic guards
+        if col in {"DATE_TIME_OF_INCIDENT"}:
+            avoid.append(col); continue
+
+        # cap cardinality for automatic coalesce
+        if rep["distinct_left"] > max_distinct or rep["distinct_right"] > max_distinct:
+            # allow dates through by name heuristic
+            if not any(tok in col.lower() for tok in ["date","time","approval","closure","due","reported","incident"]):
+                review.append(col); continue
+
+        cov = rep["coverage_left_in_right"]
+        if cov >= min_coverage:
+            safe.append(col)
+        elif review_band[0] <= cov < review_band[1]:
+            review.append(col)
+        else:
+            avoid.append(col)
+
+
+        cov2 = rep["coverage_right_in_left"]
+        if cov2 >= min_coverage:
+            safe.append(col)
+        elif review_band[0] <= cov2 < review_band[1]:
+            review.append(col)
+        else:
+            avoid.append(col)
+
+    return list(set(safe)), list(set(review)), list(set(avoid))
 
 
 
