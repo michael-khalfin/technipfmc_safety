@@ -1,8 +1,5 @@
-def _pct(x: float) -> str:
-    try:
-        return f"{100.0 * x:6.2f}%"
-    except Exception:
-        return "   n/a "
+def _pct(x) -> str:
+    return "  n/a " if x is None else f"{100.0 * x:6.2f}%"
 
 def _fmt_int(x) -> str:
     try:
@@ -60,14 +57,6 @@ def pretty_print_coalesce_report(report: dict, order=("safe","review","avoid")) 
     for col, payload in per.items():
         buckets.setdefault(payload.get("decision","other"), []).append((col, payload))
 
-    # print a quick header
-    print("\n######## Coalesce Proposal Summary ########")
-    for k in order:
-        cols = sorted([c for c,_ in buckets.get(k, [])])
-        print(f"  {k.upper():<6}: {len(cols)}  -> {', '.join(cols[:12])}{' ...' if len(cols)>12 else ''}")
-    others = [c for c,_ in buckets.get("other",[])]
-    if others:
-        print(f"  OTHER : {len(others)} -> {', '.join(sorted(others))}")
 
     # detailed per-column blocks
     for k in order:

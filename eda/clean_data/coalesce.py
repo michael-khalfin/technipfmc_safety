@@ -26,12 +26,12 @@ def merge_df_to_main(main_df, main_record, sub_df, overwrite_record = None, over
         print(f"Detected System Overwrite {overwrite_record}!")
 
     # Attach System to Record No 
-    sub_df = utils.attach_system_to_record(sub_df, sub_record, sub_system_field)
+    sub_df = utils.attach_system_to_record(sub_df, sub_record, sub_system_field, drop_sys=True)
     sub_record_mutated = sub_record + f"_{MUTATED}"
 
-    # Drop System And Old record field 
+    # Drop additional columns specified in to_drop 
     drop_cols = set(to_drop or [])
-    drop_cols.update([sub_record])  # keep mutated join key only
+    # Note: sub_record and sub_system_field are already dropped by attach_system_to_record
     sub_df = sub_df.drop(columns=[c for c in drop_cols if c in sub_df.columns], errors="ignore")
 
     # Rename to avoid duplicates 
@@ -72,8 +72,6 @@ def merge_on_column(df1, df2, df1_col, df2_col, how='left', suffixes=('', '__R')
     df2_renamed[df2_col] = _normalize_join_key(df2_renamed[df2_col])
 
     merged = pd.merge(df1, df2_renamed, on=df2_col, how=how, suffixes=suffixes)
-
-    # If df1_col also exists post-merge (because of renaming), drop the duplicate
     merged = merged.drop(columns=[c for c in [df1_col] if c in merged.columns], errors='ignore')
     return merged
 
@@ -89,28 +87,39 @@ def coalesce_into(
     df: pd.DataFrame,
     dest_col: str,
     src_col: str,
-    create_conflict_flag: bool = True,
-    conflict_flag_col: Optional[str] = None
+    conflict: str = "auto",   # "auto" | "always" | "never"
+    conflict_flag_col: Optional[str] = None,
 ) -> pd.DataFrame:
     if dest_col not in df.columns or src_col not in df.columns:
         return df
 
-    # normalized comparison for conflict detection
-    a = utils._normalize_series(df[dest_col])
-    b = utils._normalize_series(df[src_col])
+    a_norm = utils._normalize_series(df[dest_col])
+    b_norm = utils._normalize_series(df[src_col])
 
-    # A “conflict” row = both present AND not equal after normalization
-    both_present = ~df[dest_col].isna() & ~df[src_col].isna()
-    conflict_mask = both_present & (a != b)
+    both_present  = df[dest_col].notna() & df[src_col].notna()
+    conflict_mask = both_present & (a_norm != b_norm)
 
-    if create_conflict_flag:
-        flag_name = conflict_flag_col or f"{dest_col}__CONFLICT"
-        if flag_name not in df.columns:
-            df[flag_name] = False
-        df.loc[conflict_mask, flag_name] = True
+    # collision flag handling
+    if conflict != "never":
+        flag = conflict_flag_col or f"{dest_col}__CONFLICT"
+        any_conflicts = bool(conflict_mask.any())
+        if conflict == "always" or (conflict == "auto" and any_conflicts):
+            # Create if missing; use boolean dtype and OR with any existing values
+            if flag not in df.columns:
+                df[flag] = pd.Series(False, index=df.index, dtype="boolean")
+            else:
+                # try to cast to boolean if it's not
+                try:
+                    df[flag] = df[flag].astype("boolean")
+                except Exception:
+                    df[flag] = df[flag].astype("string").str.lower().isin(["true", "1", "yes"])
 
-    # Coalesce: prefer existing dest, otherwise pull from src
-    df[dest_col] = df[dest_col].where(~df[dest_col].isna(), df[src_col])
+            # accumulate conflicts across multiple coalesces
+            df.loc[conflict_mask, flag] = True
+
+    # coalesce values (prefer existing dest)
+    df[dest_col] = df[dest_col].where(df[dest_col].notna(), df[src_col])
+
     return df
 
 
@@ -182,12 +191,12 @@ def consolidated_matching_cols(
     to_drop.update(auto_drop)
     to_consolidate = list(set(to_consolidate + auto_coalesce))
 
-    # 2) Prepare sub_df: drop duplicates, rename overlaps that we keep
+
     sub_df_prep = sub_df.drop(columns=[c for c in to_drop if c in sub_df.columns], errors="ignore").copy()
     if sub_renames:
         sub_df_prep = sub_df_prep.rename(columns=sub_renames)
 
-    # 3) Merge using your standardized path (which will attach the MUTATED join on the right)
+
     merged = merge_df_to_main(
         main_df=main_df,
         main_record=main_join,
@@ -198,10 +207,10 @@ def consolidated_matching_cols(
         file_path=None                     
     )
 
-    # 4) Coalesce post-merge for chosen pairs
+
     for main_col, sub_col in to_consolidate:
         if (main_col in merged.columns) and (sub_col in merged.columns):
-            merged = coalesce_into(merged, main_col, sub_col, create_conflict_flag=True)
+            merged = coalesce_into(merged, main_col, sub_col)
             # After coalescing, you can drop the sub copy if you wish:
             merged = merged.drop(columns=[sub_col], errors="ignore")
 

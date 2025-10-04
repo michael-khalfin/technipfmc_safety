@@ -3,7 +3,7 @@ import pandas as pd
 from dataVisualizer import DataVisualizer  
 from dataModifier import DataModifier
 from functools import reduce
-import eda.clean_data.concat as concat
+import clean_data.concat as concat
 
 # General Path Variables 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -110,10 +110,11 @@ def describe_data(df: pd.DataFrame):
 
 if __name__ == "__main__":
     # Load Data and Describe it 
-    combined_df = concat.load_all_data()
-    describe_data(combined_df)
+    combined_df = concat.load_all_data_v2()
+    
+    # describe_data(combined_df)
 
-    # Change Data
+    # # Change Data
     modifier = DataModifier(df= combined_df)
     modifier.set_dropped_names(["url_link", "url"])
     cleaned_df = modifier.clean()

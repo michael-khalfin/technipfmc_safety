@@ -15,19 +15,11 @@ def _value_multiset(s: pd.Series) -> Counter:
     return Counter(s.tolist())
 
 def _pick_merged_col(aligned: pd.DataFrame, base: str, prefer: str) -> str:
-    """
-    prefer: 'L' or 'R'
-    Returns the actual column name in `aligned` corresponding to `base`.
-    Handles cases where pandas added suffixes only to overlaps.
-    """
     if base in aligned.columns:
         return base
     cand = f"{base}_{prefer}"
     if cand in aligned.columns:
         return cand
-    # fallback: if both sides had different names, pandas may not suffix either side
-    # (rare here since both sides use `base`, but we’ll be defensive)
-    # try the opposite side:
     alt = f"{base}_{'R' if prefer=='L' else 'L'}"
     if alt in aligned.columns:
         return alt
@@ -217,6 +209,9 @@ def propose_coalesce_with_reports(
     exact_conflict_ceiling: float = 1e-6, # and <=
     id_like_tokens: Tuple[str, ...] = ("record","id","key","action","master"),
     force_allow_ids: bool = True,
+    # handling sparse overlaps
+    min_both_present_rows: int = 10,
+    min_fill_rate_for_safe: float = 0.10,   # ≥10% of rows get filled from right
 ) -> Dict[str, object]:
     key_right = key_right or key_left
     if cols is None:
@@ -229,7 +224,6 @@ def propose_coalesce_with_reports(
         # quick ID-name guard (unless explicitly overridden)
         name_hits_id = any(tok in col.lower() for tok in id_like_tokens)
         if name_hits_id and not force_allow_ids:
-            # still compute reports for visibility
             rep_val = columns_value_equivalence_report(left_df, col, right_df, col, show_examples=0)
             rep_key = key_column_match_report(
                 left_df, right_df, key_left=key_left, key_right=key_right,
@@ -242,8 +236,8 @@ def propose_coalesce_with_reports(
                     "coverage_L_in_R": rep_val["coverage_left_in_right"],
                     "coverage_R_in_L": rep_val["coverage_right_in_left"],
                     "jaccard_multiset": rep_val["jaccard_multiset"],
-                    "equal_non_null":   rep_key["rates"]["equal_non_null"],
-                    "conflict_rate":    rep_key["rates"]["conflict_rate"],
+                    "equal_non_null":   rep_key["rates"].get("equal_non_null"),
+                    "conflict_rate":    rep_key["rates"].get("conflict_rate") or 0.0,
                     "distinct_left":    rep_val["distinct_left"],
                     "distinct_right":   rep_val["distinct_right"],
                 }
@@ -258,29 +252,58 @@ def propose_coalesce_with_reports(
 
         # 2) key-aligned view
         rep_key = key_column_match_report(
-            left_df, right_df, key_left=key_left, key_right=key_right,
-            col_left=col, col_right=col, how=how, right_dedupe_keep=right_dedupe_keep,
+            left_df, right_df,
+            key_left=key_left, key_right=key_right,
+            col_left=col, col_right=col,
+            how=how, right_dedupe_keep=right_dedupe_keep,
             right_record_col=right_record_col, right_system_col=right_system_col
         )
-        eq_nonnull = rep_key["rates"]["equal_non_null"]
-        conflict   = rep_key["rates"]["conflict_rate"]
+
+        rates  = rep_key["rates"]
+        counts = rep_key["counts"]
+        eq_nonnull = rates.get("equal_non_null")          # may be None if denom=0
+        conflict   = rates.get("conflict_rate") or 0.0
+        one_nan_L  = rates.get("one_nan_left_rate") or 0.0  # left is NaN, right has value
+        both_pres  = counts.get("both_present") or 0
 
         # heuristics
-        small_card = (rep_val["distinct_left"] <= max_distinct_auto and
-                      rep_val["distinct_right"] <= max_distinct_auto) or \
-                     any(t in col.lower() for t in ["date","time","approval","closure","due","reported","incident"])
+        small_card = (
+            rep_val["distinct_left"]  <= max_distinct_auto and
+            rep_val["distinct_right"] <= max_distinct_auto
+        ) or any(t in col.lower() for t in ["date","time","approval","closure","due","reported","incident"])
 
-        # NEW: promotion for high-cardinality but exact row-wise equality
-        if allow_high_card_if_exact and (eq_nonnull >= exact_equal_thresh) and (conflict <= exact_conflict_ceiling):
-            decision = "safe"
-            safe.append(col)
-        else:
-            if small_card and (covL >= min_coverage or covR >= min_coverage) and (eq_nonnull >= min_equal_non_null) and (conflict <= max_conflict_rate):
-                decision = "safe";   safe.append(col)
+        # ----- decision logic -----
+        decision = "avoid"
+
+        # A) “Classic equality” path only when we have enough both-present rows
+        if both_pres >= min_both_present_rows and eq_nonnull is not None:
+            # High-cardinality exact promotion
+            if allow_high_card_if_exact and (eq_nonnull >= exact_equal_thresh) and (conflict <= exact_conflict_ceiling):
+                decision = "safe"
+            # Standard SAFE
+            elif small_card and (covL >= min_coverage or covR >= min_coverage) and \
+                 (eq_nonnull >= min_equal_non_null) and (conflict <= max_conflict_rate):
+                decision = "safe"
+            # REVIEW band
             elif (covL >= review_band[0] or covR >= review_band[0]) and (eq_nonnull >= 0.80):
-                decision = "review"; review.append(col)
+                decision = "review"
             else:
-                decision = "avoid";  avoid.append(col)
+                decision = "avoid"
+
+        # B) Fill-only path: no row has both values present on L & R
+        elif both_pres == 0:
+            # If we can fill a meaningful portion of blanks from right and conflicts are impossible by definition
+            if one_nan_L >= min_fill_rate_for_safe and conflict == 0.0:
+                decision = "safe"   # SAFE (fill-only)
+            else:
+                decision = "review" # uncertain payoff or too little to fill
+
+        # C) Few both-present rows but not zero (sparse). Be conservative.
+        else:
+            if (covL >= review_band[0] or covR >= review_band[0]) and (conflict <= max_conflict_rate):
+                decision = "review"
+            else:
+                decision = "avoid"
 
         out_per_col[col] = {
             "value_report": rep_val,
@@ -294,8 +317,20 @@ def propose_coalesce_with_reports(
                 "conflict_rate": conflict,
                 "distinct_left": rep_val["distinct_left"],
                 "distinct_right": rep_val["distinct_right"],
+                "both_present": both_pres,
+                "one_nan_left_rate": one_nan_L,
             }
         }
+
+        if decision == "safe" and both_pres == 0 and one_nan_L >= min_fill_rate_for_safe:
+            out_per_col[col]["note"] = "fill-only"
+
+        if decision == "safe":
+            safe.append(col)
+        elif decision == "review":
+            review.append(col)
+        else:
+            avoid.append(col)
 
     return {
         "safe":   sorted(set(safe)),

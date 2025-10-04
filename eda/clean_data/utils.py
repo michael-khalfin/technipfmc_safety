@@ -52,12 +52,27 @@ def namespace_subcolumns(sub_df, keep_cols,  ns):
 
 
 def attach_system_to_record(df, record_col, system_col, drop_sys = False):
-    # Use pandas StringDtype / category instead of Python object strings
-    df[system_col] = df[system_col].fillna(UNKNOWN).astype('category')
+    # Check if the record_col is in the dataframe
+    if record_col not in df.columns:
+        raise ValueError(f"Column '{record_col}' not found in dataframe. Available columns: {df.columns.tolist()}")
+    
+    # Check if system_col exists
+    if system_col not in df.columns:
+        raise ValueError(f"Column '{system_col}' not found in dataframe. Available columns: {df.columns.tolist()}")
+    
+    # Handle categorical dtype
+    if pd.api.types.is_categorical_dtype(df[system_col]):
+        if UNKNOWN not in df[system_col].cat.categories:
+            df[system_col] = df[system_col].cat.add_categories([UNKNOWN])
+        df[system_col] = df[system_col].fillna(UNKNOWN)
+    else:
+        df[system_col] = df[system_col].fillna(UNKNOWN).astype('category')
+    
     df[record_col] = df[record_col].astype('string')
     
     # Create New Col
-    df[record_col + f"_{MUTATED}"] = df[record_col] + "_" + df[system_col].astype('string')
+    mutated_col_name = record_col + f"_{MUTATED}"
+    df[mutated_col_name] = df[record_col] + "_" + df[system_col].astype('string')
     
     #Drop Record and Sys cols
     dropped_cols = [record_col]
