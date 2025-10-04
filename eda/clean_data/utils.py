@@ -129,3 +129,5 @@ def columns_essentially_equal(
 ) -> bool:
     r = columns_equivalence_report(df, col_a, col_b, show_conflicts=0)
     return (r["equal_rate_including_nans"] >= tol_all) and (r["equal_rate_where_both_present"] >= tol_both_present)
+
+

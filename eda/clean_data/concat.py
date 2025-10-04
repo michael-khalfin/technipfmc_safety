@@ -4,6 +4,7 @@ import os
 import clean_data.utils as utils 
 import clean_data.coalesce as coalesce
 import clean_data.equal as equal
+import clean_data.prettyprint as prettyprint
 
 
 SYS_RECORD_FIELD = "SYSTEM_OF_RECORD"
@@ -28,7 +29,7 @@ def subdf_to_maindf(main_df, main_record, sub_df, sub_record, file_path, safe):
         main_df, main_record, sub_df,
         overwrite_record=sub_record,
         to_drop=[],
-        file_path=file_path,                # <<< ensures columns are named __{ns}
+        file_path=file_path,              
     )
 
     for col in safe:
@@ -41,8 +42,10 @@ def subdf_to_maindf(main_df, main_record, sub_df, sub_record, file_path, safe):
         else:
             print(f"[SKIP] {col}: dest? {col in merged.columns}  src? {src in merged.columns}")
 
-    # optional: drop right join key to keep table tidy
-    # merged.drop(columns=[f"{sub_record}_MUTATED"], inplace=True, errors="ignore")
+    # optional: drop right join key to keep table tidy (but never drop the main key)
+    right_key = f"{sub_record}_{MUTATED}"
+    if (right_key in merged.columns) and (right_key != main_record):
+        merged.drop(columns=[right_key], inplace=True, errors="ignore")
     return merged
 
 
@@ -64,6 +67,18 @@ def print_df(target_df, record, name):
     print(summary_df.to_string(index=False))
     print('\n')
 
+
+
+def aggregate_conflicts(df, flag_col="HAS_CONFLICT", drop_conflict_cols=True):
+    conflict_cols = [c for c in df.columns if c.endswith("__CONFLICT")]
+    if conflict_cols:
+        df[flag_col] = df[conflict_cols].any(axis=1)
+        if drop_conflict_cols:
+            df = df.drop(columns=conflict_cols)
+    else:
+        if flag_col not in df.columns:
+            df[flag_col] = False
+    return df
 
 
 def load_data_general(main_file, main_record, files, file_records):
@@ -133,15 +148,14 @@ def load_all_data_v2():
 
     #Attach Consolidated Accidents First
     sub_file = "data/DIM_CONSOLIDATED_ACCIDENTS.csv"
-    print(f"Processing File : {sub_file}")
+    ns = os.path.splitext(os.path.basename(sub_file))[0].replace("DIM_CONSOLIDATED_", "")
+    print(f"Processing File : {ns}")
     acc_df = pd.read_csv(sub_file, low_memory = False)
     matching_cols = get_common_columns(main_df, acc_df)
-    print_df(main_df, main_record, "BEFORE")
     if len(matching_cols) == 0:
         main_df = coalesce.merge_df_to_main(main_df, main_record, acc_df, overwrite_record=loss_column_match_record)
     else:
         main_df = coalesce.consolidated_matching_cols(main_df, acc_df)
-    print_df(main_df, main_record, "After")
 
 
     # Attach Hazard File 
@@ -149,11 +163,20 @@ def load_all_data_v2():
     ns = os.path.splitext(os.path.basename(sub_file))[0].replace("DIM_CONSOLIDATED_", "")
     print(f"Processing File : {ns}")
     hazard_df = pd.read_csv(sub_file, low_memory= False)
-    common = get_common_columns(main_df, hazard_df)
-    safe, review, avoid = equal.propose_coalesce_columns(main_df, hazard_df, common)
-    print("\nSAFE to coalesce:", safe)
-    print("REVIEW first:", review)
-    print("AVOID:", avoid)
+    res = equal.propose_coalesce_with_reports(
+        left_df=main_df,
+        right_df=hazard_df,
+        key_left=main_record,                  
+        # let the function synthesize the right key with these:
+        key_right=None,                        # same name as left
+        right_record_col=loss_column_match_record,  # 'RECORD_NO_LOSS_POTENTIAL'
+        right_system_col=SYS_RECORD_FIELD           # 'SYSTEM_OF_RECORD'
+    )
+    prettyprint.pretty_print_coalesce_report(res)
+    safe = res["safe"]
+    print("SAFE:", safe)
+    print("REVIEW:", res["review"])
+    print("AVOID:", res["avoid"])
     main_df = subdf_to_maindf(main_df, main_record, hazard_df, loss_column_match_record, sub_file, safe)
     print_df(main_df, main_record, "After Hazard")
 
@@ -163,18 +186,30 @@ def load_all_data_v2():
     ns = os.path.splitext(os.path.basename(sub_file))[0].replace("DIM_CONSOLIDATED_", "")
     print(f"Processing File : {ns}")
     misses_df = pd.read_csv(sub_file, low_memory= False)
-    common = get_common_columns(main_df, misses_df)
-    safe, review, avoid = equal.propose_coalesce_columns(main_df, misses_df, common)
-    print("\nSAFE to coalesce:", safe)
-    print("REVIEW first:", review)
-    print("AVOID:", avoid)
+    res = equal.propose_coalesce_with_reports(
+        left_df=main_df,
+        right_df=misses_df,
+        key_left=main_record,                  # 'RECORD_NO_LOSS_POTENTIAL_MUTATED' (exists on left)
+        # let the function synthesize the right key with these:
+        key_right=None,                        # same name as left
+        right_record_col=loss_column_match_record,  # 'RECORD_NO_LOSS_POTENTIAL'
+        right_system_col=SYS_RECORD_FIELD           # 'SYSTEM_OF_RECORD'
+    )
+    prettyprint.pretty_print_coalesce_report(res)
+    safe = res["safe"]
+    print("SAFE:", safe)
+    print("REVIEW:", res["review"])
+    print("AVOID:", res["avoid"])
     main_df = subdf_to_maindf(main_df, main_record, misses_df, loss_column_match_record, sub_file, safe)
     print_df(main_df, main_record, "After Near Misses")
+
+    # Aggregate any per-column conflict flags into a single column for uniformity
+    main_df = aggregate_conflicts(main_df, flag_col="HAS_CONFLICT", drop_conflict_cols=True)
 
 
 
     #Attach 
-
+    #utils.find_col(main_df, "conflict")
 
     return main_df
 

@@ -1,6 +1,6 @@
 import pandas as pd
 from collections import Counter
-from typing import Dict
+from typing import Optional, List, Dict, Tuple
 
 def _normalize_series(s: pd.Series) -> pd.Series:
     s = s.astype("string")
@@ -10,245 +10,296 @@ def _normalize_series(s: pd.Series) -> pd.Series:
     return s
 
 def _value_multiset(s: pd.Series) -> Counter:
-    # normalize, drop NaNs, count frequencies
     s = _normalize_series(s)
     s = s.dropna()
     return Counter(s.tolist())
 
+def _pick_merged_col(aligned: pd.DataFrame, base: str, prefer: str) -> str:
+    """
+    prefer: 'L' or 'R'
+    Returns the actual column name in `aligned` corresponding to `base`.
+    Handles cases where pandas added suffixes only to overlaps.
+    """
+    if base in aligned.columns:
+        return base
+    cand = f"{base}_{prefer}"
+    if cand in aligned.columns:
+        return cand
+    # fallback: if both sides had different names, pandas may not suffix either side
+    # (rare here since both sides use `base`, but we’ll be defensive)
+    # try the opposite side:
+    alt = f"{base}_{'R' if prefer=='L' else 'L'}"
+    if alt in aligned.columns:
+        return alt
+    raise KeyError(f"Column not found after merge: {base} (tried {cand} / {alt})")
+
+
+def _ensure_mutated_key(
+    df: pd.DataFrame,
+    want_key_name: str,
+    record_col: str = None,
+    system_col: str = "SYSTEM_OF_RECORD",
+    unknown: str = "unknown",
+) -> tuple[pd.DataFrame, str]:
+    """
+    Return (df_view, key_name). If want_key_name doesn't exist,
+    synthesize it as f"{record_col}_{system_col}" (with string dtypes).
+    Does NOT mutate the original df.
+    """
+    if want_key_name in df.columns:
+        return df, want_key_name
+    if record_col is None:
+        raise ValueError(
+            f"Right key '{want_key_name}' not found and record_col=None; "
+            f"provide record_col to synthesize."
+        )
+    tmp = df.copy()
+    if system_col not in tmp.columns:
+        raise KeyError(f"Right df missing '{system_col}' needed to synthesize '{want_key_name}'")
+
+    tmp[system_col] = tmp[system_col].fillna(unknown).astype("string")
+    tmp[record_col] = tmp[record_col].astype("string")
+    tmp[want_key_name] = tmp[record_col].str.strip() + "_" + tmp[system_col].astype("string")
+    return tmp, want_key_name
+
+
 def columns_value_equivalence_report(
     df_left: pd.DataFrame, col_left: str,
     df_right: pd.DataFrame, col_right: str,
-    show_examples: int = 5
+    show_examples: int = 0
 ) -> Dict[str, object]:
-    """
-    Compare two columns *as multisets of values* (order-agnostic, no join key).
-    Good for deciding if two columns across files are essentially the same field
-    despite different row orders and sparsity.
-    """
     if col_left not in df_left.columns:
         raise KeyError(f"Left missing column: {col_left}")
     if col_right not in df_right.columns:
         raise KeyError(f"Right missing column: {col_right}")
 
-    L = _value_multiset(df_left[col_left])
-    R = _value_multiset(df_right[col_right])
+    L = _value_multiset(df_left[col_left]); nL = sum(L.values())
+    R = _value_multiset(df_right[col_right]); nR = sum(R.values())
 
-    # Basic counts
-    nL = sum(L.values())
-    nR = sum(R.values())
-
-    # Intersection/union on *multisets*:
-    # multiset intersection count = sum(min(freq_L, freq_R))
-    # multiset union count       = sum(max(freq_L, freq_R))
     keys = set(L) | set(R)
     inter = sum(min(L[k], R[k]) for k in keys)
     union = sum(max(L[k], R[k]) for k in keys) if keys else 0
-
-    # Jaccard on multisets; handle empty union
     jaccard = (inter / union) if union else 1.0
-
-    # Coverage (how much of each side is explained by the other)
     coverage_L_in_R = (inter / nL) if nL else 1.0
     coverage_R_in_L = (inter / nR) if nR else 1.0
 
-    # Symmetric difference diagnostics (by frequency difference)
+    distinct_L, distinct_R = len(L), len(R)
+    distinct_overlap = len(set(L) & set(R))
+
     left_extra = Counter({k: max(L[k] - R.get(k, 0), 0) for k in L if L[k] > R.get(k, 0)})
     right_extra = Counter({k: max(R[k] - L.get(k, 0), 0) for k in R if R[k] > L.get(k, 0)})
-
-    # Examples of disagreements (most frequent offenders)
     left_examples = left_extra.most_common(show_examples)
     right_examples = right_extra.most_common(show_examples)
 
-    # Unique counts (distinct values)
-    distinct_L = len(L)
-    distinct_R = len(R)
-    distinct_overlap = len(set(L) & set(R))
-
-    report = {
-        "left_col": col_left,
-        "right_col": col_right,
-        "left_non_null_count": nL,
-        "right_non_null_count": nR,
-        "distinct_left": distinct_L,
-        "distinct_right": distinct_R,
+    return {
+        "left_col": col_left, "right_col": col_right,
+        "left_non_null_count": nL, "right_non_null_count": nR,
+        "distinct_left": distinct_L, "distinct_right": distinct_R,
         "distinct_overlap": distinct_overlap,
-        "multiset_intersection": inter,
-        "multiset_union": union,
-        "jaccard_multiset": jaccard,                # 1.0 means identical multiset
-        "coverage_left_in_right": coverage_L_in_R,  # % of left values explained by right
-        "coverage_right_in_left": coverage_R_in_L,  # % of right values explained by left
-        "top_left_only_examples": left_examples,    # [(value, extra_count), ...]
+        "multiset_intersection": inter, "multiset_union": union,
+        "jaccard_multiset": jaccard,
+        "coverage_left_in_right": coverage_L_in_R,
+        "coverage_right_in_left": coverage_R_in_L,
+        "top_left_only_examples": left_examples,
         "top_right_only_examples": right_examples,
     }
 
-    # Friendly printout (optional)
-    print(f"\n[CONTENT EQUIVALENCE] {col_left} (left) vs {col_right} (right)")
-    print(f"  Non-null counts: L={nL}, R={nR}")
-    print(f"  Distinct values: L={distinct_L}, R={distinct_R}, overlap={distinct_overlap}")
-    print(f"  Multiset Jaccard: {jaccard:.4f}")
-    print(f"  Coverage L in R:  {coverage_L_in_R:.4%}   | Coverage R in L: {coverage_R_in_L:.4%}")
+def _dedupe_on_key(df: pd.DataFrame, key: str, keep: str = "first") -> pd.DataFrame:
+    if key not in df.columns:
+        raise KeyError(f"Missing key column: {key}")
+    return df.drop_duplicates(subset=[key], keep=keep)
 
-    if left_examples:
-        print("  Left extras (value, extra_count):", left_examples)
-    if right_examples:
-        print("  Right extras (value, extra_count):", right_examples)
+def key_column_match_report(
+    left_df: pd.DataFrame,
+    right_df: pd.DataFrame,
+    key_left: str,
+    key_right: str = None,
+    col_left: str = "",
+    col_right: str = None,
+    how: str = "inner",
+    right_dedupe_keep: str = "first",
+    normalize: bool = True,
+    # NEW: allow building right key on the fly
+    right_record_col: str = None,
+    right_system_col: str = "SYSTEM_OF_RECORD",
+) -> Dict[str, object]:
+    key_right = key_right or key_left
+    col_right = col_right or col_left
 
-    return report
+    if key_left not in left_df.columns:
+        raise KeyError(f"Left missing key: {key_left}")
+    if col_left not in left_df.columns:
+        raise KeyError(f"Left missing column: {col_left}")
+    if col_right not in right_df.columns:
+        raise KeyError(f"Right missing column: {col_right}")
 
-def columns_essentially_equal_by_values(
-    df_left: pd.DataFrame, col_left: str,
-    df_right: pd.DataFrame, col_right: str,
-    jaccard_tol: float = 0.995,
-    coverage_tol: float = 0.99
-) -> bool:
-    """
-    Boolean helper over the report. Tunable thresholds.
-    """
-    rep = columns_value_equivalence_report(df_left, col_left, df_right, col_right, show_examples=0)
-    return (
-        rep["jaccard_multiset"] >= jaccard_tol and
-        rep["coverage_left_in_right"] >= coverage_tol and
-        rep["coverage_right_in_left"] >= coverage_tol
+    # Ensure the right key exists (build it if needed)
+    R_view, key_r = _ensure_mutated_key(
+        right_df, want_key_name=key_right,
+        record_col=right_record_col,
+        system_col=right_system_col
     )
+    if col_right not in R_view.columns:
+        raise KeyError(f"Right missing column after key synthesis: {col_right}")
+
+    # Deduplicate right on the synthetic/real key
+    R = R_view[[key_r, col_right]].drop_duplicates(subset=[key_r], keep=right_dedupe_keep).copy()
+    L = left_df[[key_left, col_left]].copy()
+
+    aligned = pd.merge(L, R, how=how, left_on=key_left, right_on=key_r, suffixes=("_L", "_R"))
+
+    left_name  = _pick_merged_col(aligned, col_left,  prefer="L")
+    right_name = _pick_merged_col(aligned, col_right, prefer="R")
+
+    a_raw = aligned[left_name]
+    b_raw = aligned[right_name]
+    a = _normalize_series(a_raw) if normalize else a_raw
+    b = _normalize_series(b_raw) if normalize else b_raw
+
+    matched_rows = len(aligned)
+    both_nan      = a_raw.isna() & b_raw.isna()
+    both_present  = a_raw.notna() & b_raw.notna()
+    exact_equal   = both_present & (a == b)
+    value_conflict= both_present & (a != b)
+    one_nan_left  = a_raw.isna() & b_raw.notna()
+    one_nan_right = a_raw.notna() & b_raw.isna()
+
+    cnt_both_nan = int(both_nan.sum())
+    cnt_exact    = int(exact_equal.sum())
+    cnt_conflict = int(value_conflict.sum())
+    cnt_lnan     = int(one_nan_left.sum())
+    cnt_rnan     = int(one_nan_right.sum())
+    cnt_both_pres= int(both_present.sum())
+
+    def rate(x, d): return (x / d) if d else 1.0
+    rates = {
+        "equal_including_nan": rate(cnt_exact + cnt_both_nan, matched_rows),
+        "equal_non_null":      rate(cnt_exact, cnt_both_pres),
+        "conflict_rate":       rate(cnt_conflict, matched_rows),
+        "one_nan_left_rate":   rate(cnt_lnan, matched_rows),
+        "one_nan_right_rate":  rate(cnt_rnan, matched_rows),
+    }
+
+    return {
+        "matched_rows": matched_rows,
+        "counts": {
+            "both_present": cnt_both_pres,
+            "exact_equal": cnt_exact,
+            "both_nan": cnt_both_nan,
+            "one_nan_left": cnt_lnan,
+            "one_nan_right": cnt_rnan,
+            "value_conflict": cnt_conflict,
+        },
+        "rates": rates,
+    }
 
 
-def propose_coalesce_columns(main_df, sub_df, common_cols,
-                             min_coverage=0.95, review_band=(0.85, 0.95),
-                             max_distinct=64):
-    """
-    Returns (safe, review, avoid) lists based on columns_value_equivalence_report.
-    Uses coverage L in R as the primary signal. Limits to modest cardinality by default.
-    """
-    from collections import defaultdict
+def propose_coalesce_with_reports(
+    left_df: pd.DataFrame,
+    right_df: pd.DataFrame,
+    key_left: str,
+    cols: Optional[List[str]] = None,
+    # thresholds...
+    min_coverage: float = 0.95,
+    review_band: Tuple[float, float] = (0.85, 0.95),
+    max_distinct_auto: int = 64,
+    min_equal_non_null: float = 0.95,
+    max_conflict_rate: float = 0.02,
+    how: str = "inner",
+    right_dedupe_keep: str = "first",
+    # right key synthesis
+    key_right: str  = None,
+    right_record_col: str  = None,
+    right_system_col: str = "SYSTEM_OF_RECORD",
+    # NEW knobs:
+    allow_high_card_if_exact: bool = True,
+    exact_equal_thresh: float = 0.999,    # promote if >=
+    exact_conflict_ceiling: float = 1e-6, # and <=
+    id_like_tokens: Tuple[str, ...] = ("record","id","key","action","master"),
+    force_allow_ids: bool = True,
+) -> Dict[str, object]:
+    key_right = key_right or key_left
+    if cols is None:
+        cols = sorted((set(left_df.columns) & set(right_df.columns)) - {key_left, key_right})
+
+    out_per_col: Dict[str, Dict[str, object]] = {}
     safe, review, avoid = [], [], []
-    for col in sorted(common_cols):
-        rep = columns_value_equivalence_report(main_df, col, sub_df, col, show_examples=0)
 
-        # basic guards
-        if col in {"DATE_TIME_OF_INCIDENT"}:
-            avoid.append(col); continue
-
-        # cap cardinality for automatic coalesce
-        if rep["distinct_left"] > max_distinct or rep["distinct_right"] > max_distinct:
-            # allow dates through by name heuristic
-            if not any(tok in col.lower() for tok in ["date","time","approval","closure","due","reported","incident"]):
-                review.append(col); continue
-
-        cov = rep["coverage_left_in_right"]
-        if cov >= min_coverage:
-            safe.append(col)
-        elif review_band[0] <= cov < review_band[1]:
-            review.append(col)
-        else:
+    for col in cols:
+        # quick ID-name guard (unless explicitly overridden)
+        name_hits_id = any(tok in col.lower() for tok in id_like_tokens)
+        if name_hits_id and not force_allow_ids:
+            # still compute reports for visibility
+            rep_val = columns_value_equivalence_report(left_df, col, right_df, col, show_examples=0)
+            rep_key = key_column_match_report(
+                left_df, right_df, key_left=key_left, key_right=key_right,
+                col_left=col, col_right=col, how=how, right_dedupe_keep=right_dedupe_keep,
+                right_record_col=right_record_col, right_system_col=right_system_col
+            )
+            out_per_col[col] = {
+                "value_report": rep_val, "key_report": rep_key, "decision": "avoid",
+                "metrics": {
+                    "coverage_L_in_R": rep_val["coverage_left_in_right"],
+                    "coverage_R_in_L": rep_val["coverage_right_in_left"],
+                    "jaccard_multiset": rep_val["jaccard_multiset"],
+                    "equal_non_null":   rep_key["rates"]["equal_non_null"],
+                    "conflict_rate":    rep_key["rates"]["conflict_rate"],
+                    "distinct_left":    rep_val["distinct_left"],
+                    "distinct_right":   rep_val["distinct_right"],
+                }
+            }
             avoid.append(col)
-
-
-        cov2 = rep["coverage_right_in_left"]
-        if cov2 >= min_coverage:
-            safe.append(col)
-        elif review_band[0] <= cov2 < review_band[1]:
-            review.append(col)
-        else:
-            avoid.append(col)
-
-    return list(set(safe)), list(set(review)), list(set(avoid))
-
-
-
-def count_system_aware_matches(
-    df,
-    master_rec="RECORD_NO_MASTER",
-    master_sys="SYSTEM_OF_RECORD",
-    show_conflicts=0,          # set >0 to print conflicting rows
-    return_summary=False       # set True to get a DataFrame summary back
-):
-    total = len(df)
-    summary_rows = []
-
-    for rec_col in df.columns:
-        if not rec_col.startswith("RECORD_NO__"):
             continue
 
-        ns = rec_col.split("__")[-1]
-        sys_col = f"SYSTEM_OF_RECORD__{ns}"
-        if sys_col not in df.columns:
-            print(f"\n[CHECKING] {rec_col} vs {master_rec} (SKIPPED: missing {sys_col})")
-            continue
+        # 1) value-multiset view
+        rep_val = columns_value_equivalence_report(left_df, col, right_df, col, show_examples=0)
+        covL, covR = rep_val["coverage_left_in_right"], rep_val["coverage_right_in_left"]
+        jacc      = rep_val["jaccard_multiset"]
 
-        print(f"\n[CHECKING] {rec_col} (+ {sys_col})  vs  {master_rec} (+ {master_sys})")
-
-        rec1, rec2 = df[rec_col], df[master_rec]
-        sys1, sys2 = df[sys_col], df[master_sys]
-
-        # Raw equality allowing NaN==NaN for the "raw" view
-        rec_eq_raw = rec1.fillna("___NA___").eq(rec2.fillna("___NA___"))
-        sys_eq_raw = sys1.fillna("___NA___").eq(sys2.fillna("___NA___"))
-        raw_matches_mask = rec_eq_raw & sys_eq_raw
-        raw_match_count = int(raw_matches_mask.sum())
-
-        # Matches caused by both fields being NaN on both sides
-        nan_match_mask = rec1.isna() & rec2.isna() & sys1.isna() & sys2.isna()
-        nan_match_count = int(nan_match_mask.sum())
-
-        # Both fields present on both sides
-        rec_both_present = (~rec1.isna()) & (~rec2.isna())
-        sys_both_present = (~sys1.isna()) & (~sys2.isna())
-        both_present = rec_both_present & sys_both_present
-
-        # True matches: equal on both fields and both present
-        true_match_mask = both_present & rec1.eq(rec2) & sys1.eq(sys2)
-        true_match_count = int(true_match_mask.sum())
-
-        # Non-matches are complement of raw matches
-        non_match_mask = ~raw_matches_mask
-        non_match_count = int(non_match_mask.sum())
-
-        # Of the non-matches, split into (a) one-sided NaN vs (b) value differences
-        one_sided_nan_mask = non_match_mask & (
-            (rec1.isna() ^ rec2.isna()) | (sys1.isna() ^ sys2.isna())
+        # 2) key-aligned view
+        rep_key = key_column_match_report(
+            left_df, right_df, key_left=key_left, key_right=key_right,
+            col_left=col, col_right=col, how=how, right_dedupe_keep=right_dedupe_keep,
+            right_record_col=right_record_col, right_system_col=right_system_col
         )
-        one_sided_nan_count = int(one_sided_nan_mask.sum())
+        eq_nonnull = rep_key["rates"]["equal_non_null"]
+        conflict   = rep_key["rates"]["conflict_rate"]
 
-        # Value differences: both fields present on both sides, but at least one differs
-        value_diff_conflict_mask = both_present & ~(rec1.eq(rec2) & sys1.eq(sys2))
-        value_diff_nonmatch_count = int(value_diff_conflict_mask.sum())
+        # heuristics
+        small_card = (rep_val["distinct_left"] <= max_distinct_auto and
+                      rep_val["distinct_right"] <= max_distinct_auto) or \
+                     any(t in col.lower() for t in ["date","time","approval","closure","due","reported","incident"])
 
-        # Print with percentages
-        def pct(x): return f"{(x/total):.2%}"
-        print(f"  Total rows:                         {total}")
-        print(f"  Raw matches (incl. NaN==NaN):       {raw_match_count} ({pct(raw_match_count)})")
-        print(f"  Matches due to both NaNs:           {nan_match_count} ({pct(nan_match_count)})")
-        print(f"  True matches (rec+sys, non-NaN):    {true_match_count} ({pct(true_match_count)})")
-        print(f"  True non-matches:                   {non_match_count} ({pct(non_match_count)})")
-        print(f"  Non-matches w/ one-sided NaN:       {one_sided_nan_count} ({pct(one_sided_nan_count)})")
-        print(f"  Non-matches due to value diff:      {value_diff_nonmatch_count} ({pct(value_diff_nonmatch_count)})")
+        # NEW: promotion for high-cardinality but exact row-wise equality
+        if allow_high_card_if_exact and (eq_nonnull >= exact_equal_thresh) and (conflict <= exact_conflict_ceiling):
+            decision = "safe"
+            safe.append(col)
+        else:
+            if small_card and (covL >= min_coverage or covR >= min_coverage) and (eq_nonnull >= min_equal_non_null) and (conflict <= max_conflict_rate):
+                decision = "safe";   safe.append(col)
+            elif (covL >= review_band[0] or covR >= review_band[0]) and (eq_nonnull >= 0.80):
+                decision = "review"; review.append(col)
+            else:
+                decision = "avoid";  avoid.append(col)
 
-        # Optionally show a few true conflict rows
-        if show_conflicts and value_diff_nonmatch_count > 0:
-            cols_to_show = [rec_col, master_rec, sys_col, master_sys]
-            print("\n  Example conflicts (both present, values differ):")
-            print(df.loc[value_diff_conflict_mask, cols_to_show].head(show_conflicts).to_string(index=False))
+        out_per_col[col] = {
+            "value_report": rep_val,
+            "key_report": rep_key,
+            "decision": decision,
+            "metrics": {
+                "coverage_L_in_R": covL,
+                "coverage_R_in_L": covR,
+                "jaccard_multiset": jacc,
+                "equal_non_null": eq_nonnull,
+                "conflict_rate": conflict,
+                "distinct_left": rep_val["distinct_left"],
+                "distinct_right": rep_val["distinct_right"],
+            }
+        }
 
-        # Collect a summary row for optional return
-        summary_rows.append({
-            "file_ns": ns,
-            "record_col": rec_col,
-            "system_col": sys_col,
-            "total": total,
-            "raw_matches": raw_match_count,
-            "raw_matches_pct": raw_match_count / total,
-            "nan_matches": nan_match_count,
-            "nan_matches_pct": nan_match_count / total,
-            "true_matches": true_match_count,
-            "true_matches_pct": true_match_count / total,
-            "true_nonmatches": non_match_count,
-            "true_nonmatches_pct": non_match_count / total,
-            "one_sided_nan_nonmatches": one_sided_nan_count,
-            "one_sided_nan_nonmatches_pct": one_sided_nan_count / total,
-            "value_diff_nonmatches": value_diff_nonmatch_count,
-            "value_diff_nonmatches_pct": value_diff_nonmatch_count / total,
-        })
-
-    if return_summary:
-        import pandas as pd
-        return pd.DataFrame(summary_rows)
+    return {
+        "safe":   sorted(set(safe)),
+        "review": sorted(set(review) - set(safe)),
+        "avoid":  sorted(set(avoid) - set(safe) - set(review)),
+        "per_column": out_per_col
+    }

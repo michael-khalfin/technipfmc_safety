@@ -118,6 +118,7 @@ def coalesce_into(
 def consolidated_matching_cols(
     main_df: pd.DataFrame,
     sub_df: pd.DataFrame,
+    main_record: str = None, 
     to_drop: Optional[List[str]] = None,
     to_consolidate: Optional[List[Tuple[str, str]]] = None,
     equality_tol_all: float = 0.995,
@@ -127,16 +128,12 @@ def consolidated_matching_cols(
     to_drop = set(to_drop or [])
     to_consolidate = list(to_consolidate or [])
 
-    # --- detect the join key on main (must be a single *_MUTATED column) ---
+
     mutated_cols = [c for c in main_df.columns if c.endswith(f"_{MUTATED}")]
     if len(mutated_cols) != 1:
         raise ValueError(f"Could not uniquely infer main join key; found {mutated_cols}. "
                          f"Pass through your merge path instead.")
     main_join = mutated_cols[0]
-
-    # Determine the raw record + system columns on sub_df so merge_df_to_main can attach the mutated key.
-    # If your sub_df lacks the expected columns, your overwrite logic in merge_df_to_main will kick in.
-    # We do not do namespacing here; we manage overlaps manually.
     common_cols = set(main_df.columns).intersection(set(sub_df.columns))
 
     # Never treat the join key or system field as a “content overlap”
@@ -195,10 +192,10 @@ def consolidated_matching_cols(
         main_df=main_df,
         main_record=main_join,
         sub_df=sub_df_prep,
-        overwrite_record=None,              # your internal inference handles it
+        overwrite_record=main_record,            
         overwrite_system_field=None,
-        to_drop=[],                         # already dropped
-        file_path=None                      # skip file-based namespacing here
+        to_drop=[],                        
+        file_path=None                     
     )
 
     # 4) Coalesce post-merge for chosen pairs
