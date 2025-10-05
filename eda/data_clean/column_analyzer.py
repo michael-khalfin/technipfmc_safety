@@ -279,7 +279,7 @@ class ColumnAnalyzer:
             }
         
         if verbose:
-            print(f"\nEqualizer Analysis:")
+            print(f"\n Equalizer Analysis:")
             print(f"\tSAFE: {len(safe)} columns")
             print(f"\tREVIEW: {len(review)} columns")
             print(f"\tAVOID: {len(avoid)} columns")

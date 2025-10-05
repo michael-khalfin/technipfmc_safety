@@ -125,16 +125,12 @@ class Coalescer:
                 fills = (df[col].isna() & df[src].notna()).sum()
                 conflicts = (df[col].notna() & df[src].notna() &
                             (df[col].astype(str) != df[src].astype(str))).sum()
-
-                if fills > 0 or conflicts > 0:
-                    if verbose:
-                        status = f"filled = {fills}"
-                        if conflicts > 0:
-                            status += f" , conflicts = {conflicts}"
-                        print(f"\t[COALESCE] {col} <- {src} : {status}")
-                    filled_count += fills
                 
+                status = f"filled = {fills}, conflicts = {conflicts}"
+                filled_count += fills
+        
                 df = self.coalesce_column(df, col, src, track_conflicts=True, drop_source= True)
+                if verbose: print(f"\t[COALESCE] {col} <- {src} : {status}")
                 coalesced_count += 1 
             else:
                 print(f"\t[DNE] Dest={src} & Source={col}")
@@ -164,6 +160,16 @@ class Coalescer:
     
         #Coalece Safe Column
         merged = self.coalesce_columns(merged, safe_cols, namespace, verbose)
+
+        # Remove Suffix If Base DNE
+        suffix = f"_{namespace}"
+        rename_map = {}
+        for col in merged.columns:
+            if suffix in col:
+                base_col = col.replace(suffix, "")
+                if base_col not in merged.columns:
+                    rename_map[col] = base_col
+        merged = merged.rename(columns=rename_map)
         return merged
 
 
@@ -198,13 +204,8 @@ class Coalescer:
         Load File, analyze columns, and merge it into main_df
         '''
 
-        system_col = system_col or self.SYS_RECORD_FIELD
+        system_col = self.SYS_RECORD_FIELD
         namespace = os.path.splitext(os.path.basename(file_path))[0].replace("DIM_CONSOLIDATED_", "")
-        
-        if verbose:
-            print(f"\n{'='*70}")
-            print(f"Processing: {namespace} {'(BASE)' if is_base else ''}")
-            print(f"{'='*70}")
         
         sub_df = pd.read_csv(file_path, low_memory = False)
         if verbose: print(f"Rows: {len(sub_df):,}, Cols: {len(sub_df.columns)}")
@@ -226,10 +227,30 @@ class Coalescer:
             review_cols = analysis["review"]
             avoid_cols = analysis["avoid"]
             if verbose and safe_cols: print(f"\tSafe: {', '.join(safe_cols[:5])}{' ...' if len(safe_cols) > 5 else ''}")
-            if verbose and review_cols: print(f"\Review: {', '.join(review_cols[:5])}{' ...' if len(review_cols) > 5 else ''}")
-            if verbose and avoid_cols: print(f"\Avoid: {', '.join(avoid_cols[:5])}{' ...' if len(avoid_cols) > 5 else ''}")
+            if verbose and review_cols: print(f"\tReview: {', '.join(review_cols[:5])}{' ...' if len(review_cols) > 5 else ''}")
+            if verbose and avoid_cols: print(f"\nAvoid: {', '.join(avoid_cols[:5])}{' ...' if len(avoid_cols) > 5 else ''}")
 
-            result = self.merge_and_coalescese(main_df, sub_df, main_key, sub_record_col, safe_cols, system_col, verbose )
+
+            if not safe_cols:
+                if verbose:
+                    print("\tNo SAFE columns → skipping merge for this file.")
+                return main_df
+
+            needed_cols = [sub_record_col, system_col] + safe_cols
+            needed_cols = [c for c in needed_cols if c in sub_df.columns]
+            sub_df_reduced = sub_df[needed_cols].copy()
+
+            result = self.merge_and_coalescese(
+                main_df=main_df,
+                sub_df=sub_df_reduced,   # << use reduced df
+                main_key=main_key,
+                sub_record_col=sub_record_col,
+                namespace=namespace,
+                safe_cols=safe_cols,
+                system_col=system_col,
+                verbose=verbose,
+            )
+
 
         if verbose: print(f"\tResult: {len(result):,} rows, {len(result.columns)} cols")
         self.merge_history.append({
