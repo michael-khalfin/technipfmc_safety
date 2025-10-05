@@ -33,9 +33,33 @@ class DataLoader:
             print(f"{'='*70}")
         
         df = pd.read_csv(file_path, low_memory= False)
-
+        df = self.coalescer.create_mutated_key(df, record_col, self.coalescer.SYS_RECORD_FIELD, drop_original= False)
+        if self.verbose:
+            print(f"  Rows: {len(df):,}, Cols: {len(df.columns)}")
+            print(f"  Key: {record_col}_{self.coalescer.MUTATED}")
+        return df 
         
 
+
+    def load_all_data_v1(self, include_actions = False) -> pd.DataFrame:
+
+        # Stack Loss Potential Files (are mutually exclusive)
+        if self.verbose: 
+            print(f"\n{'='*70}")
+            print(f"STACKING LOSS FILES (Mutually Exclusive)")
+            print(f"{'='*70}")
+        loss_files = ["LOSS_POTENTIAL", "ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES"]
+        loss_dfs = []
+        for file_name in loss_files:
+            df = pd.read_csv(self._file_path(file_name), low_memory = False)
+            df["SOURCE_FILE"] = file_name
+            if self.verbose: print(f"\t{file_name}: {len(df):,} rows")
+            loss_dfs.append(df)
+        
+        incidents = pd.concat(loss_dfs, axis= 0, ignore_index= True, sort = False)
+        if self.verbose:print(f"\n  Stacked: {len(incidents):,} rows, {len(incidents.columns)} cols")
+
+        return incidents
        
         
 
