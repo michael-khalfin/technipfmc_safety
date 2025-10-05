@@ -19,7 +19,7 @@ class Coalescer:
         self.analyzer = analyzer or ColumnAnalyzer()
         self.merge_history = [] # For Debugging in future cases 
 
-    def normalize_series(s: pd.Series):
+    def normalize_series(self, s: pd.Series):
         s = s.astype("string")
         s = s.str.strip()
         s = s.str.replace(r"\.0+$", "", regex=True)
@@ -55,7 +55,7 @@ class Coalescer:
 
         # covnert to string
         df[record_col] = df[record_col].astype('string')
-        df[system_col].astype('string')
+        df[system_col] = df[system_col].astype('string')
 
 
         # Create Mutated Key
@@ -110,9 +110,38 @@ class Coalescer:
             df.loc[conflict_mask, conflict_col] = True
         
         # Coalesce
-        df[dest_col] = df[dest_col].where(df[dest_col].notno(), df[src_col])
+        df[dest_col] = df[dest_col].where(df[dest_col].notna(), df[src_col])
         if drop_source: df = df.drop(columns= [src_col], errors="ignore")
         return df 
+
+    def coalesce_columns(self, df: pd.DataFrame, columns: List[str], namespace:str, verbose: bool = True) -> pd.DataFrame:
+        coalesced_count = 0
+        filled_count = 0
+        if verbose: print(f"\n Coalescing {len(columns)} safe columns:")
+
+        for col in columns:
+            src = f"{col}_{namespace}"
+            if src in df.columns and col in df.columns:
+                fills = (df[col].isna() & df[src].notna()).sum()
+                conflicts = (df[col].notna() & df[src].notna() &
+                            (df[col].astype(str) != df[src].astype(str))).sum()
+
+                if fills > 0 or conflicts > 0:
+                    if verbose:
+                        status = f"filled = {fills}"
+                        if conflicts > 0:
+                            status += f" , conflicts = {conflicts}"
+                        print(f"\t[COALESCE] {col} <- {src} : {status}")
+                    filled_count += fills
+                
+                df = self.coalesce_column(df, col, src, track_conflicts=True, drop_source= True)
+                coalesced_count += 1 
+            else:
+                print(f"\t[DNE] Dest={src} & Source={col}")
+                df = df.rename(columns = {col:src})
+            
+        if verbose: print(f" Summary: Coalesced {coalesced_count} columns, filled {filled_count} values")
+        return df
     
     def merge_and_coalescese(self, main_df: pd.DataFrame, sub_df: pd.DataFrame,
                              main_key: str, sub_record_col:str, namespace:str, 
@@ -132,33 +161,9 @@ class Coalescer:
         merged = pd.merge(main_df, sub_df, how="left", left_on= main_key, right_on=sub_key)
         if sub_key in merged.columns and sub_key != main_key:
             merged = merged.drop(columns=[sub_key], errors="ignore")
-        
-
-        #Coalece Safe Column (save metrics)
-        coalesced_count = 0
-        filled_count = 0
-        if verbose:
-            print(f"\n Coalescing {len(safe_cols)} safe columns:")
-        
-        for col in safe_cols:
-            src = f"{col}_{namespace}"
-            if src in merged.columns and col in merged.columns:
-                fills = (merged[col].isna() & merged[src].notna()).sum()
-                conflicts = (merged[col].notna() & merged[src].notna() &
-                            (merged[col].astype(str) != merged[src].astype(str))).sum()
-
-                if fills > 0 or conflicts > 0:
-                    if verbose:
-                        status = f"filled = {fills}"
-                        if conflicts > 0:
-                            status += f" , conflicts = {conflicts}"
-                        print(f"\t[COALESCE] {col} <- {src} : {status}")
-                    filled_count += fills
-                
-                merged = self.coalesce_column(merged, col, src, track_conflicts=True, drop_source= True)
-                coalesced_count += 1 
-            
-        if verbose: print(f"\tSummary: Coalesced {coalesced_count} columns, filled {filled_count} values")
+    
+        #Coalece Safe Column
+        merged = self.coalesce_columns(merged, safe_cols, namespace, verbose)
         return merged
 
 

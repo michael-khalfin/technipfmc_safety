@@ -33,7 +33,7 @@ class ColumnAnalyzer:
     
 
     # Helper Funcs 
-    def normalize_series(s: pd.Series) -> pd.Series:
+    def normalize_series(self, s: pd.Series) -> pd.Series:
         s = s.astype("string")
         s = s.str.strip()
         s = s.str.replace(r"\.0+$", "", regex=True)
@@ -279,10 +279,10 @@ class ColumnAnalyzer:
             }
         
         if verbose:
-            print(f"\n  Equalizer Analysis:")
-            print(f"    SAFE: {len(safe)} columns")
-            print(f"    REVIEW: {len(review)} columns")
-            print(f"    AVOID: {len(avoid)} columns")
+            print(f"\nEqualizer Analysis:")
+            print(f"\tSAFE: {len(safe)} columns")
+            print(f"\tREVIEW: {len(review)} columns")
+            print(f"\tAVOID: {len(avoid)} columns")
         
         return {
             "safe": sorted(safe),

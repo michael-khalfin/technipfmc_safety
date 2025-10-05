@@ -111,7 +111,7 @@ def describe_data(df: pd.DataFrame):
 if __name__ == "__main__":
     # Load Data and Describe it 
     loader = DataLoader(data_dir= DATA_PATH, verbose=True)
-    combined_df = loader.load_all_data_v1(include_actions= False)
+    combined_df = loader.load_all_data_v1(include_actions= True)
     describe_data(combined_df)
 
     # Change Data
