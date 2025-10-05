@@ -3,7 +3,7 @@ from collections import Counter
 from typing import Dict, List, Tuple, Optional
 
 
-class Equalizer:
+class ColumnAnalyzer:
     """
     Analyzes columns between dataframes to determine if they can be safely merged.
     """
@@ -165,7 +165,7 @@ class Equalizer:
             "coverage_right_in_left": coverage_R_in_L,
         }
     
-    def propose_coalesce(
+    def analyze_columns(
         self,
         left_df: pd.DataFrame,
         right_df: pd.DataFrame,
