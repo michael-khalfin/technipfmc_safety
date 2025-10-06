@@ -154,18 +154,18 @@ class DataLoader:
     
     def attach_remainder_files(self, main_df: pd.DataFrame, master_key:str):
         """
-        Attach INJURY_ILLNESS, LEADING_INDICATORS, and PROPERTY_DAMAGE_INCIDENT.
+        Attach INJURY_ILLNESS and PROPERTY_DAMAGE_INCIDENT (additional details).
+        
         
         Strategy:
-        1. Load INJURY_ILLNESS as base
-        2. Merge LEADING_INDICATORS into it
-        3. Merge PROPERTY_DAMAGE_INCIDENT into it
-        4. Aggregate if needed
-        5. Merge entire remainder into main
+        1. Load INJURY_ILLNESS as base (provides injury details for ~5.5% of incidents)
+        2. Merge PROPERTY_DAMAGE_INCIDENT into it (~1.8% of incidents)
+        3. Aggregate if needed
+        4. Merge entire remainder into main
         """
         if self.verbose:
             print(f"\n{'='*70}")
-            print("LOADING REMAINDER (INJURY/ILLNESS, LEADING_INDICATORS, PROPERTY_DAMAGE)")
+            print("MERGING REMAINDER (INJURY_ILLNESS, PROPERTY_DAMAGE) - Additional Details")
             print(f"{'='*70}")
 
         # Load Injury Df and Mutate Key
@@ -174,28 +174,13 @@ class DataLoader:
         injury_df = self.coalescer.create_mutated_key(injury_df, "MASTER_RECORD_NO", self.coalescer.SYS_RECORD_FIELD, drop_original=False)
         injury_key = f"MASTER_RECORD_NO_{self.coalescer.MUTATED}"
 
-        # Load Leading Indicatiors DF and Mutate Key
-        leading_df = pd.read_csv(self._file_path("LEADING_INDICATORS"), low_memory=False)
-        if self.verbose: print(f"  LEADING_INDICATORS: {len(leading_df):,} rows, {len(leading_df.columns)} cols")
-        leading_df = self.coalescer.create_mutated_key( leading_df, "RECORD_NO", self.coalescer.SYS_RECORD_FIELD, drop_original=True)
-        leading_key = f"RECORD_NO_{self.coalescer.MUTATED}"
-
-        # Merge (leading and injury)
-        analysis = self.equalizer.analyze_columns(injury_df, leading_df, injury_key, leading_key, verbose=self.verbose)
-        injury_df = self.coalescer.merge_and_coalescese(injury_df, leading_df, injury_key, 
-                                                        leading_key, "LEADING_INDICATORS", analysis["safe"], self.coalescer.SYS_RECORD_FIELD, self.verbose )
-        # leading_df = self.coalescer.namespace_columns(leading_df, "LEADING_INDICATORS", {leading_key})
-        # injury_df = pd.merge(injury_df, leading_df, left_on=injury_key, right_on=leading_key, how='left')
-        # injury_df = injury_df.drop(columns=[leading_key], errors='ignore')
-
         # Load Property Damage df
         property_df = pd.read_csv(self._file_path("PROPERTY_DAMAGE_INCIDENT"), low_memory=False)
         if self.verbose: print(f"  PROPERTY_DAMAGE_INCIDENT: {len(property_df):,} rows, {len(property_df.columns)} cols")
         property_df = self.coalescer.create_mutated_key(property_df, "MASTER_RECORD_NO", self.coalescer.SYS_RECORD_FIELD, drop_original=True)
         property_key = f"MASTER_RECORD_NO_{self.coalescer.MUTATED}"
 
-
-        # Merge (Property and Injury)
+        # Merge Property Damage into Injury (both use MASTER_RECORD_NO)
         property_df = self.coalescer.namespace_columns(property_df, "PROPERTY_DAMAGE_INCIDENT", {property_key})
         if injury_key == property_key:
             injury_df = pd.merge(injury_df, property_df, on=injury_key, how='left', suffixes=('', '__PROPERTY'))
@@ -288,20 +273,22 @@ class DataLoader:
     def load_all_data_v1(self, include_actions = False) -> pd.DataFrame:
         master_key = 'RECORD_NO_MASTER'
 
-        # Stack Loss Potential Files (are mutually exclusive)
+        # Stack Incident Files (are mutually exclusive - different incidents)
         if self.verbose: 
             print(f"\n{'='*70}")
-            print(f"STACKING LOSS FILES (Mutually Exclusive)")
+            print(f"STACKING INCIDENT FILES (Mutually Exclusive)")
             print(f"{'='*70}")
-        loss_files = ["LOSS_POTENTIAL", "ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES"]
-        loss_dfs = []
-        for file_name in loss_files:
+        
+        # These files contain different incident types with 0% key overlap
+        incident_files = ["LOSS_POTENTIAL", "ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES", "LEADING_INDICATORS"]
+        incident_dfs = []
+        for file_name in incident_files:
             df = pd.read_csv(self._file_path(file_name), low_memory = False)
             df["SOURCE_FILE"] = file_name
             if self.verbose: print(f"\t{file_name}: {len(df):,} rows, {len(df.columns)} cols")
-            loss_dfs.append(df)
+            incident_dfs.append(df)
         
-        incidents = pd.concat(loss_dfs, axis= 0, ignore_index= True, sort = False)
+        incidents = pd.concat(incident_dfs, axis= 0, ignore_index= True, sort = False)
         if self.verbose:print(f"\n  Stacked: {len(incidents):,} rows, {len(incidents.columns)} cols")
 
 
