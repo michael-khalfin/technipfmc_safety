@@ -233,7 +233,7 @@ class ColumnAnalyzer:
                 decision = "safe"
                 reason = "high_equality_low_conflict"
             
-            # Fill-only (no overlapping values) - UNION scenario
+            # Fill-only 
             elif both_pres == 0:
                 # Check if either column has substantial data
                 left_filled = val_metrics["left_non_null"]

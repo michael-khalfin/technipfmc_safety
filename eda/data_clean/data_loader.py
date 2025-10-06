@@ -3,7 +3,6 @@ from typing import List, Optional
 from .column_analyzer import ColumnAnalyzer
 from .coaleser import Coalescer
 
-
 class DataLoader:
     """
     Merges and Loads All Safety Data Files (horizontal coalescing and stacking)
@@ -20,6 +19,26 @@ class DataLoader:
     
     def _file_path(self, name:str) -> str:
         return f"{self.data_dir}{self.prefix}{name}.csv"
+    
+
+    def _coarce_boolean(self, df: pd.DataFrame):
+        def _coerce_binary_like(s: pd.Series) -> pd.Series:
+            mapping = {
+                "Y": True, "N": False, "YES": True, "NO": False,
+                "True": True, "False": False, "true": True, "false": False,
+                "1": True, "0": False, 1: True, 0: False
+            }
+            s2 = s.map(lambda x: mapping.get(x, x))
+            if pd.Series(s2).dropna().isin([True, False]).all():
+                return s2.astype("boolean")
+            return s
+        
+        for c in df.columns:
+            if df[c].dtype == "bool":
+                df[c] = df[c].astype("boolean")  
+            elif df[c].dtype == "object" and df[c].dropna().nunique() <= 2:
+                df[c] = _coerce_binary_like(df[c])
+        return df
     
 
     def load_base(self) -> pd.DataFrame:
@@ -152,20 +171,96 @@ class DataLoader:
 
         return main_df
     
+
+    def attach_leading_indicators(self, main_df: pd.DataFrame, master_key: str) -> pd.DataFrame:
+        if self.verbose:
+            print(f"\n{'='*70}")
+            print(f"ATTACHING SPARSE LEADING INDICATORS FILE")
+            print(f"{'='*70}")
+        leading_df = pd.read_csv(self._file_path("LEADING_INDICATORS"), low_memory=False)
+        if self.verbose: print(f"  LEADING_INDICATORS:  Rows: {len(leading_df):,}, Cols: {len(leading_df.columns)}")
+        
+        # Create mutated key for joining
+        join_col = "RECORD_NO"
+        leading_df = self.coalescer.create_mutated_key(
+            leading_df, join_col, 
+            self.coalescer.SYS_RECORD_FIELD, 
+            drop_original=False
+        )
+        leading_key = f"{join_col}_{self.coalescer.MUTATED}"
+        main_key = f"{master_key}_{self.coalescer.MUTATED}" # this used to be joinkey
+        
+        if main_key not in main_df.columns:
+            main_df = self.coalescer.create_mutated_key(main_df, master_key, self.coalescer.SYS_RECORD_FIELD, drop_original=False) # this used to be joinkey
+            
+        analysis = self.equalizer.analyze_columns(
+            main_df, leading_df, main_key, leading_key, verbose=False
+        )
+        
+        # EXPIREMENTAL: Check for high-conflict columns
+        high_conflict_cols = []
+        if "details" in analysis:
+            for col, info in analysis["details"].items():
+                metrics = info.get("metrics", {})
+                conflict_rate = metrics.get("conflict_rate", 0)
+                if conflict_rate > 0.005:  
+                    high_conflict_cols.append(col)
+        
+        # For high-conflict columns, DO NOT coalesce
+        safe_to_coalesce = [c for c in analysis.get("safe", []) if c not in high_conflict_cols]
+        
+        if self.verbose:
+            print(f"\tAnalysis results:")
+            print(f"\t    Total common columns: {len(analysis.get('safe', [])) + len(analysis.get('review', [])) + len(analysis.get('avoid', []))}")
+            print(f"\t    Safe to coalesce: {len(safe_to_coalesce)}")
+            print(f"\t    High-conflict : {len(high_conflict_cols)}")
+            print(f"\t    Must avoid: {len(analysis.get('avoid', []))}")
+            
+            if high_conflict_cols: print(f"\t    High-conflict columns({len(high_conflict_cols)}) : {high_conflict_cols}")
+        
+        namespace = "LEADING_INDICATORS"
+        leading_df = self.coalescer.namespace_columns(leading_df, namespace, {leading_key})
+        
+
+        # Check key overlap
+        if self.verbose:
+            main_keys = set(main_df[main_key].dropna().unique()) if main_key in main_df.columns else set()
+            leading_keys = set(leading_df[leading_key].dropna().unique()) if leading_key in leading_df.columns else set()
+            key_overlap = main_keys & leading_keys
+            print(f"  Key overlap: {len(key_overlap):,} matching keys")
+        
+        # Merge
+        main_df = pd.merge(main_df, leading_df, left_on=main_key, right_on=leading_key, how='left')
+        
+        
+        # Drop duplicate key
+        if leading_key in main_df.columns and leading_key != main_key:
+            main_df = main_df.drop(columns=[leading_key], errors='ignore')
+        
+        
+        main_df = self.coalescer.coalesce_columns(main_df, safe_to_coalesce, namespace, self.verbose)
+
+        if self.verbose:
+            leading_cols = [c for c in main_df.columns if namespace in c]
+            print(f" Rows: {len(main_df):,}, Cols: {len(main_df.columns)} ")
+            print(f" LEADING_INDICATORS columns kept: {len(leading_cols)}")
+
+        
+        return main_df
+    
+    
     def attach_remainder_files(self, main_df: pd.DataFrame, master_key:str):
         """
         Attach INJURY_ILLNESS and PROPERTY_DAMAGE_INCIDENT (additional details).
         
-        
         Strategy:
-        1. Load INJURY_ILLNESS as base (provides injury details for ~5.5% of incidents)
-        2. Merge PROPERTY_DAMAGE_INCIDENT into it (~1.8% of incidents)
-        3. Aggregate if needed
+        1. Load INJURY_ILLNESS as base 
+        2. Merge PROPERTY_DAMAGE_INCIDENT into it 
         4. Merge entire remainder into main
         """
         if self.verbose:
             print(f"\n{'='*70}")
-            print("MERGING REMAINDER (INJURY_ILLNESS, PROPERTY_DAMAGE) - Additional Details")
+            print("MERGING REMAINDER (INJURY_ILLNESS, PROPERTY_DAMAGE)")
             print(f"{'='*70}")
 
         # Load Injury Df and Mutate Key
@@ -181,15 +276,18 @@ class DataLoader:
         property_key = f"MASTER_RECORD_NO_{self.coalescer.MUTATED}"
 
         # Merge Property Damage into Injury (both use MASTER_RECORD_NO)
-        property_df = self.coalescer.namespace_columns(property_df, "PROPERTY_DAMAGE_INCIDENT", {property_key})
-        if injury_key == property_key:
-            injury_df = pd.merge(injury_df, property_df, on=injury_key, how='left', suffixes=('', '__PROPERTY'))
-        else:
-            injury_df = pd.merge(injury_df, property_df, left_on=injury_key, right_on=property_key, how='left')
-            injury_df = injury_df.drop(columns=[property_key], errors='ignore')
+        # property_df = self.coalescer.namespace_columns(property_df, "PROPERTY_DAMAGE_INCIDENT", {property_key})
+        analysis = self.equalizer.analyze_columns(injury_df, property_df, injury_key, property_key, verbose=self.verbose)
+        injury_df = self.coalescer.merge_and_coalescese(injury_df, property_df, injury_key, 
+                                                        property_key, "PROPERTY_DAMAGE_INCIDENT", analysis["safe"],
+                                                        system_col= self.coalescer.SYS_RECORD_FIELD, verbose = self.verbose)
+        # if injury_key == property_key:
+        #     injury_df = pd.merge(injury_df, property_df, on=injury_key, how='left', suffixes=('', '__PROPERTY'))
+        # else:
+        #     injury_df = pd.merge(injury_df, property_df, left_on=injury_key, right_on=property_key, how='left')
+        #     injury_df = injury_df.drop(columns=[property_key], errors='ignore')
 
         injury_df = self.aggregate_remainder_to_record(injury_df, injury_key)
-
 
         #preapre to merge on main 
         main_key = f"RECORD_NO_MASTER_{self.coalescer.MUTATED}"
@@ -219,68 +317,19 @@ class DataLoader:
         if remainder_key in main_df.columns and remainder_key != main_key:
             main_df = main_df.drop(columns=[remainder_key], errors='ignore')
         
-        if self.verbose: print(f"  After merging remainder: {len(main_df):,} rows, {len(main_df.columns)} cols")
+        if self.verbose: print(f" After merging remainder: {len(main_df):,} rows, {len(main_df.columns)} cols")
         return main_df
 
-
-    # def attach_remainder_files(self, main_df: pd.DataFrame, master_key:str) -> pd.DataFrame:
-    #     if self.verbose:
-    #         print(f"\n{'='*70}")
-    #         print("ATTACHING REMAINDER FILES")
-    #         print(f"{'='*70}")
-        
-    #     # List of remainder files to merge: (file_name, join_key_in_file)
-    #     remainder_files = [
-    #         ("LEADING_INDICATORS", "RECORD_NO"),
-    #         ("INJURY_ILLNESS", "MASTER_RECORD_NO"),
-    #         ("PROPERTY_DAMAGE_INCIDENT", "MASTER_RECORD_NO")
-    #     ]
-        
-    #     # Create mutated key if it doesn't exist
-    #     main_key = f"{master_key}_{self.coalescer.MUTATED}"
-    #     if main_key not in main_df.columns:
-    #         main_df = self.coalescer.create_mutated_key(main_df, master_key, self.coalescer.SYS_RECORD_FIELD, drop_original=False)
-        
-    #     # Merge each remainder file using merge_file_with_analysis
-    #     for file_name, file_key in remainder_files:
-    #         try:
-    #             if self.verbose:
-    #                 print(f"\n{'='*65}")
-    #                 print(f"Merging: {file_name}")
-    #                 print(f"{'='*65}")
-                
-    #             main_df = self.coalescer.merge_file(
-    #                 main_df=main_df,
-    #                 file_path=self._file_path(file_name),
-    #                 main_key=main_key,
-    #                 sub_record_col=file_key,
-    #                 is_base=False,
-    #                 system_col=self.coalescer.SYS_RECORD_FIELD,
-    #                 verbose=self.verbose
-    #             )
-                
-    #         except FileNotFoundError:
-    #             if self.verbose:
-    #                 print(f"  [SKIP] {file_name}: File not found")
-    #         except Exception as e:
-    #             if self.verbose:
-    #                 print(f"  [ERROR] {file_name}: {e}")
-    #             import traceback
-    #             traceback.print_exc()
-        
-    #     return main_df
-      
     def load_all_data_v1(self, include_actions = False) -> pd.DataFrame:
         master_key = 'RECORD_NO_MASTER'
 
-        # Stack Incident Files (are mutually exclusive - different incidents)
         if self.verbose: 
             print(f"\n{'='*70}")
-            print(f"STACKING INCIDENT FILES (Mutually Exclusive)")
+            print(f"STACKING MUTUALLY EXCLUSIVE INCIDENT FILES")
             print(f"{'='*70}")
         
-        # These files contain different incident types with 0% key overlap
-        incident_files = ["LOSS_POTENTIAL", "ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES", "LEADING_INDICATORS"]
+        # Only stack files with 0% overlap
+        incident_files = ["LOSS_POTENTIAL", "ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES"]
         incident_dfs = []
         for file_name in incident_files:
             df = pd.read_csv(self._file_path(file_name), low_memory = False)
@@ -292,9 +341,8 @@ class DataLoader:
         if self.verbose:print(f"\n  Stacked: {len(incidents):,} rows, {len(incidents.columns)} cols")
 
 
-        # Attach Remaining Files
+        incidents = self.attach_leading_indicators(incidents, master_key)
         incidents = self.attach_remainder_files(incidents, master_key)
-
 
         # Incorporate Action Files 
         if include_actions:
@@ -304,6 +352,8 @@ class DataLoader:
                 print(f"{'='*70}")
             incidents = self.attach_action_files(incidents, master_key)
 
+
+        incidents = self._coarce_boolean(incidents)
         
         # Final summary
         if self.verbose:

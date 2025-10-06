@@ -53,10 +53,9 @@ class Coalescer:
         else:
             df[system_col] = df[system_col].fillna(self.UNKNOWN).astype('category')
 
-        # covnert to string
-        df[record_col] = df[record_col].astype('string')
+        # Convert to string and normalize
+        df[record_col] = df[record_col].astype('string').str.replace(r'\.0$', '', regex=True)
         df[system_col] = df[system_col].astype('string')
-
 
         # Create Mutated Key
         mutated_col_name = f"{record_col}_{self.MUTATED}"
