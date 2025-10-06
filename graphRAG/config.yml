@@ -26,13 +26,13 @@ models:
     requests_per_minute: null            # set to null to disable rate limiting
   default_embedding_model:
     type: embedding 
-    model_provider: huggingface
+    model_provider: ollama
     auth_type: api_key # or azure_managed_identity
     api_key: ${API_KEY}
     # audience: "https://cognitiveservices.azure.com/.default"
     # organization: <organization_id>
     model: BAAI/bge-small-en-v1.5
-    api_base: "local" 
+    # api_base: "https://localhost:8000"
     #sentence-transformers/all-MiniLM-L6-v2
     #huggingface/sentence-transformers/all-MiniLM-L6-v2
     # deployment_name: <azure_model_deployment_name>
@@ -49,10 +49,10 @@ models:
 
 input:
   type: "csv" # or blob
-  base_dir: "data"
+  base_dir: "/projects/dsci435/fmcsafetyevents_fa25/graphRAG/data"
   file_pattern: "processed_incidents.csv"
   document_column: "document_text"
-  
+
 
 chunks:
   size: 1200
