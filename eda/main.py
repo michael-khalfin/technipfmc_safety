@@ -3,6 +3,7 @@ import pandas as pd
 from dataVisualizer import DataVisualizer  
 from dataModifier import DataModifier
 from functools import reduce
+from data_clean import DataLoader
 
 # General Path Variables 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -109,7 +110,8 @@ def describe_data(df: pd.DataFrame):
 
 if __name__ == "__main__":
     # Load Data and Describe it 
-    combined_df = load_data()
+    loader = DataLoader(data_dir= DATA_PATH, verbose=True)
+    combined_df = loader.load_all_data_v1(include_actions= True)
     describe_data(combined_df)
 
     # Change Data
@@ -127,7 +129,7 @@ if __name__ == "__main__":
     viz.visualizeVariances(0.5)
     viz.visualizeCardinality()
 
-    viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(1, 1))
-    viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(2, 2))
-    viz.visualizeTextNgrams(column_name='TITLE__NEAR_MISSES', ngram_range=(1, 1))
-    viz.visualizeTextNgrams(column_name='TITLE__NEAR_MISSES', ngram_range=(2, 2))
+    # viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(1, 1))
+    # viz.visualizeTextNgrams(column_name='TITLE__ACCIDENTS', ngram_range=(2, 2))
+    # viz.visualizeTextNgrams(column_name='TITLE__NEAR_MISSES', ngram_range=(1, 1))
+    # viz.visualizeTextNgrams(column_name='TITLE__NEAR_MISSES', ngram_range=(2, 2))
