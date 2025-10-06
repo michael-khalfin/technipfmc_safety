@@ -25,7 +25,10 @@ pip-wheel-metadata/
 .env.*
 *.pem
 *.key
-
+/.venv
+/.venv-*
+/venv
+/env
 
 # --- Editors/OS ---
 .DS_Store

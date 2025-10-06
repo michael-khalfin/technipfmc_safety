@@ -19,3 +19,11 @@ To Submit Request For Resources:
 In order to view the EDA, you can run the following 'python3 eda/main.py'
 
 
+# Change to python 3.11.5 (because graphRAG can only run between version 3.10-3.12)
+module load GCCcore/13.2.0
+module load Python/3.11.5
+# check version
+python3 --version  
+
+# update requirements
+pip freeze > requirements.txt
