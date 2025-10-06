@@ -24,6 +24,7 @@ module load GCCcore/13.2.0
 module load Python/3.11.5
 # check version
 python3 --version  
+module load CUDA/12.4.0
 
 # update requirements
 pip freeze > requirements.txt
