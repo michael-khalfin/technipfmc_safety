@@ -1,0 +1,548 @@
+2025-10-06 13:40:00.0708 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=1, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:00.0772 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=2, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:00.0845 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=3, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:00.0907 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=4, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:00.0968 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=5, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0029 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=6, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0090 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=7, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0151 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=8, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0214 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=9, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0277 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Request failed, immediately retrying, retries=10, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0339 - ERROR - graphrag.language_model.providers.litellm.services.retry.native_wait_retry - NativeRetry: Max retries exceeded, retries=10, max_retries=10, exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0342 - ERROR - graphrag.language_model.providers.litellm.request_wrappers.with_logging - with_logging: Async request failed with exception=litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 2525, in completion
+    response = base_llm_http_handler.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/custom_httpx/llm_http_handler.py", line 344, in completion
+    data = provider_config.transform_request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/llms/huggingface/chat/transformation.py", line 151, in transform_request
+    raise HuggingFaceError(
+litellm.llms.huggingface.common_utils.HuggingFaceError: Model google/gemma-2b-it is not supported for provider huggingface
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/request_wrappers/with_logging.py", line 49, in _wrapped_with_logging_async
+    return await async_fn(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/request_wrappers/with_retries.py", line 52, in _wrapped_with_retries_async
+    return await retry_service.aretry(func=async_fn, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/native_wait_retry.py", line 56, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 108, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1612, in wrapper_async
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1462, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 597, in acompletion
+    raise exception_type(
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 570, in acompletion
+    init_response = await loop.run_in_executor(None, func_with_context)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/apps/software/Python/3.11.5-GCCcore-13.2.0/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/utils.py", line 1084, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/main.py", line 3733, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/cz82/.local/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 1571, in exception_type
+    raise APIError(
+litellm.exceptions.APIError: litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface
+2025-10-06 13:40:01.0348 - ERROR - graphrag.index.validate_config - LLM configuration error detected. Exiting...
+litellm.APIError: HuggingfaceException - Model google/gemma-2b-it is not supported for provider huggingface

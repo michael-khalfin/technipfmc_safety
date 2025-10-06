@@ -27,3 +27,6 @@ python3 --version
 
 # update requirements
 pip freeze > requirements.txt
+
+# run graphRAG
+python -c "from graphrag.cli.main import app; app()" index --root . --config config.yml
