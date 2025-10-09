@@ -7,8 +7,10 @@ from collections import Counter
 import os 
 
 
+DATA_DIR = "../"
 NLP_MODEL = "en_core_web_sm"
 COMBINDED_DF_CSV = "data/combined.csv"
+COMBINDED_TRANS_DF_CSV ="data/combined_translated.csv"
 ENTITY_NER_CSV = "data/combined_with_entity_ner.csv"
 IMAGE_PATH = "eda/visualization/ner"
 IMAGE_TOP_FREQ_PATH = "eda/visualization/ner/top_freq"

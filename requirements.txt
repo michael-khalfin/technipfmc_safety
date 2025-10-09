@@ -13,3 +13,7 @@ wordcloud
 # Jupyter / notebooks (optional but useful)
 jupyter
 ipykernel
+
+
+# Mscellaneous tqdm
+tqdm
