@@ -11,10 +11,12 @@ NLP_MODEL = "en_core_web_sm"
 COMBINDED_DF_CSV = "data/combined.csv"
 ENTITY_NER_CSV = "data/combined_with_entity_ner.csv"
 IMAGE_PATH = "eda/visualization/ner"
+IMAGE_TOP_FREQ_PATH = "eda/visualization/ner/top_freq"
 
 class NERAnalysis:
 
     DEFAULT_ENTITY_NER_FILE = "data/combined_with_entity_ner.csv"
+
 
     def __init__(self, df: pd.DataFrame, description_kws: Set[str], nlp=None):
         self.df = df
@@ -22,6 +24,7 @@ class NERAnalysis:
         self.description_kws = description_kws
         self.ner_df = None
         if not os.path.exists(IMAGE_PATH): os.makedirs(IMAGE_PATH)
+        if not os.path.exists(IMAGE_TOP_FREQ_PATH): os.makedirs(IMAGE_TOP_FREQ_PATH)
 
     def set_ner_df(self, df: pd.DataFrame):
         self.ner_df = df
@@ -119,6 +122,7 @@ class NERAnalysis:
         """
         Plot the frequency of each entity label.
         """
+        plot_name = "entity_frequency"
         entities_long = self.explode_entities(entity_cols)
         label_counts = entities_long['entity_label'].value_counts().head(top_n)
 
@@ -129,23 +133,23 @@ class NERAnalysis:
         plt.xlabel("Entity Label")
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig(IMAGE_PATH, dpi=300)
+        plt.savefig(f"{IMAGE_PATH}/{plot_name}", dpi=300)
         #plt.show()
 
     def plot_top_entities(self, entity_cols: List[str] = None, top_n: int = 20):
         """
         Plot the most frequent entity texts overall.
         """
+        plot_name = 'most_frequency_entities'
         entities_long = self.explode_entities(entity_cols)
         top_entities = entities_long['entity_text'].value_counts().head(top_n)
-
         plt.figure(figsize=(10, 6))
         top_entities.plot(kind='barh', color='lightgreen')
         plt.title(f"Top {top_n} Most Frequent Entities")
         plt.xlabel("Frequency")
         plt.gca().invert_yaxis()
         plt.tight_layout()
-        plt.savefig(IMAGE_PATH, dpi=300)
+        plt.savefig(f"{IMAGE_PATH}/{plot_name}", dpi=300)
         #plt.show()
 
     def plot_top_entities_per_label(self, entity_cols: List[str] = None, top_n: int = 5):
@@ -168,7 +172,7 @@ class NERAnalysis:
             plt.xlabel("Count")
             plt.gca().invert_yaxis()
             plt.tight_layout()
-            plt.savefig(IMAGE_PATH, dpi=300)
+            plt.savefig(f"{IMAGE_TOP_FREQ_PATH}/{label}", dpi=300)
             #plt.show()
 
 
