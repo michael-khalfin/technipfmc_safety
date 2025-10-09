@@ -76,7 +76,6 @@ class NERAnalysis:
         
         return self.df
 
-    import ast
 
     def explode_entities(self, entity_cols: List[str] = None) -> pd.DataFrame:
         """
@@ -192,14 +191,6 @@ if __name__ == "__main__":
     df = pd.read_csv(COMBINDED_DF_CSV)
 
     analyzer = NERAnalysis(df, description_kws, nlp)
-
-    # DATA EXPLORATION (see which description columns actually matter)
-    # desc_cols = analyzer._get_descriptions()
-    # for col in desc_cols:
-    #     non_na_values = df[col][df[col].notna()]
-    #     print(f"\n--- {col} (Non-NA Sample) ---")
-    #     print(non_na_values.head(10))  # Print first 10 non-NA values for inspection
-    #     print(f"{col}: {df[col].notna().sum()} non-NA values")
 
     # UNCOMMENT AND RUN THIS FIRST 
     # df_with_entities = analyzer.extract_entities()

@@ -12,12 +12,19 @@
 4. pip install -r requirements.txt
 
 
-# Setup for Conda
+# Setup for Conda & Connection To Ollama
 1. module load Miniforge3/24.11.3-0
 2. conda create -n nlp python=3.11 -y
 3. conda activate nlp
 4. pip install -r requirements.txt
 5. (FOR NER): python -m spacy download en_core_web_sm
+6. Download Ollam External to NOTS SYSTEM
+7. (For Windows Only):
+    8. In local powershell, ollama serve
+    9. ssh -v -R 11434:127.0.0.1:11434 <netid>@nots.rice.edu
+    10. Verify in NOTS, curl http://localhost:11434/api/tags
+
+
 
 
 
