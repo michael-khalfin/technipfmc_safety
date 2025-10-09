@@ -81,7 +81,6 @@ class NERAnalysis:
     def explode_entities(self, entity_cols: List[str] = None) -> pd.DataFrame:
         """
         Flatten all *_entities columns into a single DataFrame with entity_text and entity_label.
-        Handles cases where entity lists are stored as strings or contain NaN/None.
         """
         if self.ner_df is None: raise ValueError("NER dataframe is not set. Run extract_entities() or set_ner_by_csv() first.")
         
@@ -176,6 +175,10 @@ class NERAnalysis:
             #plt.show()
 
 
+# Found Another Potential Column: LIKELIHOOD_DESCRIPTION
+# Found Another Potential Column: DESCRIPTION
+# Found Another Potential Column: DAMAGE_DESCRIPTION
+# Found Another Potential Column: PERSON_RESPONSIBLE_COST_CENTER_DESCRIPTION
 
 if __name__ == "__main__":
     # Check if using GPU
@@ -190,6 +193,14 @@ if __name__ == "__main__":
 
     analyzer = NERAnalysis(df, description_kws, nlp)
 
+    # DATA EXPLORATION (see which description columns actually matter)
+    # desc_cols = analyzer._get_descriptions()
+    # for col in desc_cols:
+    #     non_na_values = df[col][df[col].notna()]
+    #     print(f"\n--- {col} (Non-NA Sample) ---")
+    #     print(non_na_values.head(10))  # Print first 10 non-NA values for inspection
+    #     print(f"{col}: {df[col].notna().sum()} non-NA values")
+
     # UNCOMMENT AND RUN THIS FIRST 
     # df_with_entities = analyzer.extract_entities()
     # analyzer.set_ner_df(df_with_entities)
@@ -199,9 +210,9 @@ if __name__ == "__main__":
     # Change Param to File path where you saved df 
     analyzer.set_ner_by_csv(ENTITY_NER_CSV)
 
-    analyzer.plot_entity_label_distribution()
-    analyzer.plot_top_entities()
-    analyzer.plot_top_entities_per_label()
+    analyzer.plot_entity_label_distribution(entity_cols=["DESCRIPTION_entities"])
+    analyzer.plot_top_entities(entity_cols=["DESCRIPTION_entities"])
+    analyzer.plot_top_entities_per_label(entity_cols=["DESCRIPTION_entities"])
 
 
 
