@@ -113,6 +113,7 @@ if __name__ == "__main__":
     loader = DataLoader(data_dir= DATA_PATH, verbose=True)
     combined_df = loader.load_all_data_v1(include_actions= True)
     describe_data(combined_df)
+    combined_df.to_csv(f'{DATA_PATH}/combined.csv', index= False)
 
     # Change Data
     modifier = DataModifier(df= combined_df)

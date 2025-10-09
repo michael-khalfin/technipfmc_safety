@@ -3,6 +3,7 @@ pandas
 numpy
 scipy
 scikit-learn
+spacy
 
 # Visualizations 
 matplotlib

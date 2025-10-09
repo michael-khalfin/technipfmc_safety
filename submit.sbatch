@@ -5,20 +5,21 @@
 #SBATCH --error=slurm_output/eda_job_%j.err    # Creates a folder for error files
 #SBATCH --nodes=1
 #SBATCH --ntasks=1                             
-#SBATCH --cpus-per-task=1                      
-#SBATCH --time=00:15:00                        # A reasonable 15-minute runtime
-#SBATCH --mem-per-cpu=4G                       # A safe 4GB memory request for pandas
+#SBATCH --cpus-per-task=4  
+#SBATCH --mem=16G                       # A safe 4GB memory request for pandas                   
 #SBATCH --partition=commons                       
+#SBATCH --gres=gpu:1
+#SBATCH --time=00:30:00
 
 # Create a directory for slurm output files if it doesn't exist
 mkdir -p slurm_output
 
-# Activate the Python virtual environment
-echo "Activating Python virtual environment..."
-source .venv/bin/activate
+# Load environment
+chmod +x ner_init.bash
+./ner_init.bash
 
-# Run EDA script
-echo "Running the EDA script from eda/main.py..."
-python3 eda/main.py
+# Run your Python job
+echo "Running NER"
+python3 eda/ner.py
 
 echo "Job finished."

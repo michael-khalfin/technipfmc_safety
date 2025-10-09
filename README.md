@@ -11,6 +11,16 @@
 4. pip install -U pip
 4. pip install -r requirements.txt
 
+
+# Setup for Conda
+1. module load Miniforge3/24.11.3-0
+2. conda create -n nlp python=3.11 -y
+3. conda activate nlp
+4. pip install -r requirements.txt
+5. (FOR NER): python -m spacy download en_core_web_sm
+
+
+
 ## Resource Allocation on NOTS
 To Submit Request For Resources: 
     sbatch submit.sbatch
