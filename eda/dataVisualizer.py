@@ -8,15 +8,53 @@ from wordcloud import WordCloud
 from sklearn.feature_extraction.text import CountVectorizer, ENGLISH_STOP_WORDS
 
 sns.set_theme(style="whitegrid", palette="muted")
+BOOL, NUM, OBJ = "boolean", "number", "object"
 
 
 class DataFormatter:
-    def __init__(self, df):
+    def __init__(self, df, ignored_cols):
         self.df = df
+        self.ignored_features = self.set_dropped_names(ignored_cols)
+
+    def set_dropped_names(self, names_to_drop):
+        drop = []
+        names_to_drop = set(names_to_drop)
+        for c in self.df.columns:
+            low = c.lower()
+            if any(name in low for name in names_to_drop):
+                drop.append(c)
+            if "email" in low:
+                drop.append(c)
+            if low == "name":
+                drop.append(c)
+        return sorted(set(drop))
 
     def get_data_types(self):
-        """Return value counts of data types"""
-        return self.df.dtypes.value_counts()
+        return self.df.dtypes.value_counts() 
+     
+    def get_column_cardinalities(self):
+        """
+        Returns a DataFrame with each column’s cardinality and inferred data type label.
+        """
+        df = self.df.drop(columns = self.ignored_features)
+        card_series = df.nunique(dropna=True)
+
+        bool_cols = [c for c in df.columns if str(df[c].dtype) == "boolean"]
+        num_cols = df.select_dtypes(include=["number"]).columns.tolist()
+        obj_cols = df.select_dtypes(include=["object"]).columns.tolist()
+
+        data = {
+            "column": df.columns,
+            "cardinality": [card_series.get(c, 0) for c in df.columns],
+            "type": [
+                "boolean" if c in bool_cols else
+                "number" if c in num_cols else
+                "object" if c in obj_cols else
+                "other"
+                for c in df.columns
+            ]
+        }
+        return pd.DataFrame(data)
 
     def get_missing_counts(self, drop_zero=True):
         """Return missing value counts per column"""
@@ -52,9 +90,9 @@ class DataFormatter:
 
 
 class DataVisualizer:
-    def __init__(self, df, vis_dir="data/visualization"):
+    def __init__(self, df, vis_dir="data/visualization", ignored_features = []):
         self.df = df
-        self.formatter = DataFormatter(df)
+        self.formatter = DataFormatter(df, ignored_features)
         self.vis_dir = vis_dir
         os.makedirs(self.vis_dir, exist_ok=True)
 
@@ -110,29 +148,80 @@ class DataVisualizer:
         plt.close()
 
 
+    def visualizeCardinality(self):
+        card_df = self.formatter.get_column_cardinalities()
+        card_df_sorted = card_df.sort_values("cardinality", ascending=True)
+
+        num_cols = len(card_df_sorted)
+        height_per_row = 0.4  
+        fig_height = max(6, num_cols * height_per_row)
+        fig_width = 14  
+        plt.figure(figsize=(fig_width, fig_height))
+        ax = sns.barplot(
+            data=card_df_sorted,
+            y="column",
+            x="cardinality",
+            hue="type",
+            dodge=False,
+            palette="pastel"
+        )
+
+        plt.title("Cardinality of All Columns", fontsize=14, weight="bold", pad=20)
+        plt.xlabel("Unique Non-Null Values", fontsize=12)
+        plt.ylabel("Column Name", fontsize=12)
+
+        # Force x-axis to show only integer ticks
+        ax.xaxis.get_major_locator().set_params(integer=True)
+
+        # Tighten layout and add space between bars
+        plt.tight_layout(pad=1.5)
+        plt.legend(title="Data Type", loc="lower right")
+
+        plt.savefig(os.path.join(self.vis_dir, "column_cardinalities.png"), dpi=300)
+        plt.close()
+
+
+
     
     def visualizeCorrelationHeatmap(self):
         corr = self.formatter.get_correlation()
         if corr.empty:
             print("No numeric columns for correlation heatmap.")
             return
-        # mask the upper triangle for cleaner view
-        mask = np.triu(np.ones_like(corr, dtype=bool))
-        plt.figure(figsize=(min(18, 1.0 + 0.6 * corr.shape[1]), 12))
-        sns.heatmap(corr, mask=mask, cmap="coolwarm", vmin=-1, vmax=1,
-                    square=True, linewidths=0.5, cbar_kws={"shrink": 0.8})
+
+        # Dynamically adjust figure size based on number of columns
+        n_cols = corr.shape[1]
+        fig_width = max(12, 0.6 * n_cols)
+        fig_height = max(10, 0.6 * n_cols)
+
+        plt.figure(figsize=(fig_width, fig_height))
+
+        ax = sns.heatmap(
+            corr,
+            cmap="coolwarm", 
+            vmin=-1, vmax=1,
+            square=False, 
+            linewidths=0.3,
+            cbar_kws={"shrink": 0.75},
+            annot=True,  # display correlation coefficients
+            fmt=".2f",  
+            annot_kws={"size": 8}  # reduce annotation size
+        )
+
         plt.title("Correlation Heatmap (Numeric Features)", fontsize=14, weight="bold")
+        plt.xticks(rotation=45, ha='right', fontsize=8)
+        plt.yticks(rotation=0, fontsize=8)
         plt.tight_layout()
+
         plt.savefig(os.path.join(self.vis_dir, "correlation_heatmap.png"), dpi=300)
         plt.close()
 
-        # corr.to_csv(os.path.join(self.vis_dir, "correlation_matrix.csv"))
-
-        # And top correlated pairs (abs >= 0.9 by default)
+        # Save raw correlation matrix CSV
         top_pairs = self.formatter.get_high_corr_pairs(thresh=0.9)
         if not top_pairs.empty:
             top_pairs.to_csv(os.path.join(self.vis_dir, "high_corr_pairs.csv"), index=False)
 
+    
     # Might not be as Important as it captures features that are important for injury prevention
     def visualizeVariances(self, threshold):
         variances = self.formatter.get_variances()
