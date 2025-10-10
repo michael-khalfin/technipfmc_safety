@@ -1,89 +1,69 @@
-### This config file contains required core defaults that must be set, along with a handful of common optional settings.
-### For a full list of available settings, see https://microsoft.github.io/graphrag/config/yaml/
-
+# ----------------- Start of Corrected config.yml -----------------
 ### LLM settings ###
-## There are a number of settings to tune the threading and token limits for LLM calls - check the docs.
-
 models:
   default_chat_model:
     type: chat
     model_provider: groq
-    auth_type: api_key # or azure_managed_identity
-    api_key: ${GROQ_API_KEY} # set this in the generated .env file
-    # audience: "https://cognitiveservices.azure.com/.default"
-    # organization: <organization_id>
+    auth_type: api_key
+    api_key: ${GROQ_API_KEY}
     model: llama-3.3-70b-versatile
-    # llama-3.1-8b-instant
-    #huggingface/mistralai/Mistral-7B-Instruct-v0.2
-    # deployment_name: <azure_model_deployment_name>
-    # encoding_model: cl100k_base # automatically set by tiktoken if left undefined
-    model_supports_json: true # recommended if this is available for your model.
-    concurrent_requests: 25 # max number of simultaneous LLM requests allowed
-    async_mode: threaded # or asyncio
+    model_supports_json: true
+    concurrent_requests: 25
+    async_mode: threaded
     retry_strategy: native
     max_retries: 5
-    tokens_per_minute: null             # set to null to disable rate limiting
-    requests_per_minute: null            # set to null to disable rate limiting
+    tokens_per_minute: null
+    requests_per_minute: null
+
   default_embedding_model:
-    type: embedding 
+    type: embedding
     model_provider: ollama
-    auth_type: api_key # or azure_managed_identity
-    api_key: ${API_KEY}
-    # audience: "https://cognitiveservices.azure.com/.default"
-    # organization: <organization_id>
-    model: BAAI/bge-small-en-v1.5
-    # api_base: "https://localhost:8000"
-    #sentence-transformers/all-MiniLM-L6-v2
-    #huggingface/sentence-transformers/all-MiniLM-L6-v2
-    # deployment_name: <azure_model_deployment_name>
-    # encoding_model: cl100k_base # automatically set by tiktoken if left undefined
-    model_supports_json: true # recommended if this is available for your model.
-    concurrent_requests: 25 # max number of simultaneous LLM requests allowed
-    async_mode: threaded # or asyncio
+    auth_type: api_key
+    api_key: DUMMY_KEY_FOR_OLLAMA_BYPASS
+    model: nomic-embed-text
+    api_base: http://localhost:11434
+    model_supports_json: true
+    concurrent_requests: 25
+    async_mode: threaded
     retry_strategy: native
     max_retries: 10
-    tokens_per_minute: null              # set to null to disable rate limiting or auto for dynamic
-    requests_per_minute: null            # set to null to disable rate limiting or auto for dynamic
+    tokens_per_minute: null
+    requests_per_minute: null
 
 ### Input settings ###
-
 input:
-  type: "csv" # or blob
-  base_dir: "/projects/dsci435/fmcsafetyevents_fa25/graphRAG/data"
-  file_pattern: "processed_incidents.csv"
-  document_column: "document_text"
-
+  type: file
+  file_type: csv
+  base_dir: "data"
+  file_pattern: "test.csv" #"processed_incidents.csv"
+  text_column: "document_text"
 
 chunks:
   size: 1200
   overlap: 100
-  group_by_columns: [id]
+  # group_by_columns: [id]
 
 ### Output/storage settings ###
-## If blob storage is specified in the following four sections,
-## connection_string and container_name must be provided
-
 output:
-  type: file # [file, blob, cosmosdb]
-  base_dir: "/projects/dsci435/fmcsafetyevents_fa25/graphRAG/output"
-    
+  type: file
+  base_dir: "output"
+
 cache:
-  type: file # [file, blob, cosmosdb]
-  base_dir: "/projects/dsci435/fmcsafetyevents_fa25/graphRAG/cache"
+  type: file
+  base_dir: "cache"
 
 reporting:
-  type: file # [file, blob]
-  base_dir: "/projects/dsci435/fmcsafetyevents_fa25/graphRAG/logs"
+  type: file
+  base_dir: "logs"
 
 vector_store:
   default_vector_store:
     type: lancedb
-    db_uri: /projects/dsci435/fmcsafetyevents_fa25/graphRAG/output/lancedb
+    db_uri: "output/lancedb" # This path is relative to your project root
     container_name: default
     overwrite: True
 
 ### Workflow settings ###
-
 embed_text:
   model_id: default_embedding_model
   vector_store_id: default_vector_store
@@ -91,15 +71,15 @@ embed_text:
 extract_graph:
   model_id: default_chat_model
   prompt: "prompts/entity_extraction.txt"
-  entity_types: 
-    - INCIDENT_TYPE        
-    - INJURY_TYPE         
-    - BODY_PART            
-    - SEVERITY_LEVEL     
-    - ORGANIZATION         
-    - WORKPLACE          
-    - WORK_PROCESS         
-    - DESCRIPTION_SUMMARY  
+  entity_types:
+    - INCIDENT_TYPE
+    - INJURY_TYPE
+    - BODY_PART
+    - SEVERITY_LEVEL
+    - ORGANIZATION
+    - WORKPLACE
+    - WORK_PROCESS
+    - DESCRIPTION_SUMMARY
   max_gleanings: 1
 
 summarize_descriptions:
@@ -109,8 +89,8 @@ summarize_descriptions:
 
 extract_graph_nlp:
   text_analyzer:
-    extractor_type: regex_english # [regex_english, syntactic_parser, cfg]
-  async_mode: threaded # or asyncio
+    extractor_type: regex_english
+  async_mode: threaded
 
 cluster_graph:
   max_cluster_size: 10
@@ -130,19 +110,16 @@ community_reports:
   max_input_length: 8000
 
 embed_graph:
-  enabled: false # if true, will generate node2vec embeddings for nodes
+  enabled: false
 
 umap:
-  enabled: false # if true, will generate UMAP embeddings for nodes (embed_graph must also be enabled)
+  enabled: false
 
 snapshots:
   graphml: false
   embeddings: false
 
 ### Query settings ###
-## The prompt locations are required here, but each search method has a number of optional knobs that can be tuned.
-## See the config docs: https://microsoft.github.io/graphrag/config/yaml/#query
-
 local_search:
   chat_model_id: default_chat_model
   embedding_model_id: default_embedding_model
