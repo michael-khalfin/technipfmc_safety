@@ -5,7 +5,8 @@
     .\.venv\Scripts\Activate.ps1
  - install dependency
     python -m pip install -U pip
-    pip install graphrag pyarrow spacy
+    pip install graphrag pyarrow spacy 
+    pip install pandas pyarrow matplotlib networkx pyvis (for visualization)
  - download spacy
     python -m spacy download en_core_web_md
 
@@ -30,3 +31,8 @@ graphrag query --root .\christmas --config .\christmas\settings.yaml --method lo
 python -m graphrag.cli.main index --root .\christmas --config .\christmas\settings.yaml --method fast --verbose
 
 ## query output see: logs/query_example.log
+
+
+# works to do later
+use our data
+extract_graph cost a lot of time, change llm to nlp（extract_graph_nlp），fast but quality based on rule/NER

@@ -1,0 +1,8 @@
+source,target,weight,label
+SCROOGE,MARLEY,10.0,Scrooge and Marley were business partners
+SCROOGE,CLERGYMAN,2.0,Scrooge signed Marley's burial register
+SCROOGE,CLERK,2.0,Scrooge signed Marley's burial register
+SCROOGE,UNDERTAKER,1.0,Scrooge was responsible for Marley's funeral arrangements
+SCROOGE,CHIEF MOURNER,1.0,Scrooge was the main mourner at Marley's funeral
+SCROOGE,OLD MARLEY'S BURIAL,1.0,Scrooge attended Old Marley's burial
+SCROOGE,ST. PAUL'S CHURCHYARD,1.0,Scrooge might have walked at night in St. Paul's Churchyard
