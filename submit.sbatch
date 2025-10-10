@@ -14,11 +14,13 @@
 mkdir -p slurm_output
 
 # Activate the Python virtual environment
-echo "Activating Python virtual environment..."
-source .venv/bin/activate
+echo "Initializing Conda..."
+source ~/miniforge3/etc/profile.d/conda.sh
+echo "Activating safety_project environment..."
+conda activate safety_project
 
 # Run EDA script
-echo "Running the EDA script from eda/main.py..."
-python3 eda/main.py
+echo "Running the script"
+python3 manual_knowledge_graph/triple_extraction.py
 
 echo "Job finished."
