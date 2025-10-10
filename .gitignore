@@ -1,0 +1,15 @@
+# Environment
+.env
+.venv/
+*.pyc
+__pycache__/
+
+# # GraphRAG outputs
+# output/
+# index/
+# *.lance
+
+
+# OS junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,43 @@
+(.venv) PS C:\Users\zhour\Desktop> graphrag query --root .\christmas --config .\christmas\settings.yaml --method local --query "Who is Scrooge and what are his main relationships?"
+ ### Response:
+
+Scrooge is the main character in Charles Dickens' A Christmas Carol. He was a business partner with Marley, who passed away [Data: Relationships (0)]. After Marley's death, Scrooge attended his burial and signed the burial register along with two clergy members, a Clergyman and a Clerk [Data: Relationships (1, 2)]. The Undertaker was responsible for Marley's funeral arrangements, and the Chief Mourner was the main mourner at the funeral, indicating a close relationship with Scrooge [Data: Relationships (3, 4)]. There is also a possibility that Scrooge walked at night in St. Paul's Churchs not s not s not specifs not s not specify any further connections.
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+s not specify any further connections.
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+- Business partner with Marley [Data: Relationships (0)]
+- Signed Marley's burial register along with two clergy members [Data: Relationships (1, 2)]
+- Responsible for Marley's funeral arrangements through the Undertaker [Data: Relationships (3)]
+- Main mourner at Marley's funeral, represented by the Chief Mourner [Data: Relationships (4)]
+- Possible connection to St. Paul's Churchyard where Marley was buried [Data: Relationships (6)]

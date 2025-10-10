@@ -1,0 +1,72 @@
+(.venv) PS C:\Users\zhour\Desktop> graphrag query --root .\christmas --config .\christmas\settings.yaml --method local --query "Who is Scrooge and what are his main relationships?"
+ ### Response:
+
+Scrooge is the main character in Charles Dickens' A Christmas Carol. 
+He was a business partner with Marley, who passed away [Data: Relationships (0)]. 
+After Marley's death, Scrooge attended his burial and signed the burial register along with two clergy members,
+a Clergyman and a Clerk [Data: Relationships (1, 2)]. 
+The Undertaker was responsible for Marley's funeral arrangements, and the Chief Mourner was the main mourner at the funeral, 
+indicating a close relationship with Scrooge [Data: Relationships (3, 4)]. 
+There is also a possibility that Scrooge walked at night in St. Paul's Churchs not s not s not specifs not s not specify any further connections.
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+s not specify any further connections.
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+s not specify any further connections.
+
+Here is a summary of Scrooge's main relationships:
+
+- Business partner with Marley [Data: Relationships (0)]
+- Signed Marley's burial register along with two clergy members [Data: Relationships (1, 2)]
+- Responsible for Marley's funeral arrangements through the Undertaker [Data: Relationships (3)]
+- Main mourner at Marley's funeral, represented by the Chief Mourner [Data: Relationships (4)]
+- Possible connection to St. Paul's Churchyard where Marley was buried [Data: Relationships (6)]
+
+
+
+
+(.venv) PS C:\Users\zhour\Desktop> graphrag query --root .\christmas --config .\christmas\settings.yaml --method local --query "Who is Scrooge and what are his main relationships?"
+ ### Response: Scrooge's Relationships and Role in A Christmas Carol
+
+Scrooge, a central character in Charles Dickens' novel *A Christmas Carol*, is a businessman known for his miserly nature. Here's an overview of his significant relationships as depicted in the story:
+                                                                                                                 
+#### Scrooge and Marley (Business Partner)                                                                       
+Scrooge was Marley's partner before Marley's death. They were deeply connected, both professionally and personally, as they ran a business together [Data: Relationships (0)]. After Marley's passing, Scrooge became his sole executor, administrator, and legatee [Data: Entities (1)].
+
+#### Clergy Members Involved in Marley's Burial
+Two clergy members—the Clergyman and the Clerk—signed Marley's burial register. Their involvement suggests a connection to Scrooge through the official documentation of Marley's death [Data: Relationships (1, 2)].
+
+#### Undertaker's Role in Marley's Funeral
+The Undertaker was responsible for arranging Marley's funeral. This association could have been significant for Scrooge as it relates to his deceased partner [Data: Relationships (3)].
+
+#### Chief Mourner at Marley's Funeral
+The Chief Mourner played a crucial role in Marley's funeral, indicating a close relationship with Scrooge. This event could have been emotionally impactful for Scrooge, potentially leading to his transformation as depicted in *A Christmas Carol* [Data: Relationships (4)].
+
+#### Potential Connection to St. Paul's Churchyard
+There is no direct evidence that Scrooge walked at night in St. Paul's Churchyard; however
