@@ -1,0 +1,105 @@
+import os 
+import pandas as pd
+
+DATA_PATH = "data/"
+CONSOLIDATED_PREFIX ="DIM_CONSOLIDATED_"
+
+# get the common columns among all the features
+# based on feature names, there are no shared features among all the consolidated files
+def get_common_columns():
+    common_cols = None
+    file_columns = {}
+
+    for file_name in os.listdir(DATA_PATH):
+        if file_name.endswith(".csv"):
+            file_name = os.path.join(DATA_PATH, file_name)
+            try:
+                df = pd.read_csv(file_name, low_memory = False, nrows=1)
+                cols = set(df.columns.str.strip())
+                file_columns[file_name] = cols
+                
+                if common_cols is None:
+                    common_cols = cols
+                else:
+                    common_cols = common_cols.intersection(cols)
+            except Exception as e:
+                print(f"[Error] Could not read {file_path}: {e}")
+    return common_cols, file_columns
+
+# to list all the features for each excel file -> wanted to manually check the previous code
+def list_all_csv_columns():
+    for file_name in os.listdir(DATA_PATH):
+        if file_name.endswith(".csv"):
+            file_name = os.path.join(DATA_PATH, file_name)
+            try:
+                df = pd.read_csv(file_name, low_memory = False)
+                print(f"\nColumns in {file_name}")
+                for col in df.columns:
+                    print(f" - {col}")
+            except Exception as e:
+                print(f"[Error] Could not read {file_name}: {e}")
+
+
+# create table for summary of dataset including rows, columns, and data volumn
+def dataset_summary():
+    summary = []
+    for file_name in os.listdir(DATA_PATH):
+        if file_name.endswith(".csv"):
+            file_path = os.path.join(DATA_PATH, file_name)
+            try:
+                df = pd.read_csv(file_path, low_memory=False)
+                rows, cols = df.shape
+                memory_mb = df.memory_usage(deep=True).sum() / (1024 * 1024)
+                summary.append({
+                    "Dataset": file_name,
+                    "Rows": rows,
+                    "Columns": cols,
+                    "Volume_MB": round(memory_mb, 2)
+                })
+            except Exception as e:
+                print(f"[Error] Could not read {file_path}: {e}")
+    return pd.DataFrame(summary)
+
+# find the various row number features in each excel
+def no_columns_summary():
+    summary = []
+    for file_name in os.listdir(DATA_PATH):
+        if file_name.endswith(".csv"):
+            file_path = os.path.join(DATA_PATH, file_name)
+            try:
+                df = pd.read_csv(file_path, low_memory=False, nrows=1)  # read header only
+                cols_with_no = [col for col in df.columns if 'NO' in col.upper()]
+                summary.append({
+                    "File": file_name,
+                    "Num_Columns_with_NO": len(cols_with_no),
+                    "Columns_with_NO": ", ".join(cols_with_no) if cols_with_no else ""
+                })
+            except Exception as e:
+                print(f"[Error] Could not read {file_path}: {e}")
+    return pd.DataFrame(summary)
+
+if __name__ == "__main__":
+    """
+    #list_all_csv_columns()
+    common_cols, file_columns = get_common_columns()
+    print(common_cols)
+    for col in sorted(common_cols):
+        print(f" - {col}")
+    
+    print("\n Columns by File:")
+    for file, cols in file_columns.items():
+        print(f"\n {file}:")
+        for col in sorted(cols):
+            print(f" - {col}")
+
+    summary_df = dataset_summary()
+    print("\nDataset Summary:")
+    print(summary_df.to_string(index=False))
+    """
+
+    summary_df = no_columns_summary()
+    print("\nSummary of columns containing 'NO':")
+    print(summary_df.to_string(index=False))
+    
+
+
