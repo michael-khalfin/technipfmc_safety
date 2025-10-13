@@ -44,7 +44,7 @@ sleep 15
 # Create a small data sample for development
 echo "Creating data sample..."
 mkdir -p ./graphRAG/input
-head -n 101 ./data/cleaned_data.csv > ./graphRAG/input/dev_sample.csv
+head -n 1001 ./data/cleaned_data.csv > ./graphRAG/input/dev_sample.csv
 
 # Run the main GraphRAG pipeline
 echo "Running the main GraphRAG pipeline..."

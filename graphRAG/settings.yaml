@@ -10,7 +10,7 @@ models:
     model_provider: ollama
     auth_type: api_key # or azure_managed_identity
     api_key: "DUMMY_KEY" # set this in the generated .env file, or remove if managed identity
-    model: mistral
+    model: llama3:70b
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
@@ -38,10 +38,18 @@ models:
 ### Input settings ###
 
 input:
-  storage:
-    type: file # or blob
-    base_dir: "input"
+  # storage:
+  #   type: file # or blob
+  #   base_dir: "input"
   file_type: csv # [csv, text, json]
+  path: "input/dev_sample.csv"
+  text_column: "text"
+  id_column: "INCIDENT_NO"
+  meta_columns:
+    - "TITLE"
+    - "DATE_OF_INCIDENT"
+    - "WORKPLACE"
+    - "INJURY_ILLNESS"
 
 chunks:
   size: 600 #1200
@@ -79,7 +87,8 @@ embed_text:
 extract_graph:
   model_id: default_chat_model
   prompt: "prompts/extract_graph.txt"
-  entity_types: [organization,person,geo,event]
+  #entity_types: [organization,person,geo,event]
+  entity_types: [INCIDENT_TYPE, INJURY_TYPE, BODY_PART, EQUIPMENT, LOCATION, ORGANIZATION, DATE]
   max_gleanings: 1
 
 summarize_descriptions:
