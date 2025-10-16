@@ -42,14 +42,14 @@ input:
   #   type: file # or blob
   #   base_dir: "input"
   file_type: csv # [csv, text, json]
-  path: "input/dev_sample.csv"
-  text_column: "text"
-  id_column: "INCIDENT_NO"
-  meta_columns:
-    - "TITLE"
-    - "DATE_OF_INCIDENT"
-    - "WORKPLACE"
-    - "INJURY_ILLNESS"
+  path: "input/dev_sample_json.csv"
+  text_column: "node_json"
+  id_column: "_id"
+  # meta_columns:
+  #   - "TITLE"
+  #   - "DATE_OF_INCIDENT"
+  #   - "WORKPLACE"
+  #   - "INJURY_ILLNESS"
 
 chunks:
   size: 600 #1200
