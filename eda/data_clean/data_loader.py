@@ -341,16 +341,16 @@ class DataLoader:
         if self.verbose:print(f"\n  Stacked: {len(incidents):,} rows, {len(incidents.columns)} cols")
 
 
-        incidents = self.attach_leading_indicators(incidents, master_key)
-        incidents = self.attach_remainder_files(incidents, master_key)
+        # incidents = self.attach_leading_indicators(incidents, master_key)
+        # incidents = self.attach_remainder_files(incidents, master_key)
 
-        # Incorporate Action Files 
-        if include_actions:
-            if self.verbose:
-                print(f"\n{'='*70}")
-                print(f"Incorporating Action FILES")
-                print(f"{'='*70}")
-            incidents = self.attach_action_files(incidents, master_key)
+        # # Incorporate Action Files 
+        # if include_actions:
+        #     if self.verbose:
+        #         print(f"\n{'='*70}")
+        #         print(f"Incorporating Action FILES")
+        #         print(f"{'='*70}")
+        #     incidents = self.attach_action_files(incidents, master_key)
 
 
         incidents = self._coarce_boolean(incidents)
