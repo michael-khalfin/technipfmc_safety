@@ -322,6 +322,10 @@ class DataLoader:
 
     def load_all_data_v1(self, include_actions = False) -> pd.DataFrame:
         master_key = 'RECORD_NO_MASTER'
+        BASE_FILE = "LOSS_POTENTIAL"
+        BASE_FILE_RECORD = "RECORD_NO_LOSS_POTENTIAL"
+        incidents = pd.read_csv(self._file_path(BASE_FILE), low_memory = False)
+        incidents[BASE_FILE_RECORD] = incidents[BASE_FILE_RECORD].astype("string").str.replace(r"\.0$", "", regex=True)
 
         if self.verbose: 
             print(f"\n{'='*70}")
@@ -329,15 +333,21 @@ class DataLoader:
             print(f"{'='*70}")
         
         # Only stack files with 0% overlap
-        incident_files = ["LOSS_POTENTIAL", "ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES"]
-        incident_dfs = []
+        incident_files = ["ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES"]
         for file_name in incident_files:
             df = pd.read_csv(self._file_path(file_name), low_memory = False)
+            df[BASE_FILE_RECORD] = df[BASE_FILE_RECORD].astype("string").str.replace(r"\.0$", "", regex=True)
+
             df["SOURCE_FILE"] = file_name
             if self.verbose: print(f"\t{file_name}: {len(df):,} rows, {len(df.columns)} cols")
-            incident_dfs.append(df)
+
+
+            analysis = self.equalizer.analyze_columns(incidents, df, BASE_FILE_RECORD, BASE_FILE_RECORD, verbose=self.verbose)
+            print(analysis["safe"])
+            incidents = self.coalescer.merge_and_coalescese(incidents, df, BASE_FILE_RECORD, BASE_FILE_RECORD, file_name, analysis["safe"],
+                                                        system_col= self.coalescer.SYS_RECORD_FIELD, verbose = self.verbose)
         
-        incidents = pd.concat(incident_dfs, axis= 0, ignore_index= True, sort = False)
+        # incidents = pd.concat(incident_dfs, axis= 0, ignore_index= True, sort = False)
         if self.verbose:print(f"\n  Stacked: {len(incidents):,} rows, {len(incidents.columns)} cols")
 
 
