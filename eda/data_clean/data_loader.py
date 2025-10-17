@@ -326,6 +326,10 @@ class DataLoader:
         BASE_FILE_RECORD = "RECORD_NO_LOSS_POTENTIAL"
         incidents = pd.read_csv(self._file_path(BASE_FILE), low_memory = False)
         incidents[BASE_FILE_RECORD] = incidents[BASE_FILE_RECORD].astype("string").str.replace(r"\.0$", "", regex=True)
+        incidents = self.coalescer.create_mutated_key(
+            incidents, BASE_FILE_RECORD, self.coalescer.SYS_RECORD_FIELD, drop_original=False
+        )
+        main_key = f"{BASE_FILE_RECORD}_{self.coalescer.MUTATED}"
 
         if self.verbose: 
             print(f"\n{'='*70}")
@@ -344,7 +348,7 @@ class DataLoader:
 
             analysis = self.equalizer.analyze_columns(incidents, df, BASE_FILE_RECORD, BASE_FILE_RECORD, verbose=self.verbose)
             print(analysis["safe"])
-            incidents = self.coalescer.merge_and_coalescese(incidents, df, BASE_FILE_RECORD, BASE_FILE_RECORD, file_name, analysis["safe"],
+            incidents = self.coalescer.merge_and_coalescese(incidents, df, main_key, BASE_FILE_RECORD, file_name, analysis["safe"],
                                                         system_col= self.coalescer.SYS_RECORD_FIELD, verbose = self.verbose)
         
         # incidents = pd.concat(incident_dfs, axis= 0, ignore_index= True, sort = False)
