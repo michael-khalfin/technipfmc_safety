@@ -368,6 +368,7 @@ class DataLoader:
 
 
         incidents = self._coarce_boolean(incidents)
+        incidents = incidents[incidents["DESCRIPTION"].notna()]
         
         # Final summary
         if self.verbose:
