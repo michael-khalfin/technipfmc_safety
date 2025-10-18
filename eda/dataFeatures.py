@@ -97,9 +97,18 @@ if __name__ == "__main__":
     print(summary_df.to_string(index=False))
     """
 
-    summary_df = no_columns_summary()
-    print("\nSummary of columns containing 'NO':")
-    print(summary_df.to_string(index=False))
+    #df1 = pd.read_csv("data/cleaned_data.csv")
+
+    #for col in df1.columns:
+        #unique_values = df1[col].dropna().unique()
+        #print(f"\nColumn: {col}")
+        #print(f"Unique Values (up to 10): {unique_values[:10]}")
+
+    df2 = pd.read_csv("data/cleaned_description_translated.csv")
+
+    df2.head()
+
+
     
 
 
