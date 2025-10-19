@@ -6,11 +6,11 @@
 #SBATCH --error=slurm_output/graphrag_job_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=16G
-#SBATCH --time=04:00:00
+#SBATCH --time=12:00:00
 #SBATCH --partition=commons
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:lovelace:1
 
 # --- JOB SCRIPT ---
 
@@ -42,9 +42,9 @@ OLLAMA_PID=$!
 sleep 15
 
 # Create a small data sample for development
-echo "Creating data sample..."
-mkdir -p ./graphRAG/input
-head -n 1001 ./data/cleaned_data.csv > ./graphRAG/input/dev_sample.csv
+# echo "Creating data sample..."
+# mkdir -p ./graphRAG/input
+# head -n 1001 ./data/cleaned_data.csv > ./graphRAG/input/dev_sample.csv
 
 # Run the main GraphRAG pipeline
 echo "Running the main GraphRAG pipeline..."
