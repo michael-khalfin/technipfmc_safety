@@ -111,7 +111,7 @@ python3 eda/main.py --descriptions
 pip freeze > requirements.txt
 
 # Run GraphRAG indexing
-python -c "from graphrag.cli.main import app; app()" index --root . --config config.yml
+run_graphrag.sbatch
 ```
 
 ### Graph Visualization
