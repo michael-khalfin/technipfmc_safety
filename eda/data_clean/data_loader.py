@@ -38,26 +38,7 @@ class DataLoader:
                 df[c] = df[c].astype("boolean")  
             elif df[c].dtype == "object" and df[c].dropna().nunique() <= 2:
                 df[c] = _coerce_binary_like(df[c])
-        return df
-    
-
-    def load_base(self) -> pd.DataFrame:
-        BASE = "LOSS_POTENTIAL"
-        record_col = "RECORD_NO_LOSS_POTENTIAL"
-        file_path = self._file_path(BASE)
-
-        if self.verbose:
-            print(f"\n{'='*70}")
-            print(f"LOADING BASE: {BASE}")
-            print(f"{'='*70}")
-        
-        df = pd.read_csv(file_path, low_memory= False)
-        df = self.coalescer.create_mutated_key(df, record_col, self.coalescer.SYS_RECORD_FIELD, drop_original= False)
-        if self.verbose:
-            print(f"  Rows: {len(df):,}, Cols: {len(df.columns)}")
-            print(f"  Key: {record_col}_{self.coalescer.MUTATED}")
-        return df 
-    
+        return df  
 
     def aggregate_actions_to_record_no(self, combined: pd.DataFrame) -> pd.DataFrame:
         """
@@ -306,9 +287,6 @@ class DataLoader:
         
 
         # Merge
-        # injury_df_ns = self.coalescer.namespace_columns(injury_df, namespace, {remainder_key})
-        # main_df = pd.merge(main_df, injury_df_ns, left_on=main_key, right_on=remainder_key, how='left')
-        # main_df = self.coalescer.coalesce_columns(main_df, analysis["safe"], namespace, self.verbose)
         main_df = self.coalescer.merge_and_coalescese(main_df, injury_df, main_key, 
                                                       remainder_key, namespace, analysis["safe"],
                                                       self.coalescer.SYS_RECORD_FIELD, self.verbose)
@@ -320,7 +298,7 @@ class DataLoader:
         if self.verbose: print(f" After merging remainder: {len(main_df):,} rows, {len(main_df.columns)} cols")
         return main_df
 
-    def load_all_data_v1(self, include_actions = False) -> pd.DataFrame:
+    def load_all_data(self, include_actions = False) -> pd.DataFrame:
         master_key = 'RECORD_NO_MASTER'
         BASE_FILE = "LOSS_POTENTIAL"
         BASE_FILE_RECORD = "RECORD_NO_LOSS_POTENTIAL"
@@ -345,28 +323,26 @@ class DataLoader:
             df["SOURCE_FILE"] = file_name
             if self.verbose: print(f"\t{file_name}: {len(df):,} rows, {len(df.columns)} cols")
 
-
             analysis = self.equalizer.analyze_columns(incidents, df, BASE_FILE_RECORD, BASE_FILE_RECORD, verbose=self.verbose)
-            print(analysis["safe"])
             incidents = self.coalescer.merge_and_coalescese(incidents, df, main_key, BASE_FILE_RECORD, file_name, analysis["safe"],
                                                         system_col= self.coalescer.SYS_RECORD_FIELD, verbose = self.verbose)
         
-        # incidents = pd.concat(incident_dfs, axis= 0, ignore_index= True, sort = False)
         if self.verbose:print(f"\n  Stacked: {len(incidents):,} rows, {len(incidents.columns)} cols")
 
 
         # incidents = self.attach_leading_indicators(incidents, master_key)
         # incidents = self.attach_remainder_files(incidents, master_key)
 
-        # # Incorporate Action Files 
-        # if include_actions:
-        #     if self.verbose:
-        #         print(f"\n{'='*70}")
-        #         print(f"Incorporating Action FILES")
-        #         print(f"{'='*70}")
-        #     incidents = self.attach_action_files(incidents, master_key)
+        # Incorporate Action Files 
+        if include_actions:
+            if self.verbose:
+                print(f"\n{'='*70}")
+                print(f"Incorporating Action FILES")
+                print(f"{'='*70}")
+            incidents = self.attach_action_files(incidents, master_key)
 
 
+        # Coerce Types N Drop Rows That Don't Contain Description
         incidents = self._coarce_boolean(incidents)
         incidents = incidents[incidents["DESCRIPTION"].notna()]
         
