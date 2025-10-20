@@ -146,7 +146,6 @@ class Coalescer:
         Merge sub_df into main_df and coalesce safe columns
         """
         system_col = system_col or self.SYS_RECORD_FIELD
-
         # Create Mutated Key 
         sub_df = self.create_mutated_key(sub_df, sub_record_col, system_col, drop_original= True)
         sub_key = f"{sub_record_col}_{self.MUTATED}"

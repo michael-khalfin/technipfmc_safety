@@ -116,8 +116,10 @@ if __name__ == "__main__":
 
     # Change Data
     modifier = DataModifier(df= combined_df)
-    modifier.set_dropped_names(["url_link", "url", "record_no"])
+    modifier.set_dropped_names(["url_link", "url"])
     cleaned_df = modifier.clean()
+    cleaned_df.rename(columns={"DESCRIPTION": "text"}, inplace=True)
+    cleaned_df.to_csv(os.path.join("data", "cleaned_data.csv"), index=False)
 
     # Generate Visualizer
     viz = DataVisualizer(df=cleaned_df, vis_dir=VIS_DIR, ignored_features= ["description", "date", "email", "title", "incident_no"])
