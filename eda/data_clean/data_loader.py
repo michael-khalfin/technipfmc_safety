@@ -1,3 +1,10 @@
+"""
+Data loading module for safety incident data integration.
+
+This module provides comprehensive data loading capabilities to merge
+and integrate multiple safety data files from different sources.
+"""
+
 import pandas as pd
 from typing import List, Optional 
 from .column_analyzer import ColumnAnalyzer
@@ -5,10 +12,23 @@ from .coaleser import Coalescer
 
 class DataLoader:
     """
-    Merges and Loads All Safety Data Files (horizontal coalescing and stacking)
+    Merges and Loads All Safety Data Files (horizontal coalescing and stacking).
+    
+    This class provides methods to:
+    - Load and merge multiple safety data files
+    - Handle different data formats and structures
+    - Integrate action plans and leading indicators
+    - Clean and prepare data for analysis
     """
 
     def __init__(self, data_dir: str = 'data/', verbose: bool = True):
+        """
+        Initialize DataLoader with data directory and processing options.
+        
+        Args:
+            data_dir (str): Directory containing safety data files
+            verbose (bool): Whether to print detailed processing information
+        """
         self.verbose = verbose
         self.equalizer = ColumnAnalyzer()
         self.coalescer = Coalescer(self.equalizer)

@@ -12,12 +12,29 @@ from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 
 
 def clean_text(x: str) -> str:
-    """Remove line breaks and extra spaces from text."""
+    """
+    Remove line breaks and extra spaces from text.
+    
+    Args:
+        x (str): Input text to clean
+        
+    Returns:
+        str: Cleaned text with line breaks and extra spaces removed
+    """
     return str(x).replace("\n", " ").replace("\r", " ").strip()
 
 
 def normalize_src_lang(lang: str, tokenizer) -> str:
-    """Normalize detected language codes to match M2M100 expected codes."""
+    """
+    Normalize detected language codes to match M2M100 expected codes.
+    
+    Args:
+        lang (str): Detected language code
+        tokenizer: M2M100 tokenizer instance
+        
+    Returns:
+        str: Normalized language code or empty string if not supported
+    """
     alias = {
         "no": "nb",       # Norwegian Bokmål
         "iw": "he",       # Hebrew (legacy code)
@@ -29,7 +46,20 @@ def normalize_src_lang(lang: str, tokenizer) -> str:
 
 
 def translate_text(text, src_lang, tgt_lang, tokenizer, model, device):
-    """Translate a single text string from src_lang to tgt_lang."""
+    """
+    Translate a single text string from src_lang to tgt_lang.
+    
+    Args:
+        text (str): Text to translate
+        src_lang (str): Source language code
+        tgt_lang (str): Target language code
+        tokenizer: M2M100 tokenizer instance
+        model: M2M100 model instance
+        device: Device to run inference on (cuda/cpu)
+        
+    Returns:
+        str: Translated text or original text if translation fails
+    """
     try:
         tokenizer.src_lang = src_lang
         enc = tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
@@ -41,6 +71,15 @@ def translate_text(text, src_lang, tgt_lang, tokenizer, model, device):
 
 
 def main():
+    """
+    Main function to translate CSV columns using M2M100 model.
+    
+    This function:
+    1. Parses command line arguments
+    2. Loads the M2M100 model and tokenizer
+    3. Processes each specified column for translation
+    4. Saves the translated results to output CSV
+    """
     parser = argparse.ArgumentParser(description="Translate CSV columns into English using M2M100.")
     parser.add_argument("--csv", required=True, help="Path to the input CSV file.")
     parser.add_argument("--columns", nargs="+", required=True, help="Column names to translate.")

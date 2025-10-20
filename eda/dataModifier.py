@@ -1,4 +1,11 @@
 
+"""
+Data modification module for safety incident data processing.
+
+This module provides functionality to transform safety incident data,
+convert columns to descriptive sentences, and clean datasets for analysis.
+"""
+
 import pandas as pd 
 import re
 
@@ -44,8 +51,23 @@ colToSentenceDict = {
 rx = re.compile(r"(DATE|TIME)", re.IGNORECASE)
 
 class DataModifier:
+    """
+    Data modification class for safety incident data processing.
+    
+    This class provides methods to transform safety incident data by:
+    - Converting structured columns to descriptive sentences
+    - Cleaning and filtering data
+    - Preparing data for analysis
+    """
 
     def __init__(self, df:pd.DataFrame = None, onlyDescriptions: bool = False):
+        """
+        Initialize DataModifier with DataFrame and processing options.
+        
+        Args:
+            df (pd.DataFrame): Input DataFrame to modify
+            onlyDescriptions (bool): Whether to process only description-related columns
+        """
         self.df = df
         self.onlyDescriptions = onlyDescriptions
         self.date_list = [c for c in df.columns if rx.search(c)]
@@ -64,6 +86,12 @@ class DataModifier:
         self.df.rename(columns={"DESCRIPTION": "text"}, inplace=True)
     
     def set_dropped_names(self, names_to_drop):
+        """
+        Add column names to the drop list based on name patterns.
+        
+        Args:
+            names_to_drop (list): List of name patterns to match against column names
+        """
         drop = []
         names_to_drop = set(names_to_drop)
         for c in self.df.columns:
@@ -77,6 +105,15 @@ class DataModifier:
         self.to_drop.update(set(drop))
 
     def translateColumnsToSentences(self):
+        """
+        Convert structured columns to descriptive sentences.
+        
+        This method transforms categorical and structured data into natural language
+        descriptions by applying predefined sentence templates to column values.
+        
+        Returns:
+            pd.DataFrame: Modified DataFrame with translated columns
+        """
         if DESCRIPTION_COL not in self.df.columns:
             print(f"{DESCRIPTION_COL} not in DataFrame!")
             self.df[DESCRIPTION_COL] = ""
@@ -137,6 +174,17 @@ class DataModifier:
 
     # Main Function that would hot-one encode, drop_cols, etc 
     def clean(self):
+        """
+        Main cleaning function that processes the DataFrame.
+        
+        This method handles:
+        - Column translation to sentences (if onlyDescriptions is True)
+        - Dropping specified columns
+        - Saving processed data to CSV
+        
+        Returns:
+            pd.DataFrame: Cleaned DataFrame
+        """
         if self.onlyDescriptions:
             # mask = (self.df["TYPE"] == "Hazard Observation")
             # rows_of_interest_idx = self.df[mask].index

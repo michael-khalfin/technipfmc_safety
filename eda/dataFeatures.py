@@ -1,3 +1,10 @@
+"""
+Data feature analysis module for safety incident datasets.
+
+This module provides functions to analyze data features, find common columns
+across multiple CSV files, and generate dataset summaries.
+"""
+
 import os 
 import pandas as pd
 
@@ -7,6 +14,14 @@ CONSOLIDATED_PREFIX ="DIM_CONSOLIDATED_"
 # get the common columns among all the features
 # based on feature names, there are no shared features among all the consolidated files
 def get_common_columns():
+    """
+    Find common columns across all CSV files in the data directory.
+    
+    Returns:
+        tuple: (common_cols, file_columns) where:
+            - common_cols: Set of columns present in all files
+            - file_columns: Dictionary mapping file paths to their column sets
+    """
     common_cols = None
     file_columns = {}
 
@@ -28,6 +43,11 @@ def get_common_columns():
 
 # to list all the features for each excel file -> wanted to manually check the previous code
 def list_all_csv_columns():
+    """
+    List all columns for each CSV file in the data directory.
+    
+    Prints column names for each file to console for manual inspection.
+    """
     for file_name in os.listdir(DATA_PATH):
         if file_name.endswith(".csv"):
             file_name = os.path.join(DATA_PATH, file_name)
@@ -42,6 +62,12 @@ def list_all_csv_columns():
 
 # create table for summary of dataset including rows, columns, and data volumn
 def dataset_summary():
+    """
+    Create a summary table of all datasets in the data directory.
+    
+    Returns:
+        pd.DataFrame: Summary table with columns: Dataset, Rows, Columns, Volume_MB
+    """
     summary = []
     for file_name in os.listdir(DATA_PATH):
         if file_name.endswith(".csv"):
@@ -62,6 +88,12 @@ def dataset_summary():
 
 # find the various row number features in each excel
 def no_columns_summary():
+    """
+    Find columns containing 'NO' in their names across all CSV files.
+    
+    Returns:
+        pd.DataFrame: Summary of files and their 'NO' columns
+    """
     summary = []
     for file_name in os.listdir(DATA_PATH):
         if file_name.endswith(".csv"):

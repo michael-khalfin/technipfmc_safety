@@ -1,3 +1,11 @@
+"""
+Safety data analysis and reporting module.
+
+This module provides functions to analyze safety incident data,
+check data quality, and generate reports on data relationships
+and potential issues.
+"""
+
 import pandas as pd 
 import math 
 from utils import find_common_cols
@@ -8,6 +16,18 @@ action = pd.read_csv('data/DIM_CONSOLIDATED_ACTION_PLAN.csv', low_memory=False)
 
 
 def check_files_with_loss_potential_record():
+    """
+    Analyze the relationship between loss potential records and other safety files.
+    
+    This function loads all safety data files and analyzes:
+    - File sizes and column counts
+    - Linkage between loss potential and incident files
+    - Overlap between different incident types
+    - Common columns across files
+    
+    Returns:
+        None: Prints analysis results to console
+    """
     # Main Loss File 
     loss = pd.read_csv('data/DIM_CONSOLIDATED_LOSS_POTENTIAL.csv', low_memory=False)
 

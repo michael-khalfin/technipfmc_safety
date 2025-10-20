@@ -1,3 +1,10 @@
+"""
+Main execution module for safety incident data analysis.
+
+This module provides the main entry point for processing safety incident data,
+including data loading, cleaning, modification, and visualization.
+"""
+
 import os
 import pandas as pd
 import argparse
@@ -14,6 +21,12 @@ VIS_DIR = os.path.join(BASE_DIR, "visualization")
 CACHE_FILE = os.path.join(DATA_PATH, "combined.csv")
 
 def describe_data(df: pd.DataFrame):
+    """
+    Print comprehensive data description including info, statistics, and column types.
+    
+    Args:
+        df (pd.DataFrame): DataFrame to describe
+    """
     print("\nData Info")
     print(df.info())
 

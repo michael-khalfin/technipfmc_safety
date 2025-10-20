@@ -1,7 +1,27 @@
+"""
+Utility functions for data analysis and column operations.
+
+This module provides helper functions for finding columns,
+comparing dataframes, and analyzing data relationships.
+"""
+
 import pandas as pd
 
 
 def find_col(df, keyword):
+    """
+    Find columns in DataFrame that match a keyword.
+    
+    Args:
+        df (pd.DataFrame): DataFrame to search in
+        keyword (str): Keyword to search for in column names
+        
+    Returns:
+        str: First matching column name
+        
+    Raises:
+        ValueError: If no matching column is found
+    """
     columns, keyword = df.columns,  keyword.lower()
     main_record = None
 
@@ -19,6 +39,18 @@ def find_col(df, keyword):
 
 
 def find_common_cols(df1: pd.DataFrame, df2:pd.DataFrame, show_column_details = True, show_values: int = 2):
+    """
+    Find and analyze common columns between two DataFrames.
+    
+    Args:
+        df1 (pd.DataFrame): First DataFrame
+        df2 (pd.DataFrame): Second DataFrame
+        show_column_details (bool): Whether to show detailed column information
+        show_values (int): Number of sample values to display
+        
+    Returns:
+        int: Number of common columns
+    """
     common_cols = df1.columns.intersection(df2.columns)
     print(f"    Shared columns ({len(common_cols)}): {list(common_cols)}\n")
 

@@ -1,3 +1,11 @@
+"""
+Column analysis module for data merging and integration.
+
+This module provides comprehensive column analysis capabilities to determine
+if columns from different dataframes can be safely merged, including conflict
+detection, value comparison, and merge compatibility assessment.
+"""
+
 import pandas as pd
 from collections import Counter
 from typing import Dict, List, Tuple, Optional
@@ -6,6 +14,12 @@ from typing import Dict, List, Tuple, Optional
 class ColumnAnalyzer:
     """
     Analyzes columns between dataframes to determine if they can be safely merged.
+    
+    This class provides methods to:
+    - Compare column values and distributions
+    - Detect conflicts between datasets
+    - Assess merge compatibility
+    - Generate detailed analysis reports
     """
     def __init__(
         self,
@@ -18,6 +32,19 @@ class ColumnAnalyzer:
         exact_equal_thresh: float = 0.999,
         exact_conflict_ceiling: float = 1e-6,
     ):
+        """
+        Initialize ColumnAnalyzer with analysis parameters.
+        
+        Args:
+            min_coverage (float): Minimum coverage threshold for safe merge
+            min_equal_non_null (float): Minimum equality threshold for non-null values
+            max_conflict_rate (float): Maximum acceptable conflict rate
+            max_distinct_auto (int): Maximum distinct values for automatic processing
+            review_band (Tuple[float, float]): Coverage range requiring manual review
+            allow_high_card_if_exact (bool): Allow high cardinality if exact match
+            exact_equal_thresh (float): Threshold for exact equality
+            exact_conflict_ceiling (float): Maximum conflict rate for exact matches
+        """
         self.min_coverage = min_coverage
         self.min_equal_non_null = min_equal_non_null
         self.max_conflict_rate = max_conflict_rate

@@ -1,3 +1,10 @@
+"""
+CSV to JSON conversion utility for GraphRAG pipeline.
+
+This module converts CSV data into a format suitable for GraphRAG processing,
+creating unique node identifiers and JSON payloads for each row.
+"""
+
 import pandas as pd
 import json, hashlib, re
 from pathlib import Path
@@ -8,13 +15,31 @@ out_path = "dev_sample_json.csv"  # output CSV
 
 # ---------- Helpers ----------
 def normalize_key(k: str) -> str:
+    """
+    Normalize column names to valid identifiers.
+    
+    Args:
+        k (str): Original column name
+        
+    Returns:
+        str: Normalized column name suitable for use as identifier
+    """
     k = k.strip()
     k = re.sub(r"\s+", "_", k)
     k = re.sub(r"[^A-Za-z0-9_:/\-]", "", k)
     return k.lower()
 
 def make_id(props, label_field=None):
-    """Stable ID using hash of key fields or first few non-empty props."""
+    """
+    Generate stable ID using hash of key fields or first few non-empty props.
+    
+    Args:
+        props (dict): Dictionary of properties for the row
+        label_field (str, optional): Preferred field to use for ID generation
+        
+    Returns:
+        str: Unique identifier in format "urn:row:{hash}"
+    """
     id_basis_keys = []
     if label_field and props.get(label_field):
         id_basis_keys.append(label_field)

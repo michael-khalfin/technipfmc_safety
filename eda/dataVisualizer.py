@@ -1,3 +1,13 @@
+"""
+Data visualization module for safety incident analysis.
+
+This module provides comprehensive data visualization capabilities including:
+- Data type analysis and cardinality visualization
+- Missing value analysis
+- Correlation heatmaps and variance analysis
+- Text analysis with n-gram visualization and word clouds
+"""
+
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -12,11 +22,34 @@ BOOL, NUM, OBJ = "boolean", "number", "object"
 
 
 class DataFormatter:
+    """
+    Data formatting and analysis utilities for safety incident data.
+    
+    This class provides methods to analyze data types, cardinality,
+    missing values, correlations, and variances in safety datasets.
+    """
+    
     def __init__(self, df, ignored_cols):
+        """
+        Initialize DataFormatter with DataFrame and columns to ignore.
+        
+        Args:
+            df (pd.DataFrame): Input DataFrame
+            ignored_cols (list): List of column names to ignore in analysis
+        """
         self.df = df
         self.ignored_features = self.set_dropped_names(ignored_cols)
 
     def set_dropped_names(self, names_to_drop):
+        """
+        Identify columns to drop based on name patterns.
+        
+        Args:
+            names_to_drop (list): List of name patterns to match against column names
+            
+        Returns:
+            list: Sorted list of column names to drop
+        """
         drop = []
         names_to_drop = set(names_to_drop)
         for c in self.df.columns:
@@ -30,11 +63,20 @@ class DataFormatter:
         return sorted(set(drop))
 
     def get_data_types(self):
+        """
+        Get count of each data type in the DataFrame.
+        
+        Returns:
+            pd.Series: Count of each data type
+        """
         return self.df.dtypes.value_counts() 
      
     def get_column_cardinalities(self):
         """
-        Returns a DataFrame with each column’s cardinality and inferred data type label.
+        Returns a DataFrame with each column's cardinality and inferred data type label.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns: column, cardinality, type
         """
         df = self.df.drop(columns = self.ignored_features)
         card_series = df.nunique(dropna=True)
@@ -57,28 +99,72 @@ class DataFormatter:
         return pd.DataFrame(data)
 
     def get_missing_counts(self, drop_zero=True):
-        """Return missing value counts per column"""
+        """
+        Return missing value counts per column.
+        
+        Args:
+            drop_zero (bool): Whether to exclude columns with zero missing values
+            
+        Returns:
+            pd.Series: Missing value counts sorted in descending order
+        """
         missing_counts = self.df.isnull().sum()
         if drop_zero:
             missing_counts = missing_counts[missing_counts > 0]
         return missing_counts.sort_values(ascending=False)
 
     def get_numeric_df(self) -> pd.DataFrame:
+        """
+        Get DataFrame containing only numeric columns.
+        
+        Returns:
+            pd.DataFrame: DataFrame with only numeric columns
+        """
         return self.df.select_dtypes(include=["number"])
    
     def get_correlation(self) -> pd.DataFrame:
+        """
+        Calculate correlation matrix for numeric columns.
+        
+        Returns:
+            pd.DataFrame: Correlation matrix
+        """
         num_df = self.get_numeric_df()
         return num_df.corr(numeric_only=True)
 
     def get_variances(self) -> pd.Series:
+        """
+        Calculate variance for each numeric column.
+        
+        Returns:
+            pd.Series: Variances sorted in descending order
+        """
         num_df = self.get_numeric_df()
         return num_df.var(numeric_only=True).sort_values(ascending=False)
 
     def get_low_variance_features(self, threshold: float = 0.0) -> list[str]:
+        """
+        Identify features with low variance.
+        
+        Args:
+            threshold (float): Variance threshold for low variance features
+            
+        Returns:
+            list[str]: List of column names with variance <= threshold
+        """
         variances = self.get_variances()
         return variances[variances <= threshold].index.tolist()
 
     def get_high_corr_pairs(self, thresh: float = 0.9) -> pd.DataFrame:
+        """
+        Find highly correlated feature pairs.
+        
+        Args:
+            thresh (float): Correlation threshold for high correlation
+            
+        Returns:
+            pd.DataFrame: DataFrame with highly correlated pairs
+        """
         corr = self.get_correlation().abs()
         # upper triangle mask to avoid duplicates/self-pairs
         mask = np.triu(np.ones_like(corr, dtype=bool), k=1)
@@ -90,13 +176,37 @@ class DataFormatter:
 
 
 class DataVisualizer:
+    """
+    Comprehensive data visualization class for safety incident analysis.
+    
+    This class provides methods to create various visualizations including:
+    - Data type and cardinality plots
+    - Missing value analysis
+    - Correlation heatmaps
+    - Variance analysis
+    - Text analysis with n-grams and word clouds
+    """
+    
     def __init__(self, df, vis_dir="data/visualization", ignored_features = []):
+        """
+        Initialize DataVisualizer with DataFrame and output directory.
+        
+        Args:
+            df (pd.DataFrame): Input DataFrame for visualization
+            vis_dir (str): Directory to save visualization outputs
+            ignored_features (list): List of features to ignore in analysis
+        """
         self.df = df
         self.formatter = DataFormatter(df, ignored_features)
         self.vis_dir = vis_dir
         os.makedirs(self.vis_dir, exist_ok=True)
 
     def visualizeDataTypes(self):
+        """
+        Create a bar chart showing the distribution of data types in the dataset.
+        
+        Saves the visualization as 'column_data_types.png' in the visualization directory.
+        """
         data_types = self.formatter.get_data_types()
 
         plt.figure(figsize=(8, 6))
@@ -122,6 +232,11 @@ class DataVisualizer:
         plt.close()
 
     def visualizeMissingValues(self):
+        """
+        Create a bar chart showing missing values per column.
+        
+        Saves the visualization as 'missing_values_bar.png' in the visualization directory.
+        """
         missing_counts = self.formatter.get_missing_counts()
 
         plt.figure(figsize=(max(12, len(missing_counts) * 0.6), 6))
@@ -251,6 +366,9 @@ class DataVisualizer:
         """
         Analyzes n-grams (e.g., single words, bigrams) from a text column and
         generates a high-contrast word cloud and a frequency bar chart.
+        
+        This method is particularly useful for analyzing safety incident descriptions
+        to identify common patterns, keywords, and themes.
         
         Args:
             column_name (str): The name of the DataFrame column to analyze.

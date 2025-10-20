@@ -1,3 +1,10 @@
+"""
+Data coalescing module for merging and integrating datasets.
+
+This module provides functionality to merge DataFrames and coalesce columns
+from different sources, handling conflicts and maintaining data integrity.
+"""
+
 import pandas as pd 
 import os 
 from typing import Dict, List, Optional, Set
@@ -6,7 +13,13 @@ from .column_analyzer import ColumnAnalyzer
 
 class Coalescer: 
     """
-    Handles Merging of Df's and Coalescing of Files into Columns
+    Handles Merging of DataFrames and Coalescing of Files into Columns.
+    
+    This class provides methods to:
+    - Merge DataFrames with conflict resolution
+    - Coalesce columns from different sources
+    - Handle data type conflicts and missing values
+    - Create unique identifiers for merging
     """
 
     SYS_RECORD_FIELD = "SYSTEM_OF_RECORD"

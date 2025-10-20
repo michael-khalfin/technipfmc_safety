@@ -1,7 +1,13 @@
-# GraphRAG Parquet → Graph Visualization (NetworkX + PyVis)
-#
-# This script loads GraphRAG parquet outputs (entities, relationships, etc.),
-# builds a graph, and generates an interactive HTML file for visualization.
+"""
+GraphRAG Parquet → Graph Visualization (NetworkX + PyVis)
+
+This script loads GraphRAG parquet outputs (entities, relationships, etc.),
+builds a graph, and generates an interactive HTML file for visualization.
+
+The script creates both static and interactive visualizations of the knowledge graph
+generated from safety incident data, allowing for exploration of relationships
+and patterns in the data.
+"""
 
 # --- Config ---
 # IMPORTANT: Manually set this path to the specific, timestamped output directory you want to visualize.
