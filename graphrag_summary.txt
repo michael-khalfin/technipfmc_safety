@@ -1,0 +1,33 @@
+GRAPH RAG ANALYSIS SUMMARY
+==================================================
+
+OUTPUT FILES:
+--------------------
+documents.parquet: 147,913 bytes
+communities.parquet: 14,487 bytes
+entities.parquet: 88,893 bytes
+stats.json: 124 bytes
+community_reports.parquet: 54,199 bytes
+text_units.parquet: 139,915 bytes
+context.json: 2 bytes
+relationships.parquet: 87,822 bytes
+
+Total size: 533,355 bytes (0.51 MB)
+
+FILE TYPES:
+--------------------
+entities.parquet - Extracted entities from documents
+relationships.parquet - Relationships between entities
+documents.parquet - Processed document information
+text_units.parquet - Text chunks and units
+communities.parquet - Community structures
+community_reports.parquet - Community analysis reports
+lancedb/ - Vector database for embeddings
+stats.json - Processing statistics
+
+NEXT STEPS:
+--------------------
+1. Use pandas to read parquet files for detailed analysis
+2. Create network visualizations using NetworkX
+3. Query the knowledge graph using GraphRAG tools
+4. Generate interactive visualizations
