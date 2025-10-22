@@ -335,7 +335,7 @@ class DataLoader:
             print(f"{'='*70}")
         
         # Only stack files with 0% overlap
-        incident_files = ["ACCIDENTS", "HAZARD_OBSERVATIONS", "NEAR_MISSES"]
+        incident_files = ["ACCIDENTS_translated", "HAZARD_OBSERVATIONS_translated", "NEAR_MISSES_translated"]
         for file_name in incident_files:
             df = pd.read_csv(self._file_path(file_name), low_memory = False)
             df[BASE_FILE_RECORD] = df[BASE_FILE_RECORD].astype("string").str.replace(r"\.0$", "", regex=True)
