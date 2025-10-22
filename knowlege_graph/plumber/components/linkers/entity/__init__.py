@@ -1,0 +1,5 @@
+from .spotlight import DBpediaSpotlightEntityLinker
+from .opentapioca import OpenTapiocaEntityLinker
+from .tagme_linker import TagMeEntityLinker
+from .textrazor_linker import TextRazorEntityLinker, TextRazorDBpediaLinker, TextRazorWikidataLinker
+from .meaningcloud_linker import MeaningCloudEntityLinker
