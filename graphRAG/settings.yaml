@@ -10,11 +10,11 @@ models:
     model_provider: ollama
     auth_type: api_key # or azure_managed_identity
     api_key: "DUMMY_KEY" # set this in the generated .env file, or remove if managed identity
-    model: llama3:70b
+    model: llama3.1:8b # llama3:70b-instruct-q4_K_M, llama3:70b
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
-    concurrent_requests: 1 #25
+    concurrent_requests: 4 #25
     async_mode: threaded # or asyncio
     retry_strategy: exponential_backoff
     max_retries: 10
@@ -28,7 +28,7 @@ models:
     model: nomic-embed-text
     api_base: "http://127.0.0.1:11434"
     # api_version: 2024-05-01-preview
-    concurrent_requests: 1 #25
+    concurrent_requests: 4 #25
     async_mode: threaded # or asyncio
     retry_strategy: exponential_backoff
     max_retries: 10
@@ -42,9 +42,9 @@ input:
   #   type: file # or blob
   #   base_dir: "input"
   file_type: csv # [csv, text, json]
-  path: "input/dev_sample_json.csv"
-  text_column: "node_json"
-  id_column: "_id"
+  path: "input/dev_sample_2.csv"
+  text_column: "text"
+  id_column: "RECORD_NO_LOSS_POTENTIAL"
   # meta_columns:
   #   - "TITLE"
   #   - "DATE_OF_INCIDENT"
@@ -52,8 +52,8 @@ input:
   #   - "INJURY_ILLNESS"
 
 chunks:
-  size: 600 #1200
-  overlap: 50 #100
+  size: 1200 #1200
+  overlap: 120 #100
   group_by_columns: [id]
 
 ### Output/storage settings ###
