@@ -291,7 +291,8 @@ def process_csv(args: argparse.Namespace) -> None:
                 # Warmup errors are non-fatal; continue
                 pass
 
-    # Open JSONL for streaming writes as each row completes
+    # Ensure output directory exists, then open JSONL for streaming writes
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8") as out_jsonl:
         with ThreadPoolExecutor(max_workers=max(1, args.max_workers)) as ex:
             futs = {ex.submit(_submit, idx, row): (idx, row) for idx, row in collected}
