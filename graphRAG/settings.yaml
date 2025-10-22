@@ -10,11 +10,11 @@ models:
     model_provider: ollama
     auth_type: api_key # or azure_managed_identity
     api_key: "DUMMY_KEY" # set this in the generated .env file, or remove if managed identity
-    model: llama3:70b
+    model: llama3:8b
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
-    concurrent_requests: 1 #25
+    concurrent_requests: 2 # small, stable parallelism on 1 GPU
     async_mode: threaded # or asyncio
     retry_strategy: exponential_backoff
     max_retries: 10
@@ -28,7 +28,7 @@ models:
     model: nomic-embed-text
     api_base: "http://127.0.0.1:11434"
     # api_version: 2024-05-01-preview
-    concurrent_requests: 1 #25
+    concurrent_requests: 2 # align with GPU/CPU capacity
     async_mode: threaded # or asyncio
     retry_strategy: exponential_backoff
     max_retries: 10
@@ -52,8 +52,8 @@ input:
   #   - "INJURY_ILLNESS"
 
 chunks:
-  size: 600 #1200
-  overlap: 50 #100
+  size: 1200
+  overlap: 25
   group_by_columns: [id]
 
 ### Output/storage settings ###
@@ -94,7 +94,7 @@ extract_graph:
 summarize_descriptions:
   model_id: default_chat_model
   prompt: "prompts/summarize_descriptions.txt"
-  max_length: 500
+  max_length: 300
 
 extract_graph_nlp:
   text_analyzer:
@@ -115,8 +115,8 @@ community_reports:
   model_id: default_chat_model
   graph_prompt: "prompts/community_report_graph.txt"
   text_prompt: "prompts/community_report_text.txt"
-  max_length: 2000
-  max_input_length: 8000
+  max_length: 1000
+  max_input_length: 4000
 
 embed_graph:
   enabled: false # if true, will generate node2vec embeddings for nodes

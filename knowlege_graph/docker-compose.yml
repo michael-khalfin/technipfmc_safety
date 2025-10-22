@@ -1,9 +1,8 @@
-version: '3.7'
-
 services:
 
   plumber:
     image: jaradeh/plumber:framework
+    command: ["python", "-c", "from plumber.api.api import app; app.run(host='0.0.0.0', port=5000, threaded=True)"]
     ports:
       - '5000:5000'
     environment:
@@ -48,14 +47,13 @@ services:
       PYCOBALT_CORENLP: 'http://graphene-corenlp:9000'
     expose:
       - "5128"
-    links:
-      - graphene-corenlp
     networks:
       - plumber
 
 
   graphene-corenlp:
     image: "lambdacube/corenlp:3.7.0"
+    restart: unless-stopped
     expose:
       - "9000"
     networks:
@@ -65,10 +63,9 @@ services:
     depends_on:
       - graphene-coreference
     image: jaradeh/plumber:graphene
+    restart: unless-stopped
     expose:
       - "8080"
-    links:
-      - graphene-coreference
     networks:
       - plumber
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Utility to push CSV rows through a running Plumber instance and persist triples."""
+"""Utility to push CSV rows through a running Plumber instance and persist triples,
+then materialize a simple knowledge graph as nodes/edges CSVs."""
 
 from __future__ import annotations
 
@@ -8,7 +9,7 @@ import csv
 import json
 import time
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import requests
 
@@ -19,7 +20,7 @@ DEFAULT_RESOLVERS = ["dummy"]
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run ThePlumber triples extraction over a CSV file.")
+    parser = argparse.ArgumentParser(description="Run ThePlumber triples extraction over a CSV file and build a graph.")
     parser.add_argument(
         "csv_path",
         type=Path,
@@ -40,6 +41,18 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("plumber_triples.jsonl"),
         help="Output JSONL file; one line per input row with extracted triples.",
+    )
+    parser.add_argument(
+        "--nodes-csv",
+        type=Path,
+        default=None,
+        help="Optional path to write deduplicated nodes CSV (id,label,type). Defaults next to --output.",
+    )
+    parser.add_argument(
+        "--edges-csv",
+        type=Path,
+        default=None,
+        help="Optional path to write edges CSV (src,rel,dst,src_label,dst_label[,row_id]). Defaults next to --output.",
     )
     parser.add_argument(
         "--url",
@@ -81,6 +94,48 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=120.0,
         help="Request timeout in seconds (default: 120).",
+    )
+    parser.add_argument(
+        "--log-every",
+        type=int,
+        default=50,
+        help="Print a progress line every N processed rows (default: 50).",
+    )
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=4,
+        help="Number of parallel requests to Plumber (default: 4).",
+    )
+    parser.add_argument(
+        "--max-chars",
+        type=int,
+        default=None,
+        help="If set, truncate input text to the first N characters before sending.",
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=2,
+        help="Retry failed requests up to N times (default: 2).",
+    )
+    parser.add_argument(
+        "--retry-wait",
+        type=float,
+        default=5.0,
+        help="Seconds to wait between retries (default: 5).",
+    )
+    parser.add_argument(
+        "--start-index",
+        type=int,
+        default=0,
+        help="Skip the first N input rows (resume support).",
+    )
+    parser.add_argument(
+        "--warmup",
+        type=int,
+        default=0,
+        help="Send N sequential warmup requests before parallel processing.",
     )
     return parser.parse_args()
 
@@ -124,33 +179,191 @@ def submit_request(
     return data
 
 
+def _normalize_triple(item: Dict) -> Optional[Tuple[str, str, str]]:
+    """Coerce a triple-like dict into (subject,predicate,object) strings if possible."""
+    if not isinstance(item, dict):
+        return None
+    s = item.get("subject") or item.get("s") or item.get("subj")
+    p = item.get("predicate") or item.get("p") or item.get("rel") or item.get("relation")
+    o = item.get("object") or item.get("o") or item.get("obj")
+    if isinstance(s, dict):
+        s = s.get("text") or s.get("value") or s.get("label")
+    if isinstance(p, dict):
+        p = p.get("text") or p.get("value") or p.get("label")
+    if isinstance(o, dict):
+        o = o.get("text") or o.get("value") or o.get("label")
+    if s and p and o:
+        return str(s).strip(), str(p).strip(), str(o).strip()
+    return None
+
+
+def _default_graph_paths(output_path: Path) -> Tuple[Path, Path]:
+    base_dir = output_path.parent
+    return base_dir / "nodes.csv", base_dir / "edges.csv"
+
+
 def process_csv(args: argparse.Namespace) -> None:
     if not args.csv_path.exists():
         raise FileNotFoundError(f"Input CSV not found: {args.csv_path}")
 
-    processed = 0
-    with args.output.open("w", encoding="utf-8") as output_handle:
-        for row in read_rows(args.csv_path):
-            text = (row.get(args.text_column) or "").strip()
-            if not text:
-                continue
-            payload = build_payload(text, args.extractor, args.linker, args.resolver)
-            triples = submit_request(args.url, payload, args.timeout)
-            record = {
-                "text": text,
-                "triples": triples,
-            }
-            if args.id_column and args.id_column in row:
-                record["id"] = row[args.id_column]
-            output_handle.write(json.dumps(record, ensure_ascii=False))
-            output_handle.write("\n")
-            processed += 1
-            if args.max_rows is not None and processed >= args.max_rows:
-                break
-            if args.sleep:
-                time.sleep(args.sleep)
+    # Prepare graph outputs
+    nodes_csv, edges_csv = _default_graph_paths(args.output)
+    if args.nodes_csv is not None:
+        nodes_csv = args.nodes_csv
+    if args.edges_csv is not None:
+        edges_csv = args.edges_csv
 
-    print(f"Processed {processed} rows; results saved to {args.output}")
+    nodes: Dict[str, Dict[str, str]] = {}
+    edges: List[Dict[str, str]] = []
+
+    def _node_id(label: str, ntype: str = "entity") -> str:
+        key = f"{ntype}|{label}".lower().strip()
+        import hashlib
+        h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
+        return f"node:{h}"
+
+    def _add_node(label: str, ntype: str = "entity") -> str:
+        nid = _node_id(label, ntype)
+        if nid not in nodes:
+            nodes[nid] = {"id": nid, "label": label, "type": ntype}
+        return nid
+
+    # Collect rows upfront (apply optional truncation) to enable parallel requests
+    collected: List[Tuple[int, Dict[str, str]]] = []
+    for idx, row in enumerate(read_rows(args.csv_path)):
+        text = (row.get(args.text_column) or "").strip()
+        if not text:
+            continue
+        if args.max_chars is not None and len(text) > args.max_chars:
+            text = text[: args.max_chars]
+        row = dict(row)
+        row[args.text_column] = text
+        if idx >= args.start_index:
+            collected.append((idx, row))
+        if args.max_rows is not None and len(collected) >= args.max_rows:
+            break
+
+    total = len(collected)
+    if total == 0:
+        print("No rows to process after filtering.")
+        return
+
+    start_time = time.time()
+    processed = 0
+    errors = 0
+    results: Dict[int, Dict] = {}
+
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
+        text = row.get(args.text_column, "")
+        payload = build_payload(text, args.extractor, args.linker, args.resolver)
+        # Simple retry loop with fixed backoff
+        last_err: Optional[Exception] = None
+        for attempt in range(1, max(1, args.retries) + 1):
+            try:
+                triples = submit_request(args.url, payload, args.timeout)
+                break
+            except Exception as e:
+                last_err = e
+                if attempt < max(1, args.retries) + 0:
+                    time.sleep(max(0.0, args.retry_wait))
+                else:
+                    raise
+        rec = {"text": text, "triples": triples}
+        if args.id_column and args.id_column in row:
+            rec["id"] = row[args.id_column]
+        return idx, rec
+
+    # Optional warmup to let heavy services (e.g., CoreNLP) come alive
+    if args.warmup and total > 0:
+        warm_n = min(args.warmup, total)
+        print(f"[warmup] sending {warm_n} sequential requests before parallel run...")
+        for i in range(warm_n):
+            _, row = collected[i]
+            try:
+                _ = submit_request(
+                    args.url,
+                    build_payload(row.get(args.text_column, ""), args.extractor, args.linker, args.resolver),
+                    args.timeout,
+                )
+            except Exception as e:
+                # Warmup errors are non-fatal; continue
+                pass
+
+    # Open JSONL for streaming writes as each row completes
+    with args.output.open("w", encoding="utf-8") as out_jsonl:
+        with ThreadPoolExecutor(max_workers=max(1, args.max_workers)) as ex:
+            futs = {ex.submit(_submit, idx, row): (idx, row) for idx, row in collected}
+            for fut in as_completed(futs):
+                idx, row = futs[fut]
+                try:
+                    i, rec = fut.result()
+                    results[i] = rec
+                except Exception as e:
+                    errors += 1
+                    rec = {"text": row.get(args.text_column, ""), "triples": [], "error": str(e)}
+                    results[idx] = rec
+
+                # Stream this row to JSONL immediately
+                out_jsonl.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                out_jsonl.flush()
+
+                # Update graph incrementally
+                for t in rec.get("triples", []):
+                    norm = _normalize_triple(t)
+                    if not norm:
+                        continue
+                    s, p, o = norm
+                    sid = _add_node(s, "entity")
+                    oid = _add_node(o, "entity")
+                    edge: Dict[str, str] = {"src": sid, "rel": p, "dst": oid, "src_label": s, "dst_label": o}
+                    if args.id_column and args.id_column in row:
+                        edge["row_id"] = str(row[args.id_column])
+                    edges.append(edge)
+
+                processed += 1
+
+                if processed % max(1, args.log_every) == 0:
+                    elapsed = time.time() - start_time
+                    avg = elapsed / processed if processed else 0.0
+                    remaining = max(0, total - processed)
+                    eta_sec = remaining * avg
+                    pct = (processed / total) * 100.0
+                    print(
+                        f"[progress] {processed}/{total} ({pct:0.1f}%) | avg {avg:0.2f}s/row | elapsed {elapsed:0.1f}s | ETA {eta_sec:0.1f}s | errors {errors}"
+                    )
+
+                if args.sleep:
+                    time.sleep(args.sleep)
+
+    total_elapsed = time.time() - start_time
+    rps = processed / total_elapsed if total_elapsed > 0 and processed > 0 else 0.0
+    print(
+        f"Processed {processed} rows in {total_elapsed:0.1f}s ({rps:0.2f} rows/s); errors={errors}; results saved to {args.output}"
+    )
+
+    # Write graph CSVs
+    nodes_csv.parent.mkdir(parents=True, exist_ok=True)
+    edges_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    with nodes_csv.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["id", "label", "type"]) 
+        w.writeheader()
+        for n in nodes.values():
+            w.writerow(n)
+
+    edge_fields = ["src", "rel", "dst", "src_label", "dst_label"]
+    if any("row_id" in e for e in edges):
+        edge_fields.append("row_id")
+    with edges_csv.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=edge_fields)
+        w.writeheader()
+        for e in edges:
+            w.writerow(e)
+
+    print(f"Nodes CSV: {nodes_csv} (unique nodes: {len(nodes)})")
+    print(f"Edges CSV: {edges_csv} (edges: {len(edges)})")
 
 
 def main() -> None:
