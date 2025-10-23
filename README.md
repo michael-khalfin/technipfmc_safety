@@ -90,6 +90,18 @@ source $(conda info --base)/etc/profile.d/conda.sh
 conda activate graphrag_env
 pip install -r requirements.txt
 ```
+### 1.b Downloading Ollama
+```bash
+# Download Gitbash if using Windows
+# afterward, open gitbash and run
+curl -LO https://ollama.com/download/ollama-linux-amd64.tgz
+
+# Create bin directory on NOTS
+mkdir -p ~/bin
+
+#SCP to NOTS
+scp ./ollama-linux-amd64.tgz netID@nots.rice.edu:~/bin/
+```
 ### 2. Resource Allocation (NOTS Cluster)
 ```bash
 # Submit job for resource allocation
