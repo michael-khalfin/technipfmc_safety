@@ -76,7 +76,20 @@ source .venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
 ```
+### 1.a GraphRag Setup
+```bash
+# Load Modules
+module load foss/2023b        
+module load Python/3.11.5     # loads Python 3.11 (good for GraphRAG)
+module load CUDA/12.4.0
+module load Miniforge3/24.11.3-0
 
+# Create Conda Environment
+conda create -n graphrag_env python=3.11
+source $(conda info --base)/etc/profile.d/conda.sh
+conda activate graphrag_env
+pip install -r requirements.txt
+```
 ### 2. Resource Allocation (NOTS Cluster)
 ```bash
 # Submit job for resource allocation
