@@ -75,24 +75,16 @@ echo "Preparing Input File"
 mkdir -p ./graphRAG/input
 head -n 1001 ./data/cleaned_description_translated.csv > ./graphRAG/input/dev_sample.csv
 
-# Start the server and stream logs to both file and SLURM stdout
-# (Note: $! will be the PID of 'tee'; we’ll find the server PID separately)
-stdbuf -oL -eL "$HOME/opt/ollama/bin/ollama" serve 2>&1 | tee "$HOME/ollama.log" &
-TEE_PID=$!
-sleep 1
-OLLAMA_PID=$(pgrep -u "$USER" -f 'ollama serve' | head -n1)
-
 
 # --- GraphRAG steps ---
 echo "Preparing GraphRAG workspace..."
 mkdir -p ./graphRAG/input
 # Initialize (idempotent)
-graphrag init --root ./graphRAG --force
-
-# Sample data for dev (adjust path/file as needed)
-if [ -f ./data/cleaned_data.csv ]; then
-  head -n 1001 ./data/cleaned_data.csv > ./graphRAG/input/dev_sample.csv
+# Init only once; do NOT --force
+if [ ! -f ./graphRAG/settings.yaml ]; then
+  graphrag init --root ./graphRAG
 fi
+
 
 # --- Step 3: Pre-pull the exact models you'll use ---
 # (Do this AFTER the server is ready, BEFORE running GraphRAG)
