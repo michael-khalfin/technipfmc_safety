@@ -41768,3 +41768,117 @@ Traceback (most recent call last):
   File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 457, in exception_type
     raise AuthenticationError(
 litellm.exceptions.AuthenticationError: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.
+2025-10-24 13:25:47.0946 - ERROR - graphrag.language_model.providers.litellm.services.retry.exponential_retry - ExponentialRetry: Request failed, retrying, retries=6, delay=64.0, max_retries=10, exception=litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.
+Traceback (most recent call last):
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 823, in acompletion
+    headers, response = await self.make_openai_chat_completion_request(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/litellm_core_utils/logging_utils.py", line 190, in async_wrapper
+    result = await func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 454, in make_openai_chat_completion_request
+    raise e
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 436, in make_openai_chat_completion_request
+    await openai_aclient.chat.completions.with_raw_response.create(
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/_legacy_response.py", line 381, in wrapped
+    return cast(LegacyAPIResponse[R], await func(*args, **kwargs))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/resources/chat/completions/completions.py", line 2603, in create
+    return await self._post(
+           ^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/_base_client.py", line 1794, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/_base_client.py", line 1594, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/main.py", line 587, in acompletion
+    response = await init_response
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 870, in acompletion
+    raise OpenAIError(
+litellm.llms.openai.common_utils.OpenAIError: Error code: 401 - {'error': {'message': 'Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/exponential_retry.py", line 71, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 109, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/utils.py", line 1632, in wrapper_async
+    raise e
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/utils.py", line 1478, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/main.py", line 606, in acompletion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 457, in exception_type
+    raise AuthenticationError(
+litellm.exceptions.AuthenticationError: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.
+2025-10-24 13:26:52.0827 - ERROR - graphrag.language_model.providers.litellm.services.retry.exponential_retry - ExponentialRetry: Request failed, retrying, retries=7, delay=128.0, max_retries=10, exception=litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.
+Traceback (most recent call last):
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 823, in acompletion
+    headers, response = await self.make_openai_chat_completion_request(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/litellm_core_utils/logging_utils.py", line 190, in async_wrapper
+    result = await func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 454, in make_openai_chat_completion_request
+    raise e
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 436, in make_openai_chat_completion_request
+    await openai_aclient.chat.completions.with_raw_response.create(
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/_legacy_response.py", line 381, in wrapped
+    return cast(LegacyAPIResponse[R], await func(*args, **kwargs))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/resources/chat/completions/completions.py", line 2603, in create
+    return await self._post(
+           ^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/_base_client.py", line 1794, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/openai/_base_client.py", line 1594, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.AuthenticationError: Error code: 401 - {'error': {'message': 'Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/main.py", line 587, in acompletion
+    response = await init_response
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/llms/openai/openai.py", line 870, in acompletion
+    raise OpenAIError(
+litellm.llms.openai.common_utils.OpenAIError: Error code: 401 - {'error': {'message': 'Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/services/retry/exponential_retry.py", line 71, in aretry
+    return await func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/graphrag/language_model/providers/litellm/chat_model.py", line 109, in _base_acompletion
+    return await acompletion(**new_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/utils.py", line 1632, in wrapper_async
+    raise e
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/utils.py", line 1478, in wrapper_async
+    result = await original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/main.py", line 606, in acompletion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2273, in exception_type
+    raise e
+  File "/home/gcw3/.conda/envs/graphrag_env/lib/python3.11/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 457, in exception_type
+    raise AuthenticationError(
+litellm.exceptions.AuthenticationError: litellm.AuthenticationError: AuthenticationError: OpenAIException - Incorrect API key provided: <API_KEY>. You can find your API key at https://platform.openai.com/account/api-keys.
