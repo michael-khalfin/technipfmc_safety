@@ -5,14 +5,6 @@ Features:
 - Builds a NetworkX graph from `nodes.csv` (id,label,type) and `edges.csv` (src,rel,dst,...)
 - Aggregates duplicate edges (same src,dst,rel) and stores a `weight` count
 - Saves a static PNG via matplotlib and an interactive HTML via PyVis (if installed)
-
-Usage (examples):
-  python knowlege_graph/viz_from_csv.py \
-      --nodes knowlege_graph/output/nodes.csv \
-      --edges knowlege_graph/output/edges.csv \
-      --top-n 300
-
-If `--out-dir` is not provided, an `_viz` directory is created alongside the CSVs.
 """
 
 from __future__ import annotations
@@ -20,10 +12,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 from typing import Optional
-
+from pyvis.network import Network 
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np  
 
 
 def parse_args() -> argparse.Namespace:
@@ -40,13 +33,6 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def ensure_pyvis() -> Optional[object]:
-    try:
-        from pyvis.network import Network  # type: ignore
-        return Network
-    except Exception:
-        print("Warning: pyvis not installed. Skipping interactive HTML output. Install with: pip install pyvis")
-        return None
 
 
 def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.Graph:
@@ -69,22 +55,18 @@ def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.G
         .sort_values("weight", ascending=False)
     )
 
-    # Choose graph type
+
     G: nx.Graph
     G = nx.DiGraph() if directed else nx.Graph()
 
     # Add nodes using IDs as keys, with attributes
-    # Expected columns: id, label, type
-    if "id" not in nodes_df.columns or "label" not in nodes_df.columns:
-        raise ValueError("nodes CSV must have at least 'id' and 'label' columns")
-
     for _, r in nodes_df.iterrows():
-        nid = str(r["id"])  # supports hashed IDs like 'node:abcd'
+        nid = str(r["id"])  
         label = str(r.get("label", nid))
         ntype = str(r.get("type", "entity"))
         G.add_node(nid, label=label, type=ntype)
 
-    # Add edges with weight and label (relation)
+    # Add edges with weight and label 
     for _, r in agg.iterrows():
         src = str(r["src"])
         dst = str(r["dst"])
@@ -97,11 +79,10 @@ def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.G
         if dst not in G:
             G.add_node(dst, label=dst, type="entity")
 
-        # For simple visualization, if an undirected edge already exists, update weight
+        #if an undirected edge already exists, update weight
         if not directed and G.has_edge(src, dst):
             existing_w = G[src][dst].get("weight", 1.0)
             G[src][dst]["weight"] = float(existing_w) + w
-            # Prefer preserving a relation label if consistent; otherwise keep first
         else:
             G.add_edge(src, dst, weight=w, label=rel)
 
@@ -119,23 +100,15 @@ def filter_top_n_by_degree(G: nx.Graph, top_n: Optional[int]) -> nx.Graph:
 def plot_static(G: nx.Graph, out_dir: Path, title: str, seed: int, label_top: int) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     H = G
-    # Use a spring layout with a k parameter scaling with graph size for better spacing
-    try:
-        import numpy as np  # type: ignore
-        k = 1.0 / (np.sqrt(max(1, H.number_of_nodes()))) * 8.0
-    except Exception:
-        k = None
+    k = 1.0 / (np.sqrt(max(1, H.number_of_nodes()))) * 8.0
     pos = nx.spring_layout(H, seed=seed, k=k) if k else nx.spring_layout(H, seed=seed)
 
-    # Compute degree for sizing and labeling
     degrees = dict(H.degree())
     # Label only top-K nodes by degree
     top_nodes_for_labels = set(sorted(degrees, key=degrees.get, reverse=True)[: max(0, label_top)])
     node_labels = {n: H.nodes[n].get("label", str(n)) for n in top_nodes_for_labels}
-    # Size nodes by degree (with floor and scale)
     node_sizes = [max(40, min(400, 20 + 8 * degrees.get(n, 1))) for n in H.nodes]
-    # Color groups by node type
-    node_colors = [hash(H.nodes[n].get("type", "entity")) % 20 for n in H.nodes]
+    node_colors = [hash(H.nodes[n].get("type", "entity")) % 20 for n in H.nodes] # same cuz we only process entity? 
 
     plt.figure(figsize=(20, 20))
     nx.draw_networkx_nodes(H, pos, node_size=node_sizes, alpha=0.9, node_color=node_colors, cmap="tab20")
@@ -152,10 +125,6 @@ def plot_static(G: nx.Graph, out_dir: Path, title: str, seed: int, label_top: in
 
 
 def plot_interactive(G: nx.Graph, out_dir: Path, min_edge_weight: float = 0.0) -> Optional[Path]:
-    Network = ensure_pyvis()
-    if Network is None:
-        return None
-
     out_dir.mkdir(parents=True, exist_ok=True)
     net = Network(height="900px", width="100%", notebook=False, cdn_resources="in_line")
     net.force_atlas_2based()
@@ -163,23 +132,21 @@ def plot_interactive(G: nx.Graph, out_dir: Path, min_edge_weight: float = 0.0) -
     for node, attrs in G.nodes(data=True):
         title = attrs.get("label", str(node))
         ntype = attrs.get("type", "entity")
-        hover = f"<b>{title}</b><br>Type: {ntype}<br>Degree: {G.degree(node)}"
+        hover = f"Title: {title}, Type: {ntype}, Degree: {G.degree(node)}"
         net.add_node(node, label=title, title=hover, group=ntype)
 
     for s, t, attrs in G.edges(data=True):
         w = float(attrs.get("weight", 1.0))
         rel = str(attrs.get("label", "related_to"))
         if w >= min_edge_weight:
-            hover = f"<b>{rel}</b><br>Weight: {w:.0f}"
+            hover = f"Relation: {rel}, Weight: {w:.0f}"
             net.add_edge(s, t, title=hover, value=w)
 
     html_path = out_dir / "graph_interactive.html"
     net.show_buttons(filter_=["physics"])
-    # Generate HTML and write explicitly with UTF-8 to avoid Windows cp1252 encode errors
     try:
         html = net.generate_html(str(html_path))
     except Exception:
-        # Fallback: some versions may not accept a name parameter
         html = net.generate_html()
     with html_path.open("w", encoding="utf-8") as f:
         f.write(html)
@@ -191,7 +158,6 @@ def main() -> None:
 
     # Determine output directory
     if args.out_dir is None:
-        # Put _viz next to provided nodes CSV
         out_dir = args.nodes.parent / "_viz"
     else:
         out_dir = args.out_dir

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Utility to push CSV rows through a running Plumber instance and persist triples,
 then materialize a simple knowledge graph as nodes/edges CSVs."""
 
@@ -10,8 +9,9 @@ import json
 import time
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
+import hashlib
 
 
 DEFAULT_EXTRACTORS = ["open_ie"]
@@ -131,12 +131,6 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Skip the first N input rows (resume support).",
     )
-    parser.add_argument(
-        "--warmup",
-        type=int,
-        default=0,
-        help="Send N sequential warmup requests before parallel processing.",
-    )
     return parser.parse_args()
 
 
@@ -153,7 +147,7 @@ def build_payload(
     linkers: Optional[List[str]],
     resolvers: Optional[List[str]],
 ) -> Dict:
-    payload: Dict[str, object] = {
+    payload = {
         "input_text": text,
         "extractor": extractors,
     }
@@ -213,23 +207,21 @@ def process_csv(args: argparse.Namespace) -> None:
     if args.edges_csv is not None:
         edges_csv = args.edges_csv
 
-    nodes: Dict[str, Dict[str, str]] = {}
-    edges: List[Dict[str, str]] = []
-
-    def _node_id(label: str, ntype: str = "entity") -> str:
-        key = f"{ntype}|{label}".lower().strip()
-        import hashlib
-        h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
-        return f"node:{h}"
+    nodes = {}
+    edges = []
 
     def _add_node(label: str, ntype: str = "entity") -> str:
+        def _node_id(label: str, ntype: str = "entity") -> str:
+            key = f"{ntype}|{label}".lower().strip()
+            h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
+            return f"node:{h}"
         nid = _node_id(label, ntype)
         if nid not in nodes:
             nodes[nid] = {"id": nid, "label": label, "type": ntype}
         return nid
 
-    # Collect rows upfront (apply optional truncation) to enable parallel requests
-    collected: List[Tuple[int, Dict[str, str]]] = []
+    # Collect rows upfront to enable parallel requests
+    collected = []
     for idx, row in enumerate(read_rows(args.csv_path)):
         text = (row.get(args.text_column) or "").strip()
         if not text:
@@ -251,15 +243,12 @@ def process_csv(args: argparse.Namespace) -> None:
     start_time = time.time()
     processed = 0
     errors = 0
-    results: Dict[int, Dict] = {}
-
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-
+    results = {}
+    
     def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
         text = row.get(args.text_column, "")
         payload = build_payload(text, args.extractor, args.linker, args.resolver)
-        # Simple retry loop with fixed backoff
-        last_err: Optional[Exception] = None
+        last_err = None
         for attempt in range(1, max(1, args.retries) + 1):
             try:
                 triples = submit_request(args.url, payload, args.timeout)
@@ -274,22 +263,6 @@ def process_csv(args: argparse.Namespace) -> None:
         if args.id_column and args.id_column in row:
             rec["id"] = row[args.id_column]
         return idx, rec
-
-    # Optional warmup to let heavy services (e.g., CoreNLP) come alive
-    if args.warmup and total > 0:
-        warm_n = min(args.warmup, total)
-        print(f"[warmup] sending {warm_n} sequential requests before parallel run...")
-        for i in range(warm_n):
-            _, row = collected[i]
-            try:
-                _ = submit_request(
-                    args.url,
-                    build_payload(row.get(args.text_column, ""), args.extractor, args.linker, args.resolver),
-                    args.timeout,
-                )
-            except Exception as e:
-                # Warmup errors are non-fatal; continue
-                pass
 
     # Ensure output directory exists, then open JSONL for streaming writes
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -318,7 +291,7 @@ def process_csv(args: argparse.Namespace) -> None:
                     s, p, o = norm
                     sid = _add_node(s, "entity")
                     oid = _add_node(o, "entity")
-                    edge: Dict[str, str] = {"src": sid, "rel": p, "dst": oid, "src_label": s, "dst_label": o}
+                    edge = {"src": sid, "rel": p, "dst": oid, "src_label": s, "dst_label": o}
                     if args.id_column and args.id_column in row:
                         edge["row_id"] = str(row[args.id_column])
                     edges.append(edge)
