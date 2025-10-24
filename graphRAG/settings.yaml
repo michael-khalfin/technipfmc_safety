@@ -8,53 +8,38 @@ models:
   default_chat_model:
     type: chat
     model_provider: ollama
-    auth_type: api_key # or azure_managed_identity
-    api_key: "DUMMY_KEY" # set this in the generated .env file, or remove if managed identity
-    model: llama3:70b
-    api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
-    # api_version: 2024-05-01-preview
-    #model_supports_json: true # recommended if this is available for your model.
-    concurrent_requests: 1 #25
-    async_mode: threaded # or asyncio
+    api_base: "http://127.0.0.1:11434"
+    model: llama3:8b          # was llama3:70b
+    concurrent_requests: 1
+    async_mode: threaded
     retry_strategy: exponential_backoff
     max_retries: 10
     tokens_per_minute: null
     requests_per_minute: null
+
   default_embedding_model:
     type: embedding
     model_provider: ollama
-    auth_type: api_key
-    api_key: "DUMMY_KEY"
-    model: nomic-embed-text
     api_base: "http://127.0.0.1:11434"
-    # api_version: 2024-05-01-preview
-    concurrent_requests: 1 #25
-    async_mode: threaded # or asyncio
+    model: nomic-embed-text:latest
+    concurrent_requests: 1
+    async_mode: threaded
     retry_strategy: exponential_backoff
     max_retries: 10
     tokens_per_minute: null
     requests_per_minute: null
 
-### Input settings ###
-
 input:
-  # storage:
-  #   type: file # or blob
-  #   base_dir: "input"
-  file_type: csv # [csv, text, json]
-  path: "input/dev_sample_json.csv"
-  text_column: "node_json"
-  id_column: "_id"
-  # meta_columns:
-  #   - "TITLE"
-  #   - "DATE_OF_INCIDENT"
-  #   - "WORKPLACE"
-  #   - "INJURY_ILLNESS"
+  file_type: csv
+  path: "input/dev_sample.csv"   # was dev_sample_json.csv
+  text_column: "<YOUR_TEXT_COL>" # set to the column in dev_sample.csv that contains text
+  id_column: "id"                # make this consistent with your data
 
 chunks:
-  size: 600 #1200
-  overlap: 50 #100
-  group_by_columns: [id]
+  size: 600
+  overlap: 50
+  group_by_columns: ["id"]       # match id_column above
+
 
 ### Output/storage settings ###
 ## If blob storage is specified in the following four sections,
@@ -87,8 +72,7 @@ embed_text:
 extract_graph:
   model_id: default_chat_model
   prompt: "prompts/extract_graph.txt"
-  #entity_types: [organization,person,geo,event]
-  entity_types: [INCIDENT_TYPE, INJURY_TYPE, BODY_PART, EQUIPMENT, LOCATION, ORGANIZATION, DATE]
+  entity_types: [organization,person,geo,event]
   max_gleanings: 1
 
 summarize_descriptions:

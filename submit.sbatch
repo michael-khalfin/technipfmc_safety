@@ -20,5 +20,6 @@ source .venv/bin/activate
 # Run EDA script
 echo "Running the EDA script from eda/main.py..."
 python3 eda/main.py
+python3 eda/dataFeatures.py
 
 echo "Job finished."
