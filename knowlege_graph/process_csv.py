@@ -15,8 +15,8 @@ import hashlib
 
 
 DEFAULT_EXTRACTORS = ["open_ie"]
-DEFAULT_LINKERS = ["dummy"]
-DEFAULT_RESOLVERS = ["dummy"]
+DEFAULT_LINKERS = ["FalconWikidataJoint"]
+DEFAULT_RESOLVERS = ["spacy_neural_coreference"]
 
 
 def parse_args() -> argparse.Namespace:
