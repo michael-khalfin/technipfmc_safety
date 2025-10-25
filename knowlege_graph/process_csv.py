@@ -208,20 +208,11 @@ def process_csv(args: argparse.Namespace) -> None:
         edges_csv = args.edges_csv
 
     nodes = {}
-    edges = []
-
-    def _add_node(label: str, ntype: str = "entity") -> str:
-        def _node_id(label: str, ntype: str = "entity") -> str:
-            key = f"{ntype}|{label}".lower().strip()
-            h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
-            return f"node:{h}"
-        nid = _node_id(label, ntype)
-        if nid not in nodes:
-            nodes[nid] = {"id": nid, "label": label, "type": ntype}
-        return nid
+    edge_count = 0
 
     # Collect rows upfront to enable parallel requests
     collected = []
+    row_id_present = False
     for idx, row in enumerate(read_rows(args.csv_path)):
         text = (row.get(args.text_column) or "").strip()
         if not text:
@@ -230,6 +221,8 @@ def process_csv(args: argparse.Namespace) -> None:
             text = text[: args.max_chars]
         row = dict(row)
         row[args.text_column] = text
+        if args.id_column and args.id_column in row:
+            row_id_present = True
         if idx >= args.start_index:
             collected.append((idx, row))
         if args.max_rows is not None and len(collected) >= args.max_rows:
@@ -239,6 +232,13 @@ def process_csv(args: argparse.Namespace) -> None:
     if total == 0:
         print("No rows to process after filtering.")
         return
+
+    nodes_csv.parent.mkdir(parents=True, exist_ok=True)
+    edges_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    edge_fields = ["src", "rel", "dst", "src_label", "dst_label"]
+    if row_id_present:
+        edge_fields.append("row_id")
 
     start_time = time.time()
     processed = 0
@@ -264,52 +264,78 @@ def process_csv(args: argparse.Namespace) -> None:
             rec["id"] = row[args.id_column]
         return idx, rec
 
-    # Ensure output directory exists, then open JSONL for streaming writes
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    with args.output.open("w", encoding="utf-8") as out_jsonl:
-        with ThreadPoolExecutor(max_workers=max(1, args.max_workers)) as ex:
-            futs = {ex.submit(_submit, idx, row): (idx, row) for idx, row in collected}
-            for fut in as_completed(futs):
-                idx, row = futs[fut]
-                try:
-                    i, rec = fut.result()
-                    results[i] = rec
-                except Exception as e:
-                    errors += 1
-                    rec = {"text": row.get(args.text_column, ""), "triples": [], "error": str(e)}
-                    results[idx] = rec
 
-                # Stream this row to JSONL immediately
-                out_jsonl.write(json.dumps(rec, ensure_ascii=False) + "\n")
-                out_jsonl.flush()
+    with nodes_csv.open("w", encoding="utf-8", newline="") as nodes_file, edges_csv.open(
+        "w", encoding="utf-8", newline=""
+    ) as edges_file:
+        nodes_writer = csv.DictWriter(nodes_file, fieldnames=["id", "label", "type"])
+        nodes_writer.writeheader()
 
-                # Update graph incrementally
-                for t in rec.get("triples", []):
-                    norm = _normalize_triple(t)
-                    if not norm:
-                        continue
-                    s, p, o = norm
-                    sid = _add_node(s, "entity")
-                    oid = _add_node(o, "entity")
-                    edge = {"src": sid, "rel": p, "dst": oid, "src_label": s, "dst_label": o}
-                    if args.id_column and args.id_column in row:
-                        edge["row_id"] = str(row[args.id_column])
-                    edges.append(edge)
+        edges_writer = csv.DictWriter(edges_file, fieldnames=edge_fields)
+        edges_writer.writeheader()
 
-                processed += 1
+        def _add_node(label: str, ntype: str = "entity") -> str:
+            def _node_id(label: str, ntype: str = "entity") -> str:
+                key = f"{ntype}|{label}".lower().strip()
+                h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
+                return f"node:{h}"
 
-                if processed % max(1, args.log_every) == 0:
-                    elapsed = time.time() - start_time
-                    avg = elapsed / processed if processed else 0.0
-                    remaining = max(0, total - processed)
-                    eta_sec = remaining * avg
-                    pct = (processed / total) * 100.0
-                    print(
-                        f"[progress] {processed}/{total} ({pct:0.1f}%) | avg {avg:0.2f}s/row | elapsed {elapsed:0.1f}s | ETA {eta_sec:0.1f}s | errors {errors}"
-                    )
+            nid = _node_id(label, ntype)
+            if nid not in nodes:
+                node_rec = {"id": nid, "label": label, "type": ntype}
+                nodes[nid] = node_rec
+                nodes_writer.writerow(node_rec)
+                nodes_file.flush()
+            return nid
 
-                if args.sleep:
-                    time.sleep(args.sleep)
+        # Ensure output directory exists, then open JSONL for streaming writes
+        with args.output.open("w", encoding="utf-8") as out_jsonl:
+            with ThreadPoolExecutor(max_workers=max(1, args.max_workers)) as ex:
+                futs = {ex.submit(_submit, idx, row): (idx, row) for idx, row in collected}
+                for fut in as_completed(futs):
+                    idx, row = futs[fut]
+                    try:
+                        i, rec = fut.result()
+                        results[i] = rec
+                    except Exception as e:
+                        errors += 1
+                        rec = {"text": row.get(args.text_column, ""), "triples": [], "error": str(e)}
+                        results[idx] = rec
+
+                    # Stream this row to JSONL immediately
+                    out_jsonl.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                    out_jsonl.flush()
+
+                    # Update graph incrementally
+                    for t in rec.get("triples", []):
+                        norm = _normalize_triple(t)
+                        if not norm:
+                            continue
+                        s, p, o = norm
+                        sid = _add_node(s, "entity")
+                        oid = _add_node(o, "entity")
+                        edge = {"src": sid, "rel": p, "dst": oid, "src_label": s, "dst_label": o}
+                        if "row_id" in edge_fields and args.id_column and args.id_column in row:
+                            edge["row_id"] = str(row[args.id_column])
+                        edges_writer.writerow(edge)
+                        edges_file.flush()
+                        edge_count += 1
+
+                    processed += 1
+
+                    if processed % max(1, args.log_every) == 0:
+                        elapsed = time.time() - start_time
+                        avg = elapsed / processed if processed else 0.0
+                        remaining = max(0, total - processed)
+                        eta_sec = remaining * avg
+                        pct = (processed / total) * 100.0
+                        print(
+                            f"[progress] {processed}/{total} ({pct:0.1f}%) | avg {avg:0.2f}s/row | elapsed {elapsed:0.1f}s | ETA {eta_sec:0.1f}s | errors {errors}"
+                        )
+
+                    if args.sleep:
+                        time.sleep(args.sleep)
 
     total_elapsed = time.time() - start_time
     rps = processed / total_elapsed if total_elapsed > 0 and processed > 0 else 0.0
@@ -317,27 +343,8 @@ def process_csv(args: argparse.Namespace) -> None:
         f"Processed {processed} rows in {total_elapsed:0.1f}s ({rps:0.2f} rows/s); errors={errors}; results saved to {args.output}"
     )
 
-    # Write graph CSVs
-    nodes_csv.parent.mkdir(parents=True, exist_ok=True)
-    edges_csv.parent.mkdir(parents=True, exist_ok=True)
-
-    with nodes_csv.open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["id", "label", "type"]) 
-        w.writeheader()
-        for n in nodes.values():
-            w.writerow(n)
-
-    edge_fields = ["src", "rel", "dst", "src_label", "dst_label"]
-    if any("row_id" in e for e in edges):
-        edge_fields.append("row_id")
-    with edges_csv.open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=edge_fields)
-        w.writeheader()
-        for e in edges:
-            w.writerow(e)
-
     print(f"Nodes CSV: {nodes_csv} (unique nodes: {len(nodes)})")
-    print(f"Edges CSV: {edges_csv} (edges: {len(edges)})")
+    print(f"Edges CSV: {edges_csv} (edges: {edge_count})")
 
 
 def main() -> None:

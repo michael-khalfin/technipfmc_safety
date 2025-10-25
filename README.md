@@ -14,7 +14,7 @@ This project provides a complete pipeline for analyzing safety incident data, in
 - **Translation**: Multi-language support for international safety data
 
 
-python knowlege_graph\process_csv.py "C:\Users\carda\projects\449COMP\technipfmc_safety\data\cleaned_description_translated.csv" --text-column text --max-rows 1000 --output knowlege_graph\output\plumber_triples.jsonl --nodes-csv knowlege_graph\output\nodes.csv --edges-csv knowlege_graph\output\edges.csv --extractor OpenIE --resolver dummy --warmup 5 --max-workers 2 --retries 3 --retry-wait 8 --timeout 180 --log-every 20
+python knowlege_graph\process_csv.py "C:\Users\carda\projects\449COMP\technipfmc_safety\data\cleaned_description_translated.csv" --text-column text --max-rows 1000 --output knowlege_graph\output\plumber_triples.jsonl --nodes-csv knowlege_graph\output\nodes.csv --edges-csv knowlege_graph\output\edges.csv --max-workers 2 --retries 3 --retry-wait 8 --timeout 180 --log-every 20
 [warmup] sending 5 sequential requests before parallel run...
 
 
