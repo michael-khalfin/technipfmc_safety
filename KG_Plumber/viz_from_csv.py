@@ -9,31 +9,26 @@ Features:
 
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 from typing import Optional
-from pyvis.network import Network 
-import pandas as pd
-import networkx as nx
+
 import matplotlib.pyplot as plt
-import numpy as np  
+import networkx as nx
+import numpy as np
+import pandas as pd
+from pyvis.network import Network
 
-
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Visualize knowledge graph from nodes/edges CSVs.")
-    p.add_argument("--nodes", type=Path, default=Path("knowlege_graph/output/nodes.csv"), help="Path to nodes.csv")
-    p.add_argument("--edges", type=Path, default=Path("knowlege_graph/output/edges.csv"), help="Path to edges.csv")
-    p.add_argument("--out-dir", type=Path, default=None, help="Output directory for visualization artifacts")
-    p.add_argument("--top-n", type=int, default=250, help="Plot at most N highest-degree nodes (static/interactive)")
-    p.add_argument("--label-top", type=int, default=40, help="Label only top-K nodes by degree in static plot")
-    p.add_argument("--min-weight", type=float, default=1.0, help="Filter edges with weight below this value when plotting")
-    p.add_argument("--seed", type=int, default=42, help="Random seed for layouts")
-    p.add_argument("--directed", action="store_true", help="Build a directed graph instead of undirected")
-    p.add_argument("--title", default="Knowledge Graph Visualization", help="Title for the static plot")
-    return p.parse_args()
-
-
-
+SEED = 123
+SCRIPT_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = SCRIPT_DIR / "output"
+NODES_CSV = OUTPUT_DIR / "nodes.csv"
+EDGES_CSV = OUTPUT_DIR / "edges.csv"
+VIZ_DIR = OUTPUT_DIR / "_viz"
+TOP_N = 250
+LABEL_TOP = 40
+MIN_WEIGHT = 1.0
+DIRECTED = False
+PLOT_TITLE = "Knowledge Graph Visualization"
 
 def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.Graph:
     if not nodes_csv.exists():
@@ -154,37 +149,31 @@ def plot_interactive(G: nx.Graph, out_dir: Path, min_edge_weight: float = 0.0) -
 
 
 def main() -> None:
-    args = parse_args()
+    out_dir = VIZ_DIR or (NODES_CSV.parent / "_viz")
 
-    # Determine output directory
-    if args.out_dir is None:
-        out_dir = args.nodes.parent / "_viz"
-    else:
-        out_dir = args.out_dir
-
-    print(f"Loading graph from:\n  nodes: {args.nodes}\n  edges: {args.edges}")
-    G = load_graph(args.nodes, args.edges, directed=args.directed)
+    print(f"Loading graph from:\n  nodes: {NODES_CSV}\n  edges: {EDGES_CSV}")
+    G = load_graph(NODES_CSV, EDGES_CSV, directed=DIRECTED)
     print(f"Graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges before filtering")
 
-    H = filter_top_n_by_degree(G, args.top_n)
+    H = filter_top_n_by_degree(G, TOP_N)
     # Remove edges below weight threshold to reduce clutter
-    if args.min_weight > 1.0:
-        to_remove = [(u, v) for u, v, d in H.edges(data=True) if float(d.get("weight", 1.0)) < args.min_weight]
+    if MIN_WEIGHT > 1.0:
+        to_remove = [(u, v) for u, v, d in H.edges(data=True) if float(d.get("weight", 1.0)) < MIN_WEIGHT]
         if to_remove:
             H.remove_edges_from(to_remove)
     if H.number_of_nodes() != G.number_of_nodes():
-        print(f"Filtered to top {args.top_n} nodes for plotting: {H.number_of_nodes()} nodes, {H.number_of_edges()} edges")
+        print(f"Filtered to top {TOP_N} nodes for plotting: {H.number_of_nodes()} nodes, {H.number_of_edges()} edges")
 
     # Save static PNG
-    png_path = plot_static(H, out_dir, args.title, args.seed, args.label_top)
+    png_path = plot_static(H, out_dir, PLOT_TITLE, SEED, LABEL_TOP)
     print(f"Saved static plot to: {png_path}")
 
     # Save interactive HTML
-    html_path = plot_interactive(H, out_dir)
+    html_path = plot_interactive(H, out_dir, min_edge_weight=MIN_WEIGHT)
     if html_path:
         print(f"Saved interactive HTML to: {html_path}")
     else:
-        print("Interactive HTML skipped (pyvis not installed). Install with: pip install pyvis")
+        print("Interactive HTML skipped")
 
 
 if __name__ == "__main__":
