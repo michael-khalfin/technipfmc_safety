@@ -179,7 +179,7 @@ def main() -> None:
     png_path = plot_static(H, out_dir, args.title, args.seed, args.label_top)
     print(f"Saved static plot to: {png_path}")
 
-    # Save interactive HTML (if pyvis installed)
+    # Save interactive HTML
     html_path = plot_interactive(H, out_dir)
     if html_path:
         print(f"Saved interactive HTML to: {html_path}")
