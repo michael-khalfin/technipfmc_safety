@@ -18,12 +18,15 @@ import numpy as np
 import pandas as pd
 from pyvis.network import Network
 
-SEED = 123
+# File Configs
 SCRIPT_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = SCRIPT_DIR / "output"
 NODES_CSV = OUTPUT_DIR / "nodes.csv"
 EDGES_CSV = OUTPUT_DIR / "edges.csv"
 VIZ_DIR = OUTPUT_DIR / "_viz"
+
+# General Configs
+SEED = 123
 TOP_N = 250
 LABEL_TOP = 40
 MIN_WEIGHT = 1.0
@@ -39,7 +42,7 @@ def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.G
     nodes_df = pd.read_csv(nodes_csv)
     edges_df = pd.read_csv(edges_csv)
 
-    # Normalize and aggregate duplicate edges (src, dst, rel)
+    # Normalize and aggregate duplicate edges
     for col in ("src", "dst", "rel"):
         if col not in edges_df.columns:
             raise ValueError(f"edges CSV missing required column: {col}")

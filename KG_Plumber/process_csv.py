@@ -25,7 +25,7 @@ ID_COLUMN = "RECORD_NO_LOSS_POTENTIAL"
 
 # Path Configs
 SCRIPT_DIR = Path(__file__).resolve().parent
-CSV_PATH = SCRIPT_DIR.parent / "data" / "DIM_SYNERGI_ACTIONS.csv"
+CSV_PATH = SCRIPT_DIR.parent / "data" / "cleaned_description_translated.csv"
 OUTPUT_DIR = SCRIPT_DIR / "output"
 OUTPUT_JSONL = OUTPUT_DIR / "plumber_triples.jsonl"
 NODES_CSV_PATH  = OUTPUT_DIR / "nodes.csv"
