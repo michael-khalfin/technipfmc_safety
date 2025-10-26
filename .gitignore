@@ -36,3 +36,12 @@ pip-wheel-metadata/
 .idea/
 
 */config.yml.bak
+
+
+# Plumber 
+KG_Plumber/**
+!KG_Plumber/process_csv.py
+!KG_Plumber/viz_from_csv.py
+!KG_Plumber/output/
+!KG_Plumber/output/**
+!KG_Plumber/get_plumber.sh
