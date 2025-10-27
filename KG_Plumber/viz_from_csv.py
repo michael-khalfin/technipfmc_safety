@@ -57,7 +57,7 @@ def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.G
     G: nx.Graph
     G = nx.DiGraph() if directed else nx.Graph()
 
-    # Add nodes using IDs as keys, with attributes
+    # Add nodes using IDs as keys
     for _, r in nodes_df.iterrows():
         nid = str(r["id"])  
         label = str(r.get("label", nid))
@@ -71,7 +71,7 @@ def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.G
         rel = str(r["rel"]) if pd.notna(r["rel"]) else "related_to"
         w = float(r["weight"]) if pd.notna(r["weight"]) else 1.0
 
-        # Ensure endpoints exist (guard against edges referencing filtered/missing nodes)
+        # Ensure endpoints exist 
         if src not in G:
             G.add_node(src, label=src, type="entity")
         if dst not in G:
@@ -158,8 +158,8 @@ def main() -> None:
     G = load_graph(NODES_CSV, EDGES_CSV, directed=DIRECTED)
     print(f"Graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges before filtering")
 
-    H = filter_top_n_by_degree(G, TOP_N)
     # Remove edges below weight threshold to reduce clutter
+    H = filter_top_n_by_degree(G, TOP_N)
     if MIN_WEIGHT > 1.0:
         to_remove = [(u, v) for u, v, d in H.edges(data=True) if float(d.get("weight", 1.0)) < MIN_WEIGHT]
         if to_remove:

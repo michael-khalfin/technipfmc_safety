@@ -32,12 +32,12 @@ NODES_CSV_PATH  = OUTPUT_DIR / "nodes.csv"
 EDGES_CSV_PATH = OUTPUT_DIR / "edges.csv"
 
 # Config For Processing Due to Timout Issues and Efficiency
-MAX_ROWS: Optional[int] = None
+MAX_ROWS = None
 SLEEP_SECONDS = 0.0
 REQUEST_TIMEOUT = 120.0
 LOG_EVERY = 50
 MAX_WORKERS = 4
-MAX_CHARS: Optional[int] = None
+MAX_CHARS = None
 RETRIES = 2
 RETRY_WAIT = 5.0
 START_INDEX = 0
@@ -188,7 +188,7 @@ def process_csv() -> None:
                 nodes_file.flush()
             return nid
 
-        # Ensure output directory exists, then open JSONL for streaming writes
+        # Open JSONL for streaming writes
         with OUTPUT_JSONL.open("w", encoding="utf-8") as out_jsonl:
             with ThreadPoolExecutor(max_workers=max(1, MAX_WORKERS)) as ex:
                 futs = {ex.submit(_submit, idx, row): (idx, row) for idx, row in collected}
@@ -202,7 +202,7 @@ def process_csv() -> None:
                         rec = {"text": row.get(TEXT_COLUMN, ""), "triples": [], "error": str(e)}
                         results[idx] = rec
 
-                    # Stream this row to JSONL immediately
+                    # Stream row immediately
                     out_jsonl.write(json.dumps(rec, ensure_ascii=False) + "\n")
                     out_jsonl.flush()
 
