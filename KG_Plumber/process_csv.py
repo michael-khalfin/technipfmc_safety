@@ -43,13 +43,18 @@ RETRY_WAIT = 5.0
 START_INDEX = 0
 
 
-def read_rows(csv_path: Path) -> Iterable[Dict[str, str]]:
+"""
+Yield Rows Until We Read Them
+"""
+def read_rows(csv_path: Path):
     with csv_path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
             yield row
 
-
+"""
+Build Neccessary Payload To Send to Plumber API 
+"""
 def build_payload(
     text: str,
     extractors: List[str],
@@ -67,6 +72,9 @@ def build_payload(
     return payload
 
 
+"""
+General Submission to Plumber API
+"""
 def submit_request(
     base_url: str,
     payload: Dict,
@@ -81,7 +89,31 @@ def submit_request(
         raise RuntimeError(f"Unexpected response payload: {data}")
     return data
 
+"""
+Submit Function Utilized for Asynch Handling (Conccurent Request)
+"""
+def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
+        text = row.get(TEXT_COLUMN, "")
+        payload = build_payload(text, EXTRACTORS, LINKERS, RESOLVERS)
+        for attempt in range(1, max(1, RETRIES) + 1):
+            try:
+                triples = submit_request(PLUMBER_URL, payload, REQUEST_TIMEOUT)
+                break
+            except Exception as e:
+                if attempt < max(1, RETRIES):
+                    time.sleep(max(0.0, RETRY_WAIT))
+                    continue
+                raise
+        rec = {"text": text, "triples": triples}
+        if ID_COLUMN in row:
+            rec["id"] = row[ID_COLUMN]
+        return idx, rec
 
+
+
+"""
+(EXPERIMENTAL) Normalization of Tripets
+"""
 def _normalize_triple(item: Dict) -> Optional[Tuple[str, str, str]]:
     """Coerce a triple-like dict into (subject,predicate,object) strings if possible."""
     if not isinstance(item, dict):
@@ -100,6 +132,9 @@ def _normalize_triple(item: Dict) -> Optional[Tuple[str, str, str]]:
     return None
 
 
+"""
+Process CSV to Extract Triplets from Plumber
+"""
 def process_csv() -> None:
     if not CSV_PATH.exists():
         raise FileNotFoundError(f"Input CSV not found: {CSV_PATH}")
@@ -113,17 +148,16 @@ def process_csv() -> None:
 
     # Collect rows upfront to enable parallel requests
     collected = []
-    row_id_present = False
     for idx, row in enumerate(read_rows(CSV_PATH)):
         text = (row.get(TEXT_COLUMN) or "").strip()
         if not text:
             continue
+
+        # Use our configs yay
         if MAX_CHARS is not None and len(text) > MAX_CHARS:
             text = text[:MAX_CHARS]
         row = dict(row)
         row[TEXT_COLUMN] = text
-        if ID_COLUMN and ID_COLUMN in row:
-            row_id_present = True
         if idx >= START_INDEX:
             collected.append((idx, row))
         if MAX_ROWS is not None and len(collected) >= MAX_ROWS:
@@ -134,37 +168,20 @@ def process_csv() -> None:
         print("No rows to process after filtering.")
         return
 
+    # Create Node/Edge Dirs
     nodes_csv.parent.mkdir(parents=True, exist_ok=True)
     edges_csv.parent.mkdir(parents=True, exist_ok=True)
+    edge_fields = ["src", "rel", "dst", "src_label", "dst_label", "row_id"]
 
-    edge_fields = ["src", "rel", "dst", "src_label", "dst_label"]
-    if row_id_present:
-        edge_fields.append("row_id")
 
+    # To Check Time Elapsed
     start_time = time.time()
     processed = 0
     errors = 0
     results = {}
     
-    def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
-        text = row.get(TEXT_COLUMN, "")
-        payload = build_payload(text, EXTRACTORS, LINKERS, RESOLVERS)
-        for attempt in range(1, max(1, RETRIES) + 1):
-            try:
-                triples = submit_request(PLUMBER_URL, payload, REQUEST_TIMEOUT)
-                break
-            except Exception as e:
-                if attempt < max(1, RETRIES):
-                    time.sleep(max(0.0, RETRY_WAIT))
-                    continue
-                raise
-        rec = {"text": text, "triples": triples}
-        if ID_COLUMN and ID_COLUMN in row:
-            rec["id"] = row[ID_COLUMN]
-        return idx, rec
-
+    
     OUTPUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
-
     with nodes_csv.open("w", encoding="utf-8", newline="") as nodes_file, edges_csv.open(
         "w", encoding="utf-8", newline=""
     ) as edges_file:
@@ -174,6 +191,9 @@ def process_csv() -> None:
         edges_writer = csv.DictWriter(edges_file, fieldnames=edge_fields)
         edges_writer.writeheader()
 
+        """
+        Add Node to CSV (will need to move this out after)
+        """
         def _add_node(label: str, ntype: str = "entity") -> str:
             def _node_id(label: str, ntype: str = "entity") -> str:
                 key = f"{ntype}|{label}".lower().strip()
@@ -212,6 +232,8 @@ def process_csv() -> None:
                         if not norm:
                             continue
                         s, p, o = norm
+
+                        # TODO: Make this into a helper function for better encapsulation
                         sid = _add_node(s, "entity")
                         oid = _add_node(o, "entity")
                         edge = {"src": sid, "rel": p, "dst": oid, "src_label": s, "dst_label": o}
