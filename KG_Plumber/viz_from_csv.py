@@ -2,9 +2,8 @@
 Visualize knowledge graph from nodes/edges CSVs produced by process_csv.py
 
 Features:
-- Builds a NetworkX graph from `nodes.csv` (id,label,type) and `edges.csv` (src,rel,dst,...)
+- Builds a NetworkX graph from `nodes.csv` Wand `edges.csv` 
 - Aggregates duplicate edges (same src,dst,rel) and stores a `weight` count
-- Saves a static PNG via matplotlib and an interactive HTML via PyVis (if installed)
 """
 
 from __future__ import annotations
@@ -53,8 +52,6 @@ def load_graph(nodes_csv: Path, edges_csv: Path, directed: bool = False) -> nx.G
         .sort_values("weight", ascending=False)
     )
 
-
-    G: nx.Graph
     G = nx.DiGraph() if directed else nx.Graph()
 
     # Add nodes using IDs as keys
