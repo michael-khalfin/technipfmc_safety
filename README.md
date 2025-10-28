@@ -193,6 +193,18 @@ python translator/csv_translator_m2m100_gpu.py --csv input.csv --columns "TITLE,
 - Static and dynamic graph generation
 - Community detection and analysis
 
+### Plumber-Based Extraction (`KG_Plumber/`)
+
+- **`get_plumber.sh`**:  Script that clones the upstream [ThePlumber](https://github.com/YaserJaradeh/ThePlumber) repository into `KG_Plumber/plumber` using optional `PLUMBER_REPO_URL` and `PLUMBER_BRANCH` overrides.
+- **`process_csv.py`**: Sends incident descriptions to a running Plumber API (`http://127.0.0.1:5000` by default), retries failures, and incrementally writes outputs to `plumber_triples.jsonl`, `nodes.csv`, and `edges.csv` within the `KG_Plumber/outputs` directory.
+- **Usage**: Start the Plumber service (Docker), update `CSV_PATH` if needed, then run `python KG_Plumber/process_csv.py` to materialize triples and derived graph artifacts.
+
+### SpaCy Triple Extraction (`KG_spaCy/`)
+
+- **`KG_test.py`**: Prototyping script that loads `cleaned_description_translated.csv`, extracts subject-verb-object triples with `textacy`/spaCy, and exports raw edges to `knowledge_graph_edges.csv`.
+- **`triple_clean.py`**: Cleans the raw triples by normalizing entities/relations, filtering  long phrases, and producing`nodes.csv` and `edges.csv`.
+- **Usage**: Run `python KG_spaCy/KG_test.py` to generate initial triples, then `python KG_spaCy/triple_clean.py` to normalize them.
+
 ## Configuration
 
 ### GraphRAG Settings
