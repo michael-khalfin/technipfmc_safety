@@ -17,22 +17,6 @@ This project provides a complete pipeline for analyzing safety incident data, in
 ## Directory Structure
 
 ```
-├── src/                    # Core code and modules
-├── eda/                    # Exploratory Data Analysis and Data Cleaning
-│   ├── data_clean/         # Data cleaning and integration modules
-│   ├── dataVisualizer.py   # Data visualization tools
-│   ├── dataModifier.py     # Data transformation utilities
-│   ├── dataFeatures.py     # Feature analysis tools
-│   └── main.py            # Main EDA execution script
-├── graphRAG/              # GraphRAG knowledge graph generation
-│   ├── input/             # Input data processing
-│   ├── output/            # Generated knowledge graphs
-│   └── settings.yaml      # GraphRAG configuration
-├── translator/            # Multi-language translation tools
-├── data/                  # Safety incident data (gitignored)
-└── viz.py                 # Graph visualization utilities
-```
-
 ├── src/                        # Core code and modules
 ├── eda/                        # Exploratory Data Analysis and Cleaning
 │   ├── data_clean/             # Data cleaning and integration modules
@@ -54,7 +38,7 @@ This project provides a complete pipeline for analyzing safety incident data, in
 ├── translator/                 # Multi-language translation tools
 ├── data/                       # Safety incident data (gitignored)
 └── viz.py                      # Graph visualization utilities
-
+```
 
 ## Key Features
 
