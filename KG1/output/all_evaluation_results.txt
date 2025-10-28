@@ -1,0 +1,20 @@
+==================================================
+Entity Consistency Evaluation Results
+==================================================
+unique_entity_rate: 0.8805222053852431
+type_consistency_rate: 1.0
+name_ambiguity_entropy: 0.0
+n_clusters: 8579
+n_nodes: 11400
+
+==================================================
+Link Prediction (Holdout) Results
+==================================================
+         Adamic-Adar | PR-AUC: 0.5224 | ROC-AUC: 0.5091 | P@K: 0.9200 | R@K: 0.0321
+             Jaccard | PR-AUC: 0.4972 | ROC-AUC: 0.5006 | P@K: 0.5000 | R@K: 0.0174
+       ResourceAlloc | PR-AUC: 0.5077 | ROC-AUC: 0.5008 | P@K: 0.5000 | R@K: 0.0174
+
+==================================================
+Semantic Similarity Results
+==================================================
+Spearman r = -0.1004 (p=2.69e-06), n=2177
