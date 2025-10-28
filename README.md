@@ -77,6 +77,46 @@ pip install -U pip
 pip install -r requirements.txt
 ```
 
+### 1.a GraphRag Setup
+```bash
+# Load Modules
+module load foss/2023b        
+module load Python/3.11.5     # loads Python 3.11 (good for GraphRAG)
+module load CUDA/12.4.0
+module load Miniforge3/24.11.3-0
+
+# Create Conda Environment
+conda create -n graphrag_env python=3.11
+source $(conda info --base)/etc/profile.d/conda.sh
+conda activate graphrag_env
+pip install -r requirements.txt
+```
+### 1.b Downloading Ollama
+```bash
+# Download Gitbash if using Windows
+# afterward, open gitbash and run
+curl -LO https://ollama.com/download/ollama-linux-amd64.tgz
+
+# Create bin directory on NOTS
+mkdir -p ~/bin
+
+#SCP to NOTS
+scp ./ollama-linux-amd64.tgz netID@nots.rice.edu:~/bin/
+```
+
+### 1.c Plumber Setup (LOCAL ONLY SETUP)
+```bash
+# Set get_plumber.sh executable
+chmod +x KG_Plumber\get_plumber.sh
+
+# Run Executable
+./get_plumber.sh
+
+# Set Up Docker
+cd KG_Plumber\plumber
+docker-compose up -d
+```
+
 ### 2. Resource Allocation (NOTS Cluster)
 ```bash
 # Submit job for resource allocation
