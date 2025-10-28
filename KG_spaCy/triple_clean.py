@@ -21,14 +21,22 @@ nlp = spacy.load("en_core_web_sm")
 # Utility functions
 # -----------------------------
 def normalize_entity(text: str) -> str:
-    """Lowercase, strip, and remove punctuation"""
+    """Normalize an entity label by lowercasing and stripping punctuation.
+
+    Args: Raw entity string.
+    Returns: Cleaned entity text.
+    """
     text = text.lower().strip()
     text = re.sub(r"[\"'.,;:!?(){}\[\]]", "", text)
     text = re.sub(r"\s+", " ", text)
     return text
 
 def normalize_relation(rel: str) -> str:
-    """Lemmatize verbs and unify relation format"""
+    """Normalize a relation phrase via formatting.
+
+    Args: Original text
+    Returns: Underscore-delimited lemma string
+    """
     doc = nlp(rel.lower().strip())
     lemmas = [t.lemma_ for t in doc if not t.is_stop]
     cleaned = "_".join(lemmas)
@@ -36,15 +44,25 @@ def normalize_relation(rel: str) -> str:
     return cleaned
 
 def entity_word_count(text: str) -> int:
+    """Count the number of whitespace tokens in an entity.
+
+    Args: Entity text to evaluate
+    Returns: Token count
+    """
     return len(text.split())
 
 # -----------------------------
 # Main cleaning process
 # -----------------------------
 def clean_triples_from_csv(csv_path, max_entity_words=4):
-    """
-    Read triples from CSV (columns: record_no, subject, relation, object)
-    Return cleaned nodes and edges DataFrames
+    """Load, normalize, and filter triples from a CSV file.
+
+    Args:
+        csv_path: Path to the CSV with subject/relation/object columns.
+        max_entity_words: Maximum words allowed per entity before filtering.
+
+    Returns:
+        Tuple[DataFrame, DataFrame]: Nodes and edges DataFrames
     """
     df = pd.read_csv(csv_path)  # auto-handle tab or comma
     required_cols = ["subject", "relation", "object"]

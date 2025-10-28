@@ -6,6 +6,11 @@ from tqdm import tqdm
 nlp = spacy.load("en_core_web_sm")
 
 def extract_svo(text):
+    """Extract subject-verb-object triples from a text span.
+
+    Args: Sentence or paragraph to process with spaCy.
+    Returns: Extracted (subject, verb, object) triples.
+    """
     doc = nlp(text)
     out = []
     for s, v, o in xt.subject_verb_object_triples(doc):

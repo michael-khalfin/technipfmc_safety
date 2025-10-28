@@ -43,24 +43,34 @@ RETRY_WAIT = 5.0
 START_INDEX = 0
 
 
-"""
-Yield Rows Until We Read Them
-"""
 def read_rows(csv_path: Path):
+    """Yield raw CSV rows as dictionaries.
+
+    Args:Location of the input CSV file.
+    Returns: Parsed row with column names as keys.
+    """
     with csv_path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
             yield row
 
-"""
-Build Neccessary Payload To Send to Plumber API 
-"""
+
 def build_payload(
     text: str,
     extractors: List[str],
     linkers: Optional[List[str]],
     resolvers: Optional[List[str]],
 ) -> Dict:
+    """Create a Plumber request payload.
+
+    Args:
+        text: Source text to analyze.
+        extractors: Extractor module names to run.
+        linkers: Linker modules.
+        resolvers: Resolver modules.
+
+    Returns: JSON payload ready for submission.
+    """
     payload = {
         "input_text": text,
         "extractor": extractors,
@@ -72,14 +82,20 @@ def build_payload(
     return payload
 
 
-"""
-General Submission to Plumber API
-"""
 def submit_request(
     base_url: str,
     payload: Dict,
     timeout: float,
 ) -> List[Dict]:
+    """Send a request to Plumber and return extracted triples.
+
+    Args:
+        base_url: Root URL for the Plumber service.
+        payload: Request body created by `build_payload`.
+        timeout: Request timeout in seconds.
+
+    Returns: Parsed JSON response containing triples.
+    """
     endpoint = f"{base_url.rstrip('/')}/run"
     response = requests.post(endpoint, json=payload, timeout=timeout)
     if response.status_code != 200:
@@ -89,33 +105,40 @@ def submit_request(
         raise RuntimeError(f"Unexpected response payload: {data}")
     return data
 
-"""
-Submit Function Utilized for Asynch Handling (Conccurent Request)
-"""
 def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
-        text = row.get(TEXT_COLUMN, "")
-        payload = build_payload(text, EXTRACTORS, LINKERS, RESOLVERS)
-        for attempt in range(1, max(1, RETRIES) + 1):
-            try:
-                triples = submit_request(PLUMBER_URL, payload, REQUEST_TIMEOUT)
-                break
-            except Exception as e:
-                if attempt < max(1, RETRIES):
-                    time.sleep(max(0.0, RETRY_WAIT))
-                    continue
-                raise
-        rec = {"text": text, "triples": triples}
-        if ID_COLUMN in row:
-            rec["id"] = row[ID_COLUMN]
-        return idx, rec
+    """Submit a single row to Plumber and capture the response.
+
+    Args:
+        idx: Position of the row in the source CSV
+        row: Row data containing the text field
+
+    Returns: Index paired with the response or error record.
+    """
+    text = row.get(TEXT_COLUMN, "")
+    payload = build_payload(text, EXTRACTORS, LINKERS, RESOLVERS)
+    for attempt in range(1, max(1, RETRIES) + 1):
+        try:
+            triples = submit_request(PLUMBER_URL, payload, REQUEST_TIMEOUT)
+            break
+        except Exception as e:
+            if attempt < max(1, RETRIES):
+                time.sleep(max(0.0, RETRY_WAIT))
+                continue
+            raise
+    rec = {"text": text, "triples": triples}
+    if ID_COLUMN in row:
+        rec["id"] = row[ID_COLUMN]
+    return idx, rec
 
 
 
-"""
-(EXPERIMENTAL) Normalization of Tripets
-"""
-def _normalize_triple(item: Dict) -> Optional[Tuple[str, str, str]]:
-    """Coerce a triple-like dict into (subject,predicate,object) strings if possible."""
+def _normalize_triple(item: Dict):
+    """Coerce a triple-like dict into (subject, predicate, object) strings.
+
+    Args: Triple mapping returned by Plumber.
+
+    Returns:Normalized components
+    """
     if not isinstance(item, dict):
         return None
     s = item.get("subject") or item.get("s") or item.get("subj")
@@ -132,23 +155,33 @@ def _normalize_triple(item: Dict) -> Optional[Tuple[str, str, str]]:
     return None
 
 
-"""
-Process CSV to Extract Triplets from Plumber
-"""
-def process_csv() -> None:
-    if not CSV_PATH.exists():
-        raise FileNotFoundError(f"Input CSV not found: {CSV_PATH}")
+def process_csv(
+    csv_path: Path = CSV_PATH,
+    nodes_csv: Path = NODES_CSV_PATH,
+    edges_csv: Path = EDGES_CSV_PATH,
+) -> None:
+    """Process incident text with Plumber
+
+    Args:
+        csv_path: Source CSV containing the text column and IDs.
+        nodes_csv: Output path for graph nodes.
+        edges_csv: Output path for graph edges.
+
+    Returns: None
+    """
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Input CSV not found: {csv_path}")
 
     # Prepare graph outputs
-    nodes_csv = NODES_CSV_PATH or (OUTPUT_JSONL.parent / "nodes.csv")
-    edges_csv = EDGES_CSV_PATH or (OUTPUT_JSONL.parent / "edges.csv")
+    nodes_csv = nodes_csv or (OUTPUT_JSONL.parent / "nodes.csv")
+    edges_csv = edges_csv or (OUTPUT_JSONL.parent / "edges.csv")
 
     nodes = {}
     edge_count = 0
 
     # Collect rows upfront to enable parallel requests
     collected = []
-    for idx, row in enumerate(read_rows(CSV_PATH)):
+    for idx, row in enumerate(read_rows(csv_path)):
         text = (row.get(TEXT_COLUMN) or "").strip()
         if not text:
             continue
@@ -191,11 +224,22 @@ def process_csv() -> None:
         edges_writer = csv.DictWriter(edges_file, fieldnames=edge_fields)
         edges_writer.writeheader()
 
-        """
-        Add Node to CSV (will need to move this out after)
-        """
         def _add_node(label: str, ntype: str = "entity") -> str:
+            """Add a node record if missing and return its stable ID.
+
+            Args:
+                label: label for the node.
+                ntype: Node category, defaulting to 'entity'.
+            Returns: Stable node identifier.
+            """
             def _node_id(label: str, ntype: str = "entity") -> str:
+                """Generatenode identifier from label and type.
+
+                Args:
+                    label: label for the node.
+                    ntype: Node category, defaulting to 'entity'.
+                Returns: Stable node identifier.
+                """
                 key = f"{ntype}|{label}".lower().strip()
                 h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
                 return f"node:{h}"
@@ -269,6 +313,7 @@ def process_csv() -> None:
 
 
 def main() -> None:
+    """entry point fr"""
     process_csv()
 
 
