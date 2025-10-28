@@ -136,26 +136,9 @@ if __name__ == "__main__":
         #print(f"\nColumn: {col}")
         #print(f"Unique Values (up to 10): {unique_values[:10]}")
 
-    print(f"\n dataFeatures.py Program Running")
-    print(f"\n Looking at DIM_CONSOLIDATED_HAZARD_OBSERVATIONS_translated.csv")
+    df2 = pd.read_csv("data/cleaned_description_translated.csv")
 
-    df2 = pd.read_csv("data/DIM_CONSOLIDATED_HAZARD_OBSERVATIONS_translated.csv", low_memory = False)
-
-    print(df2.columns)
-
-    print(df2["SIF_PREVENTION"].value_counts(dropna=False))
-    print(df2["STOPPED_WORK"].value_counts(dropna=False))
-
-    print(df2.head())
-
-    print(f"\n Looking at DIM_CONSOLIDATED_HAZARD_OBSERVATIONS")
-
-    df3 = pd.read_csv("data/DIM_CONSOLIDATED_HAZARD_OBSERVATIONS.csv", low_memory = False)
-
-    print(df3["SIF_PREVENTION"].value_counts(dropna=False))
-    print(df3["STOPPED_WORK"].value_counts(dropna=False))
-
-    print(df3.head())
+    df2.head()
 
 
     
