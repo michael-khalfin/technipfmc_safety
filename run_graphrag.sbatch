@@ -17,17 +17,21 @@
 echo "Job started on $(hostname) at $(date)"
 mkdir -p slurm_output
 
+# 1. Load system modules
+module load foss/2023b
+module load Python/3.11.5
+module load CUDA/12.4.0
+module load Miniforge3/24.11.3-0
+
+# 2. Initialize Conda and activate your environment
+source $(conda info --base)/etc/profile.d/conda.sh
+conda activate graphrag_env
+
 # Load CUDA module for GPU access
 echo "Loading CUDA module..."
 module load CUDA
 
-# Run nvidia-smi to confirm GPU is visible
-echo "Checking for GPU with nvidia-smi..."
-nvidia-smi
-
-# Activate Conda Environment
-source /home/mlk15/miniforge3/etc/profile.d/conda.sh
-conda activate graphrag_env
+z
 
 # Run the GraphRAG Initialization
 #echo "Initializing a fresh GraphRAG project in ./graphRAG..."
