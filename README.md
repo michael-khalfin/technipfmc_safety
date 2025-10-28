@@ -29,13 +29,22 @@ This project provides a complete pipeline for analyzing safety incident data, in
 │   ├── output/                 # Generated knowledge graphs
 │   └── settings.yaml           # GraphRAG configuration
 ├── evaluation/                 # Knowledge graph evaluation framework
-│   ├── KG1/
-│   ├── KG2/
-│   ├── entity_consistency_eval.py   # entity consistency evaluation
-│   ├── link_prediction_holdout.py   # link prediction evaluation
-│   ├── semantic_similar_distance.py # semantic similar distance evaluation
-│   └── evaluate_all.py              # a total py to run all three methods
-├── translator/                 # Multi-language translation tools
+│   ├── KG1/                    # Example KG folder (includes nodes.csv, edges.csv)
+│   ├── KG2/                    # Second KG for comparison
+│   ├── entity_consistency_eval.py   # Evaluates entity redundancy & type coherence
+│   ├── link_prediction_holdout.py   # Tests predictive structure quality via link prediction
+│   ├── semantic_similar_distance.py # Correlates semantic similarity with graph distance
+│   └── evaluate_all.py              # Unified runner to execute all evaluation methods
+├── KG_Plumber/                      # Triple extraction via ThePlumber (Docker-based)
+│   ├── output/                      # Generated plumber_triples.jsonl, nodes.csv, edges.csv
+│   ├── get_plumber.sh               # Script to download and set up ThePlumber locally
+│   └── process_csv.py               # Sends CSV data to Plumber API for triple extraction
+├── KG_spaCy/                        # Rule-based triple extraction using spaCy/Textacy
+│   ├── KG_test.py                   # Extracts subject–verb–object triples from text
+│   └── triple_clean.py              # Cleans and normalizes extracted triples
+├── translator/                      # Multi-language translation tools
+│   ├── csv_translator_m2m100_gpu.py    # Translates CSV columns using M2M100 with GPU
+│   └── run_translate.sbatch            # SLURM script for translation on HPC
 ├── data/                       # Safety incident data (gitignored)
 └── viz.py                      # Graph visualization utilities
 ```
