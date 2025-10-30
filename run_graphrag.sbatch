@@ -53,7 +53,7 @@ fi
 #echo "Initializing a fresh GraphRAG project in ./graphRAG..."
 # This command will create a default settings.yaml, .env, and prompts folder.
 # We use --force to overwrite any old files and ensure a clean start.
-graphrag init --root ./graphRAG --force
+# graphrag init --root ./graphRAG --force
 
 # Start Ollama Server in the background
 echo "Starting Ollama server..."
@@ -66,7 +66,7 @@ echo "Checking Ollama system info..."
 # Create a small data sample for development
 echo "Creating data sample..."
 mkdir -p ./graphRAG/input
-head -n 1001 ./data/cleaned_data.csv > ./graphRAG/input/dev_sample.csv
+head -n 1001 ./data/cleaned_description_translated.csv > ./graphRAG/input/dev_sample.csv
 
 # Run the main GraphRAG pipeline
 echo "Running the main GraphRAG pipeline..."

@@ -14,8 +14,8 @@ models:
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
-    concurrent_requests: 1 #25
-    async_mode: threaded # or asyncio
+    concurrent_requests: 4 # increase parallelism on NOTS
+    async_mode: asyncio # thread scheduling overhead avoided
     retry_strategy: exponential_backoff
     max_retries: 10
     tokens_per_minute: null
@@ -28,8 +28,8 @@ models:
     model: nomic-embed-text
     api_base: "http://127.0.0.1:11434"
     # api_version: 2024-05-01-preview
-    concurrent_requests: 1 #25
-    async_mode: threaded # or asyncio
+    concurrent_requests: 8 # embeddings are cheaper, allow more overlap
+    async_mode: asyncio # match chat model behavior
     retry_strategy: exponential_backoff
     max_retries: 10
     tokens_per_minute: null
@@ -42,9 +42,9 @@ input:
   #   type: file # or blob
   #   base_dir: "input"
   file_type: csv # [csv, text, json]
-  path: "input/dev_sample_json.csv"
-  text_column: "node_json"
-  id_column: "_id"
+  path: "input/dev_sample.csv"
+  text_column: "text"
+  id_column: "RECORD_NO_LOSS_POTENTIAL"
   # meta_columns:
   #   - "TITLE"
   #   - "DATE_OF_INCIDENT"

@@ -136,7 +136,7 @@ pip install -r requirements.txt
 ```
 ### 1.b Downloading Ollama
 ```bash
-# Download Gitbash if using Windows
+# (LOCAL SETUP) Download Gitbash if using Windows
 # afterward, open gitbash and run
 curl -LO https://ollama.com/download/ollama-linux-amd64.tgz
 
@@ -144,7 +144,7 @@ curl -LO https://ollama.com/download/ollama-linux-amd64.tgz
 mkdir -p ~/bin
 
 #SCP to NOTS
-scp ./ollama-linux-amd64.tgz netID@nots.rice.edu:~/bin/
+scp ./ollama-linux-amd64.tgz $USER@nots.rice.edu:~/bin/
 ```
 
 ### 1.c Plumber Setup (LOCAL ONLY SETUP)
