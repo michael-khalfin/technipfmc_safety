@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=10G
-#SBATCH --time=00:20:00
+#SBATCH --time=06:20:00
 #SBATCH --partition=commons
 #SBATCH --gres=gpu:lovelace:1
 
@@ -30,7 +30,8 @@ export OLLAMA_HOME="$OLLAMA_MODELS"
 export OLLAMA_HOST=127.0.0.1:11434
 export OLLAMA_NUM_PARALLEL=16
 export OLLAMA_MAX_QUEUE=32
-export OLLAMA_KEEP_ALIVE=10m
+export OLLAMA_KEEP_ALIVE=0
+
 
 # Initialize conda
 source "$(conda info --base)/etc/profile.d/conda.sh"

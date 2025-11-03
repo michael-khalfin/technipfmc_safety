@@ -1,8 +1,6 @@
 """Utility to push CSV rows through a running Plumber instance and persist triples,
 then materialize a simple knowledge graph as nodes/edges CSVs."""
 
-from __future__ import annotations
-
 import csv
 import hashlib
 import json
