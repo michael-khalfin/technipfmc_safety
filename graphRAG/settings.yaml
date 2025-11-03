@@ -10,10 +10,18 @@ models:
     model_provider: ollama
     auth_type: api_key # or azure_managed_identity
     api_key: "DUMMY_KEY" # set this in the generated .env file, or remove if managed identity
-    model: llama3:8b
+    model: phi3:mini
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
+    model_parameters:
+      temperature: 0.7
+      top_p: 0.95
+      top_k: 40
+      repeat_penalty: 1.1
+      min_p: 0.0
+      tfs_z: 1.0
+      mirostat: 0
     concurrent_requests: 16 # increase parallelism on NOTS
     async_mode: asyncio # thread scheduling overhead avoided
     retry_strategy: exponential_backoff
@@ -52,8 +60,8 @@ input:
   #   - "INJURY_ILLNESS"
 
 chunks:
-  size: 600 #1200
-  overlap: 50 #100
+  size: 1200 #1200
+  overlap: 100 #100
   group_by_columns: [id]
 
 ### Output/storage settings ###
