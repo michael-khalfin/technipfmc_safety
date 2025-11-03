@@ -10,7 +10,7 @@ models:
     model_provider: ollama
     auth_type: api_key # or azure_managed_identity
     api_key: "DUMMY_KEY" # set this in the generated .env file, or remove if managed identity
-    model: llama3:70b
+    model: llama3:8b
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
