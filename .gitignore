@@ -30,6 +30,9 @@ pip-wheel-metadata/
 /venv
 /env
 
+# --- LOGS ---
+*.log
+
 # --- Editors/OS ---
 .DS_Store
 .vscode/
@@ -45,3 +48,8 @@ KG_Plumber/**
 !KG_Plumber/output/
 !KG_Plumber/output/**
 !KG_Plumber/get_plumber.sh
+
+
+# GraphRAG
+graphRAG/cache/*
+graphRAG/shard

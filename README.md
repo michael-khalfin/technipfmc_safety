@@ -136,15 +136,28 @@ pip install -r requirements.txt
 ```
 ### 1.b Downloading Ollama
 ```bash
-# Download Gitbash if using Windows
-# afterward, open gitbash and run
+
+# Create and Opt Directory (Uncomment below if disk quota exceeded)
+export OLLAMA_DIR="$HOME/opt/ollama"
+# export OLLAMA_DIR="/scratch/$USER/opt/ollama"  
+mkdir -p "$OLLAMA_DIR" 
+
+# Download Ollama Tarbell
+cd $OLLAMA_DIR
 curl -LO https://ollama.com/download/ollama-linux-amd64.tgz
 
-# Create bin directory on NOTS
-mkdir -p ~/bin
+# Unpack Tarbell
+tar -xvzf ollama-linux-amd64.tgz
 
-#SCP to NOTS
-scp ./ollama-linux-amd64.tgz netID@nots.rice.edu:~/bin/
+# Activate Ollama 
+chmod +x $OLLAMA_DIR/bin/ollama
+
+# (TENTATIVE TO CHANGE) Run and PrePull Models
+./bin/ollama serve
+
+# Models
+"$OLLAMA_DIR/bin/ollama" pull llama3:8b
+"$OLLAMA_DIR/bin/ollama" pull nomic-embed-text:latest
 ```
 
 ### 1.c Plumber Setup (LOCAL ONLY SETUP)
