@@ -165,10 +165,12 @@ if HAS_PYVIS:
 
     for source, target, attrs in H.edges(data=True):
         weight = attrs.get("weight", 0)
-        label = attrs.get("label", "")
-        hover_text = f"<b>Relationship:</b><br>{label}<br>Weight: {weight:.2f}"
+        edge_label = attrs.get("label", "")
+        # Truncate long labels for display
+        display_label = edge_label[:30] + "..." if len(edge_label) > 30 else edge_label
+        hover_text = f"<b>Relationship:</b><br>{edge_label}<br>Weight: {weight:.2f}"
         if weight >= MIN_EDGE_WEIGHT:
-            net.add_edge(source, target, title=hover_text, value=weight)
+            net.add_edge(source, target, label=display_label, title=hover_text, value=weight)
 
     net.show_buttons(filter_=['physics'])
     net.write_html(str(html_path), notebook=False, open_browser=False)

@@ -15,10 +15,10 @@ models:
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
     model_parameters:
-      temperature: 0.7
-      top_p: 0.95
-      top_k: 40
-      repeat_penalty: 1.1
+      temperature: 0.1  # Lower temp for faster, more deterministic extraction
+      top_p: 0.9
+      top_k: 20  # Reduced for faster sampling
+      repeat_penalty: 1.05
       min_p: 0.0
       tfs_z: 1.0
       mirostat: 0
@@ -94,15 +94,16 @@ embed_text:
 
 extract_graph:
   model_id: default_chat_model
-  prompt: "prompts/extract_graph.txt"
+  prompt: "prompts/custom_safety_prompt.txt"
+  #prompt: "prompts/extract_graph.txt"
   #entity_types: [organization,person,geo,event]
   entity_types: [INCIDENT_TYPE, INJURY_TYPE, BODY_PART, EQUIPMENT, LOCATION, ORGANIZATION, DATE]
-  max_gleanings: 1
+  max_gleanings: 0  # Single pass extraction - 2x faster per chunk
 
 summarize_descriptions:
   model_id: default_chat_model
   prompt: "prompts/summarize_descriptions.txt"
-  max_length: 500
+  max_length: 100  # Shorter summaries = faster generation
 
 extract_graph_nlp:
   text_analyzer:
@@ -123,8 +124,8 @@ community_reports:
   model_id: default_chat_model
   graph_prompt: "prompts/community_report_graph.txt"
   text_prompt: "prompts/community_report_text.txt"
-  max_length: 2000
-  max_input_length: 8000
+  max_length: 500  # Reduced for faster generation
+  max_input_length: 4000  # Process less input per report
 
 embed_graph:
   enabled: false # if true, will generate node2vec embeddings for nodes
