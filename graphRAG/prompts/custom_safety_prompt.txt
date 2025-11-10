@@ -1,0 +1,84 @@
+-Goal-
+Extract normalized safety incident entities using canonical names and fixed relation types.
+
+-Critical Rules-
+1. Entity names: UPPERCASE, max 4 words, NO full sentences
+2. Normalize similar entities: "forklift", "Forklift", "20T Forklift" → "FORKLIFT"
+3. Use ONLY these relation types: CAUSED_BY, RESULTED_IN, INVOLVED, OCCURRED_AT, AFFECTED, USED_IN
+4. Skip generic terms: "workplace", "area", "incident", "case", "employee"
+
+-Input Format-
+Each incident has:
+1. Narrative (first 1-3 sentences): actual event
+2. Metadata: "This case is a type of [TYPE]. ... at workplace: [LOCATION]. ... client: [ORG]. ... on [DATE]."
+
+-Entity Extraction-
+entity_name: UPPERCASE, max 4 words (e.g., "FORKLIFT" not "The 20-ton forklift that was involved")
+entity_type: {entity_types}
+entity_description: 5-10 words describing role in incident
+
+Normalize entities:
+- "stairs", "stairway", "staircase" → "STAIRS"
+- "forklift", "20T forklift", "lift truck" → "FORKLIFT"
+- "hand", "left hand", "right hand" → "HAND" (specify left/right in description)
+- "cut", "laceration", "deep cut" → "CUT" (severity in description)
+
+Format: ("entity"{tuple_delimiter}<entity_name>{tuple_delimiter}<entity_type>{tuple_delimiter}<entity_description>)
+
+-Relationship Extraction-
+Use ONLY these canonical relations:
+- CAUSED_BY: direct cause (e.g., FALL → CAUSED_BY → STAIRS)
+- RESULTED_IN: consequence (e.g., FALL → RESULTED_IN → INJURY)
+- INVOLVED: equipment/person involved (e.g., INCIDENT → INVOLVED → FORKLIFT)
+- OCCURRED_AT: location (e.g., INCIDENT → OCCURRED_AT → WAREHOUSE)
+- AFFECTED: body part harmed (e.g., INJURY → AFFECTED → HAND)
+- USED_IN: tool used (e.g., TASK → USED_IN → EQUIPMENT)
+
+relationship_strength: 10=direct cause, 8=strong involvement, 5=co-location
+description: Brief phrase, NO full sentences (max 6 words)
+
+Format: ("relationship"{tuple_delimiter}<source>{tuple_delimiter}<target>{tuple_delimiter}<relation_type>{tuple_delimiter}<strength>)
+
+-Entity Types-
+- INCIDENT_TYPE: fall, collision, spill, fire, struck-by, caught-in, near-miss
+- INJURY_TYPE: cut, bruise, burn, sprain, fracture (actual injuries only)
+- BODY_PART: hand, finger, back, leg, head, eye
+- EQUIPMENT: forklift, crane, ladder, drill, saw, truck
+- LOCATION: Specific facility/building names (not "workplace" or "area")
+- ORGANIZATION: Company/contractor names
+- DATE: Incident dates
+
+Use {record_delimiter} between entries. End with {completion_delimiter}
+
+Example:
+Text: Worker fell down stairs and injured left hand. This case occurred at Nusajaya Campus 2, Malaysia on 2024-01-15.
+######################
+Output:
+("entity"{tuple_delimiter}FALL{tuple_delimiter}INCIDENT_TYPE{tuple_delimiter}Worker fell down stairs)
+{record_delimiter}
+("entity"{tuple_delimiter}STAIRS{tuple_delimiter}EQUIPMENT{tuple_delimiter}Stairway where fall occurred)
+{record_delimiter}
+("entity"{tuple_delimiter}HAND INJURY{tuple_delimiter}INJURY_TYPE{tuple_delimiter}Left hand injured in fall)
+{record_delimiter}
+("entity"{tuple_delimiter}HAND{tuple_delimiter}BODY_PART{tuple_delimiter}Left hand affected by injury)
+{record_delimiter}
+("entity"{tuple_delimiter}NUSAJAYA CAMPUS 2{tuple_delimiter}LOCATION{tuple_delimiter}Malaysia facility where incident occurred)
+{record_delimiter}
+("entity"{tuple_delimiter}2024-01-15{tuple_delimiter}DATE{tuple_delimiter}Date of incident)
+{record_delimiter}
+("relationship"{tuple_delimiter}FALL{tuple_delimiter}STAIRS{tuple_delimiter}CAUSED_BY{tuple_delimiter}10)
+{record_delimiter}
+("relationship"{tuple_delimiter}FALL{tuple_delimiter}HAND INJURY{tuple_delimiter}RESULTED_IN{tuple_delimiter}10)
+{record_delimiter}
+("relationship"{tuple_delimiter}HAND INJURY{tuple_delimiter}HAND{tuple_delimiter}AFFECTED{tuple_delimiter}10)
+{record_delimiter}
+("relationship"{tuple_delimiter}FALL{tuple_delimiter}NUSAJAYA CAMPUS 2{tuple_delimiter}OCCURRED_AT{tuple_delimiter}10)
+{completion_delimiter}
+
+######################
+-Real Data-
+######################
+Entity_types: {entity_types}
+Text: {input_text}
+######################
+Output:

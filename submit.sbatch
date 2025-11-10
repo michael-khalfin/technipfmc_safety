@@ -6,8 +6,10 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=10G
-#SBATCH --time=06:20:00
-#SBATCH --partition=commons
+##SBATCH --time=06:20:00
+##SBATCH --partition=commons
+#SBATCH --time=00:30:00
+#SBATCH --partition=debug
 #SBATCH --gres=gpu:lovelace:1
 
 echo "Job started on $(hostname) at $(date)"
@@ -20,8 +22,10 @@ echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-<unset>} (Slurm remaps your G
 # CONFIGURATION
 # ---------------------
 export DATA_DIR="/scratch/$USER"
-export LOG_PATH="/home/$USER/COMP449/technipfmc_safety"
-mkdir -p "$DATA_DIR/opt/ollama" "$DATA_DIR/logs"
+#export LOG_PATH="/home/$USER/COMP449/technipfmc_safety"
+export LOG_PATH="./slurm_output"
+#mkdir -p "$DATA_DIR/opt/ollama" "$DATA_DIR/logs"
+mkdir -p "$DATA_DIR/opt/ollama/bin" "$DATA_DIR/opt/ollama/lib" "$DATA_DIR/logs"
 export OLLAMA_MODELS="$DATA_DIR/.ollama"
 mkdir -p "$OLLAMA_MODELS"
 
@@ -50,7 +54,8 @@ nvidia-smi || true
 # ---------------------
 
 # Flush old log
-: > "$LOG_PATH/ollama.log"
+#: > "$LOG_PATH/ollama.log"
+: > "$LOG_PATH/ollama_${SLURM_JOB_ID:-$RANDOM}.log"
 
 echo "Starting Ollama server (legacy v0.12.x mode)..."
 nohup "$DATA_DIR/opt/ollama/bin/ollama" serve > "$LOG_PATH/ollama.log" 2>&1 &
