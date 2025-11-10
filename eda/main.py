@@ -62,6 +62,10 @@ if __name__ == "__main__":
 
     modifier.set_dropped_names(["url_link", "url"])
     cleaned_df = modifier.clean()
+
+    # Drop Columns 
+    columns_to_drop = []
+    cleaned_df = cleaned_df.drop(columns_to_drop, axis=1)
     cleaned_df.to_csv(os.path.join("data", "cleaned_data.csv"), index=False)
 
     # Generate Visualizer

@@ -83,7 +83,7 @@ class DataLoader:
             df[BASE_FILE_RECORD] = df[BASE_FILE_RECORD].astype("string").str.replace(r"\.0$", "", regex=True)
 
             df["SOURCE_FILE"] = file_name
-            if self.verbose: print(f"\t{file_name}: {len(df):,} rows, {len(df.columns)} cols")
+            if self.verbose: print(f"\t STACKING {file_name}: {len(df):,} rows, {len(df.columns)} cols")
 
             analysis = self.equalizer.analyze_columns(incidents, df, BASE_FILE_RECORD, BASE_FILE_RECORD, verbose=self.verbose)
             incidents = self.coalescer.merge_and_coalescese(incidents, df, main_key, BASE_FILE_RECORD, file_name, analysis["safe"],

@@ -1,0 +1,7 @@
+{
+  "unique_entity_rate": 0.94327251995439,
+  "type_consistency_rate": 0.7249144811858609,
+  "name_ambiguity_entropy": 0.02708410686709679,
+  "n_clusters": 3508,
+  "n_nodes": 3748
+}
