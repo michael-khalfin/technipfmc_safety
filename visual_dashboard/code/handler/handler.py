@@ -20,7 +20,8 @@ from graph_makers import (
     generate_heatmap,
     generate_wordcloud,
     generate_temporal_distribution,
-    generate_stacked_bar_chart
+    generate_stacked_bar_chart,
+    get_data_quality_info
 )
 
 # Path to data file
@@ -123,7 +124,7 @@ def filter_data_by_requirements(df, filter_requirements):
     return df_filtered
 
 
-def generate_chart(chart_type, filter_requirements=None, **kwargs):
+def generate_chart(chart_type, filter_requirements=None, return_metadata=False, **kwargs):
     """
     Main handler function to generate charts based on type and filter requirements.
     
@@ -148,11 +149,13 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
             - For numerical columns: {'column_name': {'min': value, 'max': value}}
             - For categorical columns: {'column_name': 'value'}
         
+        return_metadata: If True, return dict with 'chart' and 'data_quality' keys
+        
         **kwargs: Additional arguments specific to each chart type
     
     Returns:
-        For 'statistical_summary': Dictionary with statistics
-        For other chart types: matplotlib Figure object
+        For 'statistical_summary': Dictionary with statistics (or dict with 'summary' and 'data_quality' if return_metadata=True)
+        For other chart types: matplotlib Figure object (or dict with 'chart' and 'data_quality' if return_metadata=True)
     """
     # Load data
     df = load_data()
@@ -169,29 +172,54 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
     chart_type = chart_type.lower().strip()
     
     if chart_type == 'statistical_summary':
-        return generate_statistical_summary(df)
+        summary = generate_statistical_summary(df)
+        if return_metadata:
+            # For statistical summary, data quality is already included in the summary
+            # But we can add overall data quality info
+            return {
+                'summary': summary,
+                'data_quality': {
+                    'total_rows': len(df),
+                    'missing_count': 0,  # Statistical summary uses all rows
+                    'valid_count': len(df),
+                    'missing_percentage': 0.0
+                }
+            }
+        return summary
     
     elif chart_type == 'temporal_distribution':
         groupby = kwargs.get('groupby', 'year')
         time_column = kwargs.get('time_column', 'DATE_OF_INCIDENT')
         title = kwargs.get('title', None)
         figsize = kwargs.get('figsize', (12, 6))
-        return generate_temporal_distribution(df, time_column=time_column, 
-                                            groupby=groupby, title=title, figsize=figsize)
+        result = generate_temporal_distribution(df, time_column=time_column, 
+                                            groupby=groupby, title=title, figsize=figsize,
+                                            return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'top_locations':
         k = kwargs.get('k', 10)
         location_column = kwargs.get('location_column', 'WORKPLACE_CITY')
         title = kwargs.get('title', f'Top {k} Locations by Incident Count')
         horizontal = kwargs.get('horizontal', False)
-        return generate_bar_chart_top_k(df, location_column, k=k, title=title, horizontal=horizontal)
+        result = generate_bar_chart_top_k(df, location_column, k=k, title=title, 
+                                         horizontal=horizontal, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'top_units':
         k = kwargs.get('k', 10)
-        unit_column = kwargs.get('unit_column', 'OPERATING_CENTER')
+        unit_column = kwargs.get('unit_column', 'BU')
         title = kwargs.get('title', f'Top {k} Units by Incident Count')
         horizontal = kwargs.get('horizontal', False)
-        return generate_bar_chart_top_k(df, unit_column, k=k, title=title, horizontal=horizontal)
+        result = generate_bar_chart_top_k(df, unit_column, k=k, title=title, 
+                                         horizontal=horizontal, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'incident_type':
         chart_subtype = kwargs.get('subtype', 'bar')  # 'bar' or 'pie'
@@ -200,9 +228,13 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
         
         if chart_subtype == 'pie':
             top_n = kwargs.get('top_n', None)
-            return generate_pie_chart(df, column, title=title, top_n=top_n)
+            result = generate_pie_chart(df, column, title=title, top_n=top_n, return_metadata=return_metadata)
         else:
-            return generate_bar_chart_all_categories(df, column, title=title)
+            result = generate_bar_chart_all_categories(df, column, title=title, return_metadata=return_metadata)
+        
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'risk_color':
         chart_subtype = kwargs.get('subtype', 'pie')  # 'pie' or 'stacked'
@@ -210,30 +242,44 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
         title = kwargs.get('title', 'Risk Color Distribution')
         
         if chart_subtype == 'stacked':
-            category_column = kwargs.get('category_column', 'INCIDENT_TYPE')
-            return generate_stacked_bar_chart(df, category_column, column, title=title)
+            category_column = kwargs.get('category_column', 'LOSS_POTENTIAL_SEVERITY')
+            result = generate_stacked_bar_chart(df, category_column, column, title=title, return_metadata=return_metadata)
         else:
             top_n = kwargs.get('top_n', None)
-            return generate_pie_chart(df, column, title=title, top_n=top_n)
+            result = generate_pie_chart(df, column, title=title, top_n=top_n, return_metadata=return_metadata)
+        
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'top_causes':
         k = kwargs.get('k', 10)
         column = kwargs.get('column', 'CASE_CATEGORIZATION')
         title = kwargs.get('title', f'Top {k} Causes/Hazards')
         horizontal = kwargs.get('horizontal', False)
-        return generate_bar_chart_top_k(df, column, k=k, title=title, horizontal=horizontal)
+        result = generate_bar_chart_top_k(df, column, k=k, title=title, 
+                                         horizontal=horizontal, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'severity_likelihood_heatmap':
-        x_column = kwargs.get('x_column', 'SEVERITY_VALUE')
+        x_column = kwargs.get('x_column', 'LOSS_POTENTIAL_SEVERITY')
         y_column = kwargs.get('y_column', 'LIKELIHOOD_VALUE')
         title = kwargs.get('title', 'Severity vs Likelihood Heatmap')
-        return generate_heatmap(df, x_column, y_column, title=title)
+        result = generate_heatmap(df, x_column, y_column, title=title, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'wordcloud':
         text_column = kwargs.get('text_column', 'TITLE')
         title = kwargs.get('title', f'Word Cloud: {text_column}')
         max_words = kwargs.get('max_words', 100)
-        return generate_wordcloud(df, text_column, title=title, max_words=max_words)
+        result = generate_wordcloud(df, text_column, title=title, max_words=max_words, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'bar_chart_all':
         column = kwargs.get('column')
@@ -241,7 +287,10 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
             raise ValueError("'column' parameter is required for 'bar_chart_all'")
         title = kwargs.get('title', None)
         top_n = kwargs.get('top_n', None)
-        return generate_bar_chart_all_categories(df, column, title=title, top_n=top_n)
+        result = generate_bar_chart_all_categories(df, column, title=title, top_n=top_n, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'bar_chart_top_k':
         column = kwargs.get('column')
@@ -250,7 +299,10 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
         k = kwargs.get('k', 10)
         title = kwargs.get('title', None)
         horizontal = kwargs.get('horizontal', False)
-        return generate_bar_chart_top_k(df, column, k=k, title=title, horizontal=horizontal)
+        result = generate_bar_chart_top_k(df, column, k=k, title=title, horizontal=horizontal, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'pie_chart':
         column = kwargs.get('column')
@@ -258,7 +310,10 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
             raise ValueError("'column' parameter is required for 'pie_chart'")
         title = kwargs.get('title', None)
         top_n = kwargs.get('top_n', None)
-        return generate_pie_chart(df, column, title=title, top_n=top_n)
+        result = generate_pie_chart(df, column, title=title, top_n=top_n, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'heatmap':
         x_column = kwargs.get('x_column')
@@ -266,7 +321,10 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
         if not x_column or not y_column:
             raise ValueError("'x_column' and 'y_column' parameters are required for 'heatmap'")
         title = kwargs.get('title', None)
-        return generate_heatmap(df, x_column, y_column, title=title)
+        result = generate_heatmap(df, x_column, y_column, title=title, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     elif chart_type == 'stacked_bar':
         category_column = kwargs.get('category_column')
@@ -274,7 +332,10 @@ def generate_chart(chart_type, filter_requirements=None, **kwargs):
         if not category_column or not stack_column:
             raise ValueError("'category_column' and 'stack_column' parameters are required for 'stacked_bar'")
         title = kwargs.get('title', None)
-        return generate_stacked_bar_chart(df, category_column, stack_column, title=title)
+        result = generate_stacked_bar_chart(df, category_column, stack_column, title=title, return_metadata=return_metadata)
+        if return_metadata:
+            return {'chart': result['figure'], 'data_quality': result['data_quality']}
+        return result
     
     else:
         raise ValueError(f"Unknown chart type: {chart_type}. "
