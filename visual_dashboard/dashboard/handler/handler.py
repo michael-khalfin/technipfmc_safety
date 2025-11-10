@@ -25,7 +25,7 @@ from graph_makers import (
 )
 
 # Path to data file
-DATA_FILE = Path(__file__).parent.parent.parent / "data" / "merged_incidents.csv"
+DATA_FILE = Path(__file__).parent.parent.parent.parent / "data" / "merged_incidents.csv"
 
 # Cache for loaded data
 _data_cache = None
@@ -163,7 +163,7 @@ def generate_chart(chart_type, filter_requirements=None, return_metadata=False, 
     # Apply filters if provided
     if filter_requirements:
         df = filter_data_by_requirements(df, filter_requirements)
-        print(f"After filtering: {len(df)} rows")
+        # print(f"After filtering: {len(df)} rows")
     
     if len(df) == 0:
         raise ValueError("No data available after filtering. Please adjust filter requirements.")
@@ -193,7 +193,7 @@ def generate_chart(chart_type, filter_requirements=None, return_metadata=False, 
         title = kwargs.get('title', None)
         figsize = kwargs.get('figsize', (12, 6))
         result = generate_temporal_distribution(df, time_column=time_column, 
-                                            groupby=groupby, title=title, figsize=figsize,
+                                            groupby=groupby, title=title, 
                                             return_metadata=return_metadata)
         if return_metadata:
             return {'chart': result['figure'], 'data_quality': result['data_quality']}
