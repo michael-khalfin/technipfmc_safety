@@ -192,12 +192,12 @@ def generate_bar_chart_top_k(df, column, k=10, title=None, horizontal=False, ret
 
     counts = df[column].value_counts().head(k)
     fig = px.bar(
-        x=counts.values if not horizontal else counts.values[::-1],
-        y=counts.index if not horizontal else counts.index[::-1],
+        x=counts.index if not horizontal else counts.values[::-1],
+        y=counts.values if not horizontal else counts.index[::-1],
         orientation='h' if horizontal else 'v',
         title=title or f"Top {k}: {column}",
         text=counts.values,
-        labels={'x': 'Count', 'y': column}
+        labels={'x': column if not horizontal else 'Count', 'y': 'Count' if not horizontal else column}
     )
     fig.update_traces(textposition='outside')
     fig.update_layout(template='plotly_white', height=600)
