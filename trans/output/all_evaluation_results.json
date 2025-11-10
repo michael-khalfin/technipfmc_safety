@@ -1,0 +1,7 @@
+{
+  "semantic_similarity": {
+    "spearman_r": -0.03538558121247611,
+    "p_value": 0.11779969116840264,
+    "n_samples": 1955
+  }
+}

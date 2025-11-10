@@ -9,7 +9,7 @@ from tqdm import tqdm
 import argparse
 import os
 
-def evaluate_semantic_similarity(nodes_path, edges_path, outdir="outputs", model_name="all-MiniLM-L6-v2", n_pairs=3000, seed=0):
+def evaluate_semantic_similarity(nodes_path, edges_path, outdir="outputs", model_name="sentence-transformers/paraphrase-MiniLM-L3-v2", n_pairs=3000, seed=0):
     """Main function for semantic similarity evaluation, returns a dictionary containing all evaluation metrics"""
     # === Read Data ===
     os.makedirs(outdir, exist_ok=True)
@@ -86,12 +86,12 @@ def main():
     parser = argparse.ArgumentParser(description="Semantic Similarity vs Graph Distance Analysis")
     parser.add_argument("--nodes", type=str, required=True, help="Path to nodes.csv (must have: id,label)")
     parser.add_argument("--edges", type=str, required=True, help="Path to edges.csv (must have: src,dst)")
-    parser.add_argument("--model", type=str, default="all-MiniLM-L6-v2", help="SentenceTransformer model name")
+    parser.add_argument("--model", type=str, default="sentence-transformers/paraphrase-MiniLM-L3-v2", help="SentenceTransformer model name")
     parser.add_argument("--n_pairs", type=int, default=3000, help="Number of node pairs to sample")
     parser.add_argument("--seed", type=int, default=0, help="Random seed")
     args = parser.parse_args()
 
     evaluate_semantic_similarity(args.nodes, args.edges, args.model, args.n_pairs, args.seed)
-
+    
 if __name__ == "__main__":
     main()

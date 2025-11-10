@@ -1,0 +1,23 @@
+Processing nodes...
+Processing 33780 unique entities...
+
+Starting entity type classification:
+Total unique entities: 33780
+Processing 337 entities (1.0% sample)
+Estimated completion time: 16:58:56
+Estimated duration: 0:02:48.500000
+
+Classifying sample entities: 100%|████| 337/337 [06:05<00:00,  1.08s/it]
+
+Entity classification completed!
+
+Type distribution:
+Other: 33616 (99.5%)
+Equipment: 79 (0.2%)
+Action: 34 (0.1%)
+Person: 33 (0.1%)
+State: 12 (0.0%)
+Location: 3 (0.0%)
+Event: 3 (0.0%)
+Processing edges...
+Transformation completed. Files saved in 'trans' directory.

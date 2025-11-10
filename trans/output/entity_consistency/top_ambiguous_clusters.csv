@@ -1,0 +1,21 @@
+cluster_id,cluster_size,type_entropy,type_counts
+116,2,1.0,"{'Equipment': 1, 'Other': 1}"
+379,2,1.0,"{'Action': 1, 'Other': 1}"
+3,2,1.0,"{'Equipment': 1, 'Other': 1}"
+153,2,1.0,"{'Other': 1, 'Person': 1}"
+233,2,1.0,"{'Equipment': 1, 'Other': 1}"
+1647,2,1.0,"{'Equipment': 1, 'Other': 1}"
+325,2,1.0,"{'Equipment': 1, 'Other': 1}"
+272,2,1.0,"{'Equipment': 1, 'Other': 1}"
+1487,2,1.0,"{'Equipment': 1, 'Other': 1}"
+817,2,1.0,"{'Equipment': 1, 'Other': 1}"
+983,2,1.0,"{'Other': 1, 'State': 1}"
+417,3,0.9182958340544896,"{'Action': 1, 'Other': 2}"
+172,3,0.9182958340544896,"{'Other': 2, 'Person': 1}"
+1302,12,-0.0,{'Other': 12}
+774,9,-0.0,{'Other': 9}
+472,9,-0.0,{'Other': 9}
+133,9,-0.0,{'Other': 9}
+236,7,-0.0,{'Other': 7}
+211,7,-0.0,{'Other': 7}
+550,7,-0.0,{'Other': 7}
