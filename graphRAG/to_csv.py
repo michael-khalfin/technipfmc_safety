@@ -32,5 +32,7 @@ edges = (
 )
 
 print("Converted to CSV's")
-nodes.to_csv(out_dir / "nodes.csv", index=False)
-edges.to_csv( out_dir / "edges.csv", index=False)
+evaluation_dir = Path("evaluation/KG3")
+evaluation_dir.mkdir(parents=True, exist_ok=True)
+nodes.to_csv(evaluation_dir / "nodes.csv", index=False)
+edges.to_csv( evaluation_dir / "edges.csv", index=False)

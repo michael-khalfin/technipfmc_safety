@@ -60,7 +60,7 @@ input:
   #   - "INJURY_ILLNESS"
 
 chunks:
-  size: 1200 #1200
+  size: 700 #1200
   overlap: 100 #100
   group_by_columns: [id]
 
@@ -98,7 +98,12 @@ extract_graph:
   #prompt: "prompts/extract_graph.txt"
   #entity_types: [organization,person,geo,event]
   entity_types: [INCIDENT_TYPE, INJURY_TYPE, BODY_PART, EQUIPMENT, LOCATION, ORGANIZATION, DATE]
-  max_gleanings: 0  # Single pass extraction - 2x faster per chunk
+  metadata:
+    canonical_incident_types: ["FALL", "COLLISION", "SPILL", "FIRE", "STRUCK-BY", "CAUGHT-IN", "NEAR-MISS"]
+    canonical_injury_types: ["CUT", "BRUISE", "BURN", "SPRAIN", "FRACTURE"]
+    canonical_body_parts: ["HAND", "FINGER", "BACK", "LEG", "HEAD", "EYE"]
+    canonical_equipment: ["FORKLIFT", "CRANE", "LADDER", "DRILL", "SAW", "TRUCK"]
+  max_gleanings: 2  # Single pass extraction - 2x faster per chunk
 
 summarize_descriptions:
   model_id: default_chat_model
@@ -111,7 +116,8 @@ extract_graph_nlp:
   async_mode: threaded # or asyncio
 
 cluster_graph:
-  max_cluster_size: 10
+  max_cluster_size: 20
+
 
 extract_claims:
   enabled: false
