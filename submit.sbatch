@@ -74,7 +74,7 @@ fi
 # ---------------------
 # PULL MODELS
 # ---------------------
-CHAT_MODEL="phi3:mini"
+CHAT_MODEL="qwen3:1.7b"
 EMBED_MODEL="nomic-embed-text"
 
 if ! "$DATA_DIR/opt/ollama/bin/ollama" list | grep -q "$CHAT_MODEL"; then

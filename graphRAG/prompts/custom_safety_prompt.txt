@@ -6,11 +6,6 @@ Extract normalized safety incident entities using canonical names and fixed rela
 2. Normalize similar entities: "forklift", "Forklift", "20T Forklift" → "FORKLIFT"
 3. Use ONLY these relation types: CAUSED_BY, RESULTED_IN, INVOLVED, OCCURRED_AT, AFFECTED, USED_IN
 4. Skip generic terms: "workplace", "area", "incident", "case", "employee"
-5. Canonical vocab lists (from settings.yaml):
-   INCIDENT_TYPE: {canonical_incident_types}
-   INJURY_TYPE: {canonical_injury_types}
-   BODY_PART: {canonical_body_parts}
-   EQUIPMENT: {canonical_equipment}
 
 -Input Format-
 Each incident has:
@@ -39,16 +34,16 @@ Use ONLY these canonical relations:
 - AFFECTED: body part harmed (e.g., INJURY → AFFECTED → HAND)
 - USED_IN: tool used (e.g., TASK → USED_IN → EQUIPMENT)
 
-relationship_strength: 10=direct cause, 8=strong involvement, 5=co-location  
+relationship_strength: 10=direct cause, 8=strong involvement, 5=co-location
 description: Brief phrase, NO full sentences (max 6 words)
 
 Format: ("relationship"{tuple_delimiter}<source>{tuple_delimiter}<target>{tuple_delimiter}<relation_type>{tuple_delimiter}<strength>)
 
 -Entity Types-
-- INCIDENT_TYPE: {canonical_incident_types}
-- INJURY_TYPE: {canonical_injury_types}
-- BODY_PART: {canonical_body_parts}
-- EQUIPMENT: {canonical_equipment}
+- INCIDENT_TYPE: fall, collision, spill, fire, struck-by, caught-in, near-miss
+- INJURY_TYPE: cut, bruise, burn, sprain, fracture (actual injuries only)
+- BODY_PART: hand, finger, back, leg, head, eye
+- EQUIPMENT: forklift, crane, ladder, drill, saw, truck
 - LOCATION: Specific facility/building names (not "workplace" or "area")
 - ORGANIZATION: Company/contractor names
 - DATE: Incident dates

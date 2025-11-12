@@ -98,11 +98,6 @@ extract_graph:
   #prompt: "prompts/extract_graph.txt"
   #entity_types: [organization,person,geo,event]
   entity_types: [INCIDENT_TYPE, INJURY_TYPE, BODY_PART, EQUIPMENT, LOCATION, ORGANIZATION, DATE]
-  metadata:
-    canonical_incident_types: ["FALL", "COLLISION", "SPILL", "FIRE", "STRUCK-BY", "CAUGHT-IN", "NEAR-MISS"]
-    canonical_injury_types: ["CUT", "BRUISE", "BURN", "SPRAIN", "FRACTURE"]
-    canonical_body_parts: ["HAND", "FINGER", "BACK", "LEG", "HEAD", "EYE"]
-    canonical_equipment: ["FORKLIFT", "CRANE", "LADDER", "DRILL", "SAW", "TRUCK"]
   max_gleanings: 2  # Single pass extraction - 2x faster per chunk
 
 summarize_descriptions:
