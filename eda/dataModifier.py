@@ -17,41 +17,42 @@ import re
 # Column constants
 DESCRIPTION_COL = "text"
 RECORD_NO_COL = "RECORD_NO_LOSS_POTENTIAL"
-FACT_LIMIT = 18
+ENTITY_FACT_LIMIT = 12
+META_FACT_LIMIT = 12
 
 # Mapping from consolidated column names to canonical fact labels
 COLUMN_FACT_LABELS = {
-    "TYPE": "INCIDENT_TYPE",
-    "IMPACT_TYPE": "IMPACT_TYPE",
-    "SEVERITY_DESCRIPTION": "SEVERITY_DESC",
-    "SEVERITY_VALUE": "SEVERITY_SCORE",
-    "LIKELIHOOD_TYPE": "LIKELIHOOD_DESC",
-    "LIKELIHOOD_DESCRIPTION": "LIKELIHOOD_RANGE",
-    "LIKELIHOOD_VALUE": "LIKELIHOOD_SCORE",
-    "CRITICALITY": "CRITICALITY",
-    "RISK_COLOR": "RISK_COLOR",
-    "MITIGATED_RISK": "MITIGATED_RISK",
-    "MITIGATED_RISK_COLOR": "MITIGATED_RISK_COLOR",
-    "SYSTEM_OF_RECORD": "SOURCE_SYSTEM",
-    "DATE_TIME_OF_INCIDENT": "EVENT_DATETIME",
-    "TITLE": "TITLE",
-    "GBU": "GENERAL_BUSINESS_UNIT",
-    "BU": "SPECIFIC_BUSINESS_UNIT",
-    "WORKPLACE": "WORKPLACE",
-    "PROJECT": "PROJECT",
-    "CLIENT": "CLIENT",
-    "CASE_CATEGORIZATION": "CASE_CATEGORIZATION",
-    "WORK_PROCESS": "WORK_PROCESS",
-    "LIFE_SAVING_RULES": "LIFE_SAVING_RULES",
-    "DATE_REPORTED": "REPORTED_DATE",
-    "STATUS": "STATUS",
-    "LOSS_POTENTIAL_SEVERITY": "LOSS_POTENTIAL",
-    "DATE_OF_APPROVAL": "APPROVED_DATE",
-    "DATE_OF_CLOSURE": "CLOSED_DATE",
-    "DUE_DATE": "DEADLINE",
-    "OPERATING_CENTER": "OPERATING_CENTER",
-    "LOCATION_CODE": "LOCATION_CODE",
-    "PERSON_RESPONSIBLE_STATUS": "PERSON_RESPONSIBLE_STATUS",
+    "TYPE": ("INCIDENT_TYPE", "entity"),
+    "IMPACT_TYPE": ("IMPACT_TYPE", "meta"),
+    "SEVERITY_DESCRIPTION": ("SEVERITY_DESC", "meta"),
+    "SEVERITY_VALUE": ("SEVERITY_SCORE", "meta"),
+    "LIKELIHOOD_TYPE": ("LIKELIHOOD_DESC", "meta"),
+    "LIKELIHOOD_DESCRIPTION": ("LIKELIHOOD_RANGE", "meta"),
+    "LIKELIHOOD_VALUE": ("LIKELIHOOD_SCORE", "meta"),
+    "CRITICALITY": ("CRITICALITY", "meta"),
+    "RISK_COLOR": ("RISK_COLOR", "meta"),
+    "MITIGATED_RISK": ("MITIGATED_RISK", "meta"),
+    "MITIGATED_RISK_COLOR": ("MITIGATED_RISK_COLOR", "meta"),
+    "SYSTEM_OF_RECORD": ("SOURCE_SYSTEM", "meta"),
+    "DATE_TIME_OF_INCIDENT": ("EVENT_DATETIME", "entity"),
+    "TITLE": ("TITLE", "meta"),
+    "GBU": ("GENERAL_BUSINESS_UNIT", "meta"),
+    "BU": ("SPECIFIC_BUSINESS_UNIT", "meta"),
+    "WORKPLACE": ("WORKPLACE", "entity"),
+    "PROJECT": ("PROJECT", "meta"),
+    "CLIENT": ("CLIENT", "entity"),
+    "CASE_CATEGORIZATION": ("CASE_CATEGORIZATION", "meta"),
+    "WORK_PROCESS": ("WORK_PROCESS", "meta"),
+    "LIFE_SAVING_RULES": ("LIFE_SAVING_RULES", "meta"),
+    "DATE_REPORTED": ("REPORTED_DATE", "entity"),
+    "STATUS": ("STATUS", "meta"),
+    "LOSS_POTENTIAL_SEVERITY": ("LOSS_POTENTIAL", "meta"),
+    "DATE_OF_APPROVAL": ("APPROVED_DATE", "meta"),
+    "DATE_OF_CLOSURE": ("CLOSED_DATE", "meta"),
+    "DUE_DATE": ("DEADLINE", "meta"),
+    "OPERATING_CENTER": ("OPERATING_CENTER", "meta"),
+    "LOCATION_CODE": ("LOCATION_CODE", "meta"),
+    "PERSON_RESPONSIBLE_STATUS": ("PERSON_RESPONSIBLE_STATUS", "meta"),
 }
 
 # Boolean columns need bespoke phrasing
@@ -155,34 +156,54 @@ class DataModifier:
 
         def _build_structured_text(row: pd.Series) -> str:
             record_id = _format_value(row.get(RECORD_NO_COL)) or "UNKNOWN"
+            incident_type = (_format_value(row.get("TYPE")) or "INCIDENT").upper()
+            title = _format_value(row.get("TITLE")) or "UNTITLED INCIDENT"
+            incident_label = f"{incident_type} {record_id}"
+            if title and title.upper() not in incident_label:
+                incident_label = f"{incident_label} - {title}"
+
             narrative = row.get(DESCRIPTION_COL, "")
             narrative = narrative.strip() if isinstance(narrative, str) else str(narrative).strip()
             if not narrative:
                 narrative = "Narrative not provided."
 
-            facts = []
-            for col, label in COLUMN_FACT_LABELS.items():
+            entity_facts = []
+            meta_facts = []
+            for col, (label, role) in COLUMN_FACT_LABELS.items():
                 value = row.get(col)
                 formatted = _format_value(value)
                 if formatted:
-                    facts.append(f"- {label}: {formatted}")
+                    if role == "entity":
+                        entity_facts.append(f"- {label}: {formatted}")
+                    else:
+                        meta_facts.append(f"- META[{label}]: {formatted}")
 
             for col, (label, true_desc, false_desc) in BOOLEAN_FACT_LABELS.items():
                 if col not in row.index or pd.isna(row[col]):
                     continue
                 val = row[col]
                 if val is True:
-                    facts.append(f"- {label}: {true_desc}")
+                    meta_facts.append(f"- META[{label}]: {true_desc}")
                 elif val is False:
-                    facts.append(f"- {label}: {false_desc}")
+                    meta_facts.append(f"- META[{label}]: {false_desc}")
 
-            if len(facts) > FACT_LIMIT:
-                facts = facts[:FACT_LIMIT]
+            if len(entity_facts) > ENTITY_FACT_LIMIT:
+                entity_facts = entity_facts[:ENTITY_FACT_LIMIT]
+            if len(meta_facts) > META_FACT_LIMIT:
+                meta_facts = meta_facts[:META_FACT_LIMIT]
 
-            lines = [f"INCIDENT_ID: {record_id}", "NARRATIVE:", narrative]
-            if facts:
-                lines.extend(["", "FACTS:"])
-                lines.extend(facts)
+            lines = [
+                f"INCIDENT_LABEL: {incident_label}",
+                f"INCIDENT_ID: {record_id}",
+                "NARRATIVE:",
+                narrative,
+            ]
+            if entity_facts:
+                lines.extend(["", "ENTITY_FACTS:"])
+                lines.extend(entity_facts)
+            if meta_facts:
+                lines.extend(["", "META_FACTS:"])
+                lines.extend(meta_facts)
 
             return _collapse_newlines("\n".join(lines).strip())
 

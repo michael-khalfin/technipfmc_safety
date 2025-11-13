@@ -81,7 +81,7 @@ fi
 # ---------------------
 # PULL MODELS
 # ---------------------
-CHAT_MODEL="gpt-oss"
+CHAT_MODEL="mistral"
 EMBED_MODEL="nomic-embed-text"
 
 if ! "$DATA_DIR/opt/ollama/bin/ollama" list | grep -q "$CHAT_MODEL"; then

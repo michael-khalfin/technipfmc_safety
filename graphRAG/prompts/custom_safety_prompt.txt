@@ -9,11 +9,16 @@ Quality Bar
    or edge, omit it instead of guessing.
 2. Entity surface form: uppercase, <= 4 words, no stop-words (THE, A, OF).
 3. Always leverage the structured sections supplied in the input
-   (`INCIDENT_ID`, `NARRATIVE`, `FACTS`).
-4. Skip generic placeholders like "INCIDENT", "WORKPLACE", "EMPLOYEE", "CASE".
-5. Prefer domain nouns over adjectives (e.g., "FORKLIFT" not "HEAVY").
-6. The input escapes real line breaks as literal `\n`. Interpret `\n` as a newline
-   while reading, but do not treat it as a token worth extracting.
+   (`INCIDENT_LABEL`, `INCIDENT_ID`, `NARRATIVE`, `ENTITY_FACTS`, `META_FACTS`).
+4. `INCIDENT_LABEL` is the canonical name for the incident node. Use it exactly
+   as given (e.g., `NEAR MISS 29857 - DROPPED PRY BAR`) when creating
+   `INCIDENT_TYPE` entities.
+5. Draw candidates for equipment, injuries, body parts, organizations, locations,
+   and dates from `ENTITY_FACTS`. Treat `META_FACTS` as context only.
+6. Skip generic placeholders like "INCIDENT", "WORKPLACE", "EMPLOYEE", "CASE".
+7. Prefer domain nouns over adjectives (e.g., "FORKLIFT" not "HEAVY").
+8. The input escapes real line breaks as literal `\n`. Interpret `\n` as a newline
+   while reading, but never emit `\n` as an entity or relation.
 
 Entity Construction
 -------------------
@@ -21,13 +26,14 @@ Entity Construction
 - entity_type: one of {entity_types}.
 - entity_description: 5-12 words describing the role or attributes. Mention
   severity, laterality (left/right), or function if it reduces ambiguity.
+- For incident nodes, reuse the provided `INCIDENT_LABEL`.
 - Enforce normalization (examples):
   * stairs, stairway, staircase -> STAIRS
   * forklift, lift truck, 20T forklift -> FORKLIFT
   * crane, overhead crane -> CRANE
   * left/right hands, fingers -> HAND / FINGER (side in description)
   * burns, scald -> BURN
-- DATE entities must reuse ISO-like text strings from the input (no reformatting).
+- DATE entities must reuse ISO-like text strings from `ENTITY_FACTS` (no reformatting).
 
 Relation Construction
 ---------------------
@@ -57,18 +63,23 @@ Separate tuples with {record_delimiter} and end the entire response with {comple
 Example
 -------
 Text:
+INCIDENT_LABEL: ACCIDENT 324 - 20Ton Forklift dented parking delivery truck
 INCIDENT_ID: 324
 NARRATIVE:
 20T Forklift reversed and dented a parked DHL truck.
 
-FACTS:
+ENTITY_FACTS:
 - INCIDENT_TYPE: Accident
 - WORKPLACE: Nusajaya Campus 2, Iskandar Puteri, Malaysia
 - CLIENT: TECHNIPFMC PLC
 - REPORTED_DATE: 2022-01-11
 
+META_FACTS:
+- META[RISK_COLOR]: Green
+- META[STATUS]: Completed
+
 Output:
-("entity"{tuple_delimiter}FORKLIFT COLLISION{tuple_delimiter}INCIDENT_TYPE{tuple_delimiter}Forklift struck parked truck)
+("entity"{tuple_delimiter}ACCIDENT 324 - 20TON FORKLIFT DENTED PARKING DELIVERY TRUCK{tuple_delimiter}INCIDENT_TYPE{tuple_delimiter}Forklift struck parked truck)
 {record_delimiter}
 ("entity"{tuple_delimiter}FORKLIFT{tuple_delimiter}EQUIPMENT{tuple_delimiter}20T forklift reversing during turn)
 {record_delimiter}
@@ -78,13 +89,13 @@ Output:
 {record_delimiter}
 ("entity"{tuple_delimiter}2022-01-11{tuple_delimiter}DATE{tuple_delimiter}Incident report date)
 {record_delimiter}
-("relationship"{tuple_delimiter}FORKLIFT COLLISION{tuple_delimiter}FORKLIFT{tuple_delimiter}INVOLVED{tuple_delimiter}8)
+("relationship"{tuple_delimiter}ACCIDENT 324 - 20TON FORKLIFT DENTED PARKING DELIVERY TRUCK{tuple_delimiter}FORKLIFT{tuple_delimiter}INVOLVED{tuple_delimiter}8)
 {record_delimiter}
-("relationship"{tuple_delimiter}FORKLIFT COLLISION{tuple_delimiter}DHL TRUCK{tuple_delimiter}INVOLVED{tuple_delimiter}5)
+("relationship"{tuple_delimiter}ACCIDENT 324 - 20TON FORKLIFT DENTED PARKING DELIVERY TRUCK{tuple_delimiter}DHL TRUCK{tuple_delimiter}INVOLVED{tuple_delimiter}5)
 {record_delimiter}
-("relationship"{tuple_delimiter}FORKLIFT COLLISION{tuple_delimiter}NUSAJAYA CAMPUS 2{tuple_delimiter}OCCURRED_AT{tuple_delimiter}10)
+("relationship"{tuple_delimiter}ACCIDENT 324 - 20TON FORKLIFT DENTED PARKING DELIVERY TRUCK{tuple_delimiter}NUSAJAYA CAMPUS 2{tuple_delimiter}OCCURRED_AT{tuple_delimiter}10)
 {record_delimiter}
-("relationship"{tuple_delimiter}FORKLIFT COLLISION{tuple_delimiter}2022-01-11{tuple_delimiter}OCCURRED_AT{tuple_delimiter}5)
+("relationship"{tuple_delimiter}ACCIDENT 324 - 20TON FORKLIFT DENTED PARKING DELIVERY TRUCK{tuple_delimiter}2022-01-11{tuple_delimiter}OCCURRED_AT{tuple_delimiter}5)
 {completion_delimiter}
 
 Real Data
