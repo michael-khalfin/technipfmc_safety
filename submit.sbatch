@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=10G
-#SBATCH --time=01:20:00
+#SBATCH --time=06:20:00
 #SBATCH --partition=commons
 #SBATCH --gres=gpu:lovelace:1
 
@@ -74,7 +74,7 @@ fi
 # ---------------------
 # PULL MODELS
 # ---------------------
-CHAT_MODEL="qwen3:1.7b"
+CHAT_MODEL="mistral"
 EMBED_MODEL="nomic-embed-text"
 
 if ! "$DATA_DIR/opt/ollama/bin/ollama" list | grep -q "$CHAT_MODEL"; then

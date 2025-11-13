@@ -10,18 +10,19 @@ models:
     model_provider: ollama
     auth_type: api_key # or azure_managed_identity
     api_key: "DUMMY_KEY" # set this in the generated .env file, or remove if managed identity
-    model: phi3:mini
+    model: mistral
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
     model_parameters:
-      temperature: 0.1  # Lower temp for faster, more deterministic extraction
+      temperature: 0.1
       top_p: 0.9
-      top_k: 20  # Reduced for faster sampling
+      top_k: 20
       repeat_penalty: 1.05
       min_p: 0.0
       tfs_z: 1.0
       mirostat: 0
+      num_predict: 250
     concurrent_requests: 16 # increase parallelism on NOTS
     async_mode: asyncio # thread scheduling overhead avoided
     retry_strategy: exponential_backoff
@@ -98,7 +99,7 @@ extract_graph:
   #prompt: "prompts/extract_graph.txt"
   #entity_types: [organization,person,geo,event]
   entity_types: [INCIDENT_TYPE, INJURY_TYPE, BODY_PART, EQUIPMENT, LOCATION, ORGANIZATION, DATE]
-  max_gleanings: 2  # Single pass extraction - 2x faster per chunk
+  max_gleanings: 0  # Single pass extraction - 2x faster per chunk
 
 summarize_descriptions:
   model_id: default_chat_model
