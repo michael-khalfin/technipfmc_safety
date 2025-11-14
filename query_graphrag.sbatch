@@ -19,7 +19,7 @@ echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-<unset>} (Slurm remaps your G
 # ---------------------
 # Set Query
 # ---------------------
-QUERY="What are some incidents that occured from fire hazards?"
+QUERY="What are some incidents where workers lost a hand?"
 METHOD="local"
 
 
