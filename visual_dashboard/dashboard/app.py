@@ -25,6 +25,7 @@ def load_filter_options():
         'severity_max': float(df['LOSS_POTENTIAL_SEVERITY'].dropna().max()),
         'likelihood_min': float(df['LIKELIHOOD_VALUE'].dropna().min()),
         'likelihood_max': float(df['LIKELIHOOD_VALUE'].dropna().max()),
+        'available_years': sorted(df['YEAR_OF_INCIDENT'].dropna().unique().tolist()),
     }
 
 filter_options = load_filter_options()
@@ -32,9 +33,26 @@ filter_options = load_filter_options()
 # --- Sidebar filters ---
 st.sidebar.header("Filter Settings")
 
-# Year range
-year_range = st.sidebar.slider("Year Range", 2015, 2025, (2020, 2024))
+# Toggle for month view
+filter_by_month = st.sidebar.toggle("By month", value=False)
 
+# Year selection based on toggle
+if filter_by_month:
+    # Single year selection when filtering by month
+    # Default to most recent year (last in sorted list)
+    default_year_index = len(filter_options['available_years']) - 1
+    selected_year = st.sidebar.selectbox(
+        "Select Year",
+        options=filter_options['available_years'],
+        index=default_year_index
+    )
+    # Month range slider
+    month_range = st.sidebar.slider("Month Range", 1, 12, (1, 12))
+else:
+    # Year range slider when filtering by year
+    year_range = st.sidebar.slider("Year Range", 2015, 2025, (2020, 2024))
+
+st.sidebar.markdown("---")
 # Incident Types
 incident_types = st.sidebar.multiselect("Incident Types", ["Accident", "Near Miss", "Hazard Observation"])
 
@@ -70,10 +88,18 @@ likelihood_range = st.sidebar.slider(
     (int(filter_options['likelihood_min']), int(filter_options['likelihood_max']))
 )
 
-# Build filter requirements
-filter_requirements = {
-    "YEAR_OF_INCIDENT": {"min": year_range[0], "max": year_range[1]},
-}
+# Build filter requirements based on month toggle
+if filter_by_month:
+    # When filtering by month: use specific year and month range
+    filter_requirements = {
+        "YEAR_OF_INCIDENT": {"min": selected_year, "max": selected_year},
+        "MONTH_OF_INCIDENT": {"min": month_range[0], "max": month_range[1]},
+    }
+else:
+    # When filtering by year: use year range
+    filter_requirements = {
+        "YEAR_OF_INCIDENT": {"min": year_range[0], "max": year_range[1]},
+    }
 
 if incident_types:
     filter_requirements["INCIDENT_TYPE"] = incident_types
@@ -120,8 +146,12 @@ else:
 col5.metric("Open Actions", summary["open_actions"])
 
 # --- Temporal Distribution ---
-st.subheader("Incident Frequency by Year")
-temporal_chart = generate_chart("temporal_distribution", filter_requirements, time_column="YEAR_OF_INCIDENT", groupby="year")
+if filter_by_month:
+    st.subheader("Incident Frequency by Month")
+    temporal_chart = generate_chart("temporal_distribution", filter_requirements, time_column="DATE_OF_INCIDENT", groupby="month")
+else:
+    st.subheader("Incident Frequency by Year")
+    temporal_chart = generate_chart("temporal_distribution", filter_requirements, time_column="YEAR_OF_INCIDENT", groupby="year")
 st.plotly_chart(temporal_chart, use_container_width=True)
 
 # --- Top Locations ---
