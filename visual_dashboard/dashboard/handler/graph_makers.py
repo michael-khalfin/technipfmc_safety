@@ -329,14 +329,43 @@ def generate_stacked_bar_chart(df, category_column, stack_column, title=None, re
     crosstab = pd.crosstab(df[category_column], df[stack_column])
     melted = crosstab.reset_index().melt(id_vars=category_column, var_name=stack_column, value_name='Count')
 
-    fig = px.bar(
-        melted,
-        x=category_column,
-        y='Count',
-        color=stack_column,
-        title=title or f"Stacked Bar Chart: {stack_column} by {category_column}",
-        barmode='stack'
-    )
+    # Define color mapping for risk colors (matching impact type pie chart colors)
+    # Environment (#fb8072) -> Red, Injury (#8dd3c7) -> Green, Injury/Illness (#ffffb3) -> Yellow
+    color_discrete_map = None
+    if stack_column.upper() == 'RISK_COLOR':
+        color_discrete_map = {
+            'Red': '#FF0000',
+            'Yellow': '#FFFF33',
+            'Green': '#4CBB17',
+        }
+        # Reorder categories for proper stacking: Green (bottom), Yellow, Red (top)
+        # In Plotly, the order in color_discrete_map and category order affects stacking
+        # We'll use category_order to ensure proper order
+        unique_stack_values = melted[stack_column].unique()
+        severity_order = ['Green', 'GREEN', 'green', 'Yellow', 'YELLOW', 'yellow', 'Red', 'RED', 'red']
+        ordered_stack_values = [v for v in severity_order if v in unique_stack_values]
+        ordered_stack_values.extend([v for v in unique_stack_values if v not in ordered_stack_values])
+        
+        fig = px.bar(
+            melted,
+            x=category_column,
+            y='Count',
+            color=stack_column,
+            title=title or f"Stacked Bar Chart: {stack_column} by {category_column}",
+            barmode='stack',
+            color_discrete_map=color_discrete_map,
+            category_orders={stack_column: ordered_stack_values}
+        )
+    else:
+        fig = px.bar(
+            melted,
+            x=category_column,
+            y='Count',
+            color=stack_column,
+            title=title or f"Stacked Bar Chart: {stack_column} by {category_column}",
+            barmode='stack'
+        )
+    
     fig.update_layout(template='plotly_white', height=600)
 
     if return_metadata:
