@@ -14,10 +14,12 @@ Quality Bar
    as given (e.g., `NEAR MISS 29857 - DROPPED PRY BAR`) when creating
    `INCIDENT_TYPE` entities.
 5. Draw candidates for equipment, injuries, body parts, organizations, locations,
-   and dates from `ENTITY_FACTS`. Treat `META_FACTS` as context only.
-6. Skip generic placeholders like "INCIDENT", "WORKPLACE", "EMPLOYEE", "CASE".
-7. Prefer domain nouns over adjectives (e.g., "FORKLIFT" not "HEAVY").
-8. The input escapes real line breaks as literal `\n`. Interpret `\n` as a newline
+   and dates from `ENTITY_FACTS`.
+6. NEVER create entities or relationships from `META_FACTS` (severity, likelihood,
+   risk color, source system, business unit, etc.)—treat those lines strictly as context.
+7. Skip generic placeholders like "INCIDENT", "WORKPLACE", "EMPLOYEE", "CASE".
+8. Prefer domain nouns over adjectives (e.g., "FORKLIFT" not "HEAVY").
+9. The input escapes real line breaks as literal `\n`. Interpret `\n` as a newline
    while reading, but never emit `\n` as an entity or relation.
 
 Entity Construction

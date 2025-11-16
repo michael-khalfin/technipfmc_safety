@@ -63,7 +63,7 @@ input:
 chunks:
   size: 700 #1200
   overlap: 100 #100
-  group_by_columns: [id]
+  group_by_columns: [RECORD_NO_LOSS_POTENTIAL]
 
 ### Output/storage settings ###
 ## If blob storage is specified in the following four sections,
@@ -99,7 +99,7 @@ extract_graph:
   #prompt: "prompts/extract_graph.txt"
   #entity_types: [organization,person,geo,event]
   entity_types: [INCIDENT_TYPE, INJURY_TYPE, BODY_PART, EQUIPMENT, LOCATION, ORGANIZATION, DATE]
-  max_gleanings: 0  # Single pass extraction - 2x faster per chunk
+  max_gleanings: 2  # Single pass extraction - 2x faster per chunk
 
 summarize_descriptions:
   model_id: default_chat_model
