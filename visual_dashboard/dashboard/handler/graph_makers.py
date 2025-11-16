@@ -292,15 +292,27 @@ def generate_temporal_distribution(df, time_column='DATE_OF_INCIDENT', groupby='
         raise ValueError(f"Column '{time_column}' not found in dataframe")
 
     df_temp = df.copy()
-    df_temp[time_column] = pd.to_datetime(df_temp[time_column], errors='coerce')
-    df_temp = df_temp.dropna(subset=[time_column])
-
-    if groupby == 'year':
-        df_temp['GROUP'] = df_temp[time_column].dt.year
-    elif groupby == 'month':
-        df_temp['GROUP'] = df_temp[time_column].dt.to_period('M').astype(str)
+    
+    # Check if column is already numeric (like YEAR_OF_INCIDENT)
+    if pd.api.types.is_numeric_dtype(df_temp[time_column]):
+        # Already numeric, use directly
+        df_temp = df_temp.dropna(subset=[time_column])
+        if groupby == 'year':
+            df_temp['GROUP'] = df_temp[time_column].astype(int)
+        else:
+            # For numeric columns, only year grouping makes sense
+            df_temp['GROUP'] = df_temp[time_column].astype(int)
     else:
-        df_temp['GROUP'] = df_temp[time_column].dt.date
+        # Try to parse as datetime
+        df_temp[time_column] = pd.to_datetime(df_temp[time_column], errors='coerce')
+        df_temp = df_temp.dropna(subset=[time_column])
+
+        if groupby == 'year':
+            df_temp['GROUP'] = df_temp[time_column].dt.year
+        elif groupby == 'month':
+            df_temp['GROUP'] = df_temp[time_column].dt.to_period('M').astype(str)
+        else:
+            df_temp['GROUP'] = df_temp[time_column].dt.date
 
     counts = df_temp['GROUP'].value_counts().sort_index()
 
