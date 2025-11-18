@@ -54,8 +54,14 @@ print(f"Visualizing data from: {OUTPUT_PATH}")
 VIZ_DIR = OUTPUT_PATH / "_viz"
 VIZ_DIR.mkdir(parents=True, exist_ok=True)
 
-entities_pq = OUTPUT_PATH / "entities.parquet"
-rels_pq = OUTPUT_PATH / "relationships.parquet"
+
+isFiltered = True
+if isFiltered:
+    entities_pq = OUTPUT_PATH / "entities_filtered.parquet"
+    rels_pq = OUTPUT_PATH / "relationships_filtered.parquet"
+else:
+    entities_pq = OUTPUT_PATH / "entities.parquet"
+    rels_pq = OUTPUT_PATH / "relationships.parquet"
 
 print("\nChecking for parquet files:")
 if not entities_pq.exists() or not rels_pq.exists():

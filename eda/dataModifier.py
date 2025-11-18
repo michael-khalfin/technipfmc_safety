@@ -6,49 +6,54 @@ This module provides functionality to transform safety incident data,
 convert columns to descriptive sentences, and clean datasets for analysis.
 """
 
-import pandas as pd 
+import csv
+import pandas as pd
 import re
 
-# Map Col to Sentence
+# Column constants
 DESCRIPTION_COL = "text"
 RECORD_NO_COL = "RECORD_NO_LOSS_POTENTIAL"
-colToSentenceDict = {
-    "TYPE": "This case is a type of {}.",
-    "IMPACT_TYPE": "The type of impact specified is {}.",
-    "SEVERITY_DESCRIPTION": "The description of the severity selected in the Risk Matrix is {}.",
-    "SEVERITY_VALUE": "The severity value for this case is {}.",
-    "LIKELIHOOD_TYPE": "The description of the type of likelihood selected in the Risk Matrix is {}.",
-    "LIKELIHOOD_DESCRIPTION": "This case is ({}) to occur .",
-    "LIKELIHOOD_VALUE": "The value of the likelihood is {}.",
-    "CRITICALITY": "The criticality of this case, which is the risk weight of the loss potential, is {}.",
-    "RISK_COLOR": "The risk color for this case is {}.",
-    "MITIGATED_RISK": "The value of the mitigated risk is {}.",
-    "MITIGATED_RISK_COLOR": "The mitigated risk color is {}.",
-    "SYSTEM_OF_RECORD": "The system of record used for this case is {}.",
-    "DATE_TIME_OF_INCIDENT": "The date and the time of the case is {}.",
-    "TITLE": "The title of the case is {}.",
-    "GBU": "The General Business Unit involved in the case is {}.",
-    "BU": "The specific Business Unit involved in the case is {}.",
-    "WORKPLACE": "This case occurred at the workplace: {}.",
-    "PROJECT": "The name of the project is {}.",
-    "CLIENT": "The client for this case is {}.",
-    "CASE_CATEGORIZATION": "The case categorization is {}.",
-    "WORK_PROCESS": "The work process involved is {}.",
-    "LIFE_SAVING_RULES": "The life saving rules used in this case are {}.",
-    "DATE_REPORTED": "The case was reported on {}.",
-    "STATUS": "The status of the case is {}.",
-    "LOSS_POTENTIAL_SEVERITY": "The loss potential severity of the case was {}.",
-    "DATE_OF_APPROVAL": "The date when the incident has been approved as completed is {}.",
-    "DATE_OF_CLOSURE": " The date when the incident was reported as closed is {}.",
-    "DUE_DATE": " The deadline for the incident to be closed is {}.",
-    "OPERATING_CENTER": "The operating center corresponding to the selected incident is {}.",
-    "LOCATION_CODE": "The location code of the incident is {}.",
-    "PERSON_RESPONSIBLE_STATUS": "The status of the person responsible is {}."
+ENTITY_FACT_LIMIT = 12
+META_FACT_LIMIT = 12
+
+# Mapping from consolidated column names to canonical fact labels
+COLUMN_FACT_LABELS = {
+    "TYPE": ("INCIDENT_TYPE", "entity"),
+    "IMPACT_TYPE": ("IMPACT_TYPE", "entity"),
+    "SEVERITY_DESCRIPTION": ("SEVERITY_DESC", "entity"),
+    "LIKELIHOOD_TYPE": ("LIKELIHOOD_DESC", "entity"),
+    "LIKELIHOOD_DESCRIPTION": ("LIKELIHOOD_RANGE", "entity"),
+    "RISK_COLOR": ("RISK_COLOR", "meta"),
+    "MITIGATED_RISK": ("MITIGATED_RISK", "meta"),
+    # "MITIGATED_RISK_COLOR": ("MITIGATED_RISK_COLOR", "meta"),
+    # "SYSTEM_OF_RECORD": ("SOURCE_SYSTEM", "meta"),
+    "DATE_TIME_OF_INCIDENT": ("EVENT_DATETIME", "entity"),
+    "TITLE": ("TITLE", "meta"),
+    "GBU": ("GENERAL_BUSINESS_UNIT", "meta"),
+    "BU": ("SPECIFIC_BUSINESS_UNIT", "meta"),
+    "WORKPLACE": ("WORKPLACE", "entity"),
+    "PROJECT": ("PROJECT", "meta"),
+    "CLIENT": ("CLIENT", "entity"),
+    "CASE_CATEGORIZATION": ("CASE_CATEGORIZATION", "meta"),
+    "WORK_PROCESS": ("WORK_PROCESS", "entity"),
+    "LIFE_SAVING_RULES": ("LIFE_SAVING_RULES", "meta"),
+    "DATE_REPORTED": ("REPORTED_DATE", "entity"),
+    "LOSS_POTENTIAL_SEVERITY": ("LOSS_POTENTIAL", "meta"),
+    "OPERATING_CENTER": ("OPERATING_CENTER", "entity"),
+    "LOCATION_CODE": ("LOCATION_CODE", "meta"),
 }
 
 
-# Define Regex Rules for Dates, etc
-rx = re.compile(r"(DATE|TIME)", re.IGNORECASE)
+# To Map 
+
+
+# Boolean columns need bespoke phrasing
+BOOLEAN_FACT_LABELS = {
+    "WORK_RELATED": ("WORK_RELATIONSHIP", "Work related case", "Not work related case"),
+    "TFMC_OWNED": ("TFMC_OWNERSHIP", "TFMC owned operation", "Non-TFMC owned operation"),
+    "SIF_PREVENTION": ("SIF_PREVENTION", "Significant Incident Failure potential", "Not a Significant Incident Failure potential"),
+    "STOPPED_WORK": ("WORK_INTERRUPTION", "Work stopped due to event", "Work continued during event"),
+}
 
 class DataModifier:
     """
@@ -70,7 +75,6 @@ class DataModifier:
         """
         self.df = df
         self.onlyDescriptions = onlyDescriptions
-        self.date_list = [c for c in df.columns if rx.search(c)]
 
         # Values That Are to be set by user
         self.to_drop = set()
@@ -106,69 +110,96 @@ class DataModifier:
 
     def translateColumnsToSentences(self):
         """
-        Convert structured columns to descriptive sentences.
+        Convert structured columns to an interpretable text block.
         
-        This method transforms categorical and structured data into natural language
-        descriptions by applying predefined sentence templates to column values.
+        Each record becomes:
+            INCIDENT_ID: <id>
+            NARRATIVE:
+            <original description>
+            
+            FACTS:
+            - LABEL: value
         
         Returns:
-            pd.DataFrame: Modified DataFrame with translated columns
+            pd.DataFrame: Two-column DataFrame (record id + structured text)
         """
         if DESCRIPTION_COL not in self.df.columns:
             print(f"{DESCRIPTION_COL} not in DataFrame!")
             self.df[DESCRIPTION_COL] = ""
+        else:
+            self.df[DESCRIPTION_COL] = self.df[DESCRIPTION_COL].fillna("").astype(str)
 
-        for col, placeholder in colToSentenceDict.items():
-            if col not in self.df.columns:
-                print(f"Warning: Column '{col}' not found, skipping...")
-                continue
-            
-            if col == 'WORK_RELATED':
-                self.df[DESCRIPTION_COL] += self.df[col].apply(
-                    lambda val: " This case is work related." if val is True
-                    else " This case is not work related." if val is False
-                    else ""
-                )
+        def _format_value(val):
+            if pd.isna(val):
+                return None
+            if isinstance(val, str):
+                stripped = val.strip()
+            else:
+                stripped = str(val).strip()
+            return stripped if stripped else None
 
-                continue
-            
-            if col == 'TFMC_OWNED':
-                self.df[DESCRIPTION_COL] += self.df[col].apply(
-                    lambda val: " The incident involves a TFMC owned operation." if val is True 
-                    else " This incident involves a non-TFMC owned operation." if val is False
-                    else ""
-                )
+        def _collapse_newlines(value: str) -> str:
+            value = value.replace("\r\n", "\n").replace("\r", "\n")
+            return value.replace("\n", "\\n")
 
-                continue
-            
-            if col == 'SIF_PREVENTION':
-                self.df[DESCRIPTION_COL] += self.df[col].apply(
-                    lambda val: " This case is a Significant Incident Failure Potential Case." if val is True
-                    else " This case is not a Significant Incident Failure Potential Case." if val is False
-                    else ""
-                )
+        def _build_structured_text(row: pd.Series) -> str:
+            # Build INcident Label via Type and Title
+            record_id = _format_value(row.get(RECORD_NO_COL)) or "UNKNOWN"
+            incident_type = (_format_value(row.get("TYPE")) or "INCIDENT").upper()
+            title = _format_value(row.get("TITLE")) or "UNTITLED INCIDENT"
+            incident_label = f"{incident_type} {record_id}"
+            if title and title.upper() not in incident_label:
+                incident_label = f"{incident_label} - {title}"
 
-                continue
-            
-            if col == 'STOPPED_WORK':
-                self.df[DESCRIPTION_COL] += self.df[col].apply(
-                    lambda val: " This case stopped work. " if val is True
-                    else " This case did not stop work. " if val is False
-                    else ""
-                )
+            # Extract Narrative
+            narrative = row.get(DESCRIPTION_COL, "")
+            narrative = narrative.strip() if isinstance(narrative, str) else str(narrative).strip()
 
-                continue 
+            # Identify Entity and Meta Facts (meta are used strictly for context to the LLM)
+            entity_facts = []
+            meta_facts = []
+            for col, (label, role) in COLUMN_FACT_LABELS.items():
+                value = row.get(col)
+                formatted = _format_value(value)
+                if formatted:
+                    if role == "entity":
+                        entity_facts.append(f"- {label}: {formatted}")
+                    else:
+                        meta_facts.append(f"- META[{label}]: {formatted}")
 
-            self.df[DESCRIPTION_COL] += self.df[col].apply(
-                lambda val: f" {placeholder.format(val)}" if pd.notna(val) else ""
-            )
-        
-            self.df.drop(columns=[col], inplace=True)
-        
+            # Coerce Booleans Into Text Data
+            for col, (label, true_desc, false_desc) in BOOLEAN_FACT_LABELS.items():
+                if col not in row.index or pd.isna(row[col]):
+                    continue
+                val = row[col]
+                if val is True:
+                    meta_facts.append(f"- META[{label}]: {true_desc}")
+                elif val is False:
+                    meta_facts.append(f"- META[{label}]: {false_desc}")
 
-        # Drop All Other Rows other than data col
+            # Set A Limit For Each Incident
+            # if len(entity_facts) > ENTITY_FACT_LIMIT:
+            #     entity_facts = entity_facts[:ENTITY_FACT_LIMIT]
+            # if len(meta_facts) > META_FACT_LIMIT:
+            #     meta_facts = meta_facts[:META_FACT_LIMIT]
+
+            lines = [
+                f"INCIDENT_LABEL: {incident_label}",
+                f"INCIDENT_ID: {record_id}",
+                "NARRATIVE:",
+                narrative,
+            ]
+            if entity_facts:
+                lines.extend(["", "ENTITY_FACTS:"])
+                lines.extend(entity_facts)
+            if meta_facts:
+                lines.extend(["", "META_FACTS:"])
+                lines.extend(meta_facts)
+
+            return _collapse_newlines("\n".join(lines).strip())
+
+        self.df[DESCRIPTION_COL] = self.df.apply(_build_structured_text, axis=1)
         self.df = self.df[[RECORD_NO_COL, DESCRIPTION_COL]]
-
         return self.df
 
 
@@ -190,7 +221,12 @@ class DataModifier:
             # rows_of_interest_idx = self.df[mask].index
             # print(self.df.loc[rows_of_interest_idx, DESCRIPTION_COL])
             description_only_df = self.translateColumnsToSentences()
-            description_only_df.to_csv("data/cleaned_description_translated.csv", index=False)
+            description_only_df.to_csv(
+                "data/cleaned_description_translated.csv",
+                index=False,
+                quoting=csv.QUOTE_ALL,
+                lineterminator="\n",
+            )
             # idx = rows_of_interest_idx[0]  
             # print(description_only_df.loc[idx, DESCRIPTION_COL])
 

@@ -19,7 +19,7 @@ echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-<unset>} (Slurm remaps your G
 # ---------------------
 # Set Query
 # ---------------------
-QUERY="What are some incidents that occured from fire hazards?"
+QUERY="What are some incidents where workers lost a hand?"
 METHOD="local"
 
 
@@ -81,7 +81,7 @@ fi
 # ---------------------
 # PULL MODELS
 # ---------------------
-CHAT_MODEL="phi3:mini"
+CHAT_MODEL="mistral"
 EMBED_MODEL="nomic-embed-text"
 
 if ! "$DATA_DIR/opt/ollama/bin/ollama" list | grep -q "$CHAT_MODEL"; then
