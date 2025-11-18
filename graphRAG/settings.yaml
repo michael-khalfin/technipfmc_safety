@@ -63,7 +63,7 @@ input:
 chunks:
   size: 700 #1200
   overlap: 100 #100
-  group_by_columns: [id]
+  group_by_columns: [RECORD_NO_LOSS_POTENTIAL]
 
 ### Output/storage settings ###
 ## If blob storage is specified in the following four sections,

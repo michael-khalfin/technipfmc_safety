@@ -14,10 +14,12 @@ Quality Bar
    as given (e.g., `NEAR MISS 29857 - DROPPED PRY BAR`) when creating
    `INCIDENT_TYPE` entities.
 5. Draw candidates for equipment, injuries, body parts, organizations, locations,
-   and dates from `ENTITY_FACTS`. Treat `META_FACTS` as context only.
-6. Skip generic placeholders like "INCIDENT", "WORKPLACE", "EMPLOYEE", "CASE".
-7. Prefer domain nouns over adjectives (e.g., "FORKLIFT" not "HEAVY").
-8. The input escapes real line breaks as literal `\n`. Interpret `\n` as a newline
+   and dates from `ENTITY_FACTS`.
+6. NEVER create entities or relationships from `META_FACTS` (severity, likelihood,
+   risk color, source system, business unit, etc.)—treat those lines strictly as context.
+7. Skip generic placeholders like "INCIDENT", "WORKPLACE", "EMPLOYEE", "CASE".
+8. Prefer domain nouns over adjectives (e.g., "FORKLIFT" not "HEAVY").
+9. The input escapes real line breaks as literal `\n`. Interpret `\n` as a newline
    while reading, but never emit `\n` as an entity or relation.
 
 Entity Construction
@@ -66,17 +68,36 @@ Text:
 INCIDENT_LABEL: ACCIDENT 324 - 20Ton Forklift dented parking delivery truck
 INCIDENT_ID: 324
 NARRATIVE:
-20T Forklift reversed and dented a parked DHL truck.
+20T Forklift was transporting offshore cabin basket, while reversing for a 3 point
+turning the forklift collided into the DHL Truck in the parking area causing a small
+dent on the backside of the truck. No one was injured.
 
 ENTITY_FACTS:
 - INCIDENT_TYPE: Accident
-- WORKPLACE: Nusajaya Campus 2, Iskandar Puteri, Malaysia
+- IMPACT_TYPE: Damage - Financial impact
+- SEVERITY_DESC: 2 - Minor
+- LIKELIHOOD_DESC: Frequency of the incident
+- LIKELIHOOD_RANGE: 3 - Possible - Has occurred in our company, or more than once per year in the industry
+- EVENT_DATETIME: 20:00.0
+- WORKPLACE: Nusajaya Campus 2, Iskandar Puteri, Malaysia, Asia Pacific, TechnipFMC
 - CLIENT: TECHNIPFMC PLC
-- REPORTED_DATE: 2022-01-11
+- WORK_PROCESS: Manufacturing-Warehouse
+- REPORTED_DATE: 1/11/2022
+- OPERATING_CENTER: N/A - Non Project Specific
 
 META_FACTS:
 - META[RISK_COLOR]: Green
-- META[STATUS]: Completed
+- META[MITIGATED_RISK]: 2.0
+- META[TITLE]: 20Ton Forklift dented parking delivery truck
+- META[GENERAL_BUSINESS_UNIT]: REMS
+- META[SPECIFIC_BUSINESS_UNIT]: Surface Products
+- META[PROJECT]: N/A - Non Project Specific - N/A - Non Project Specific
+- META[CASE_CATEGORIZATION]: Workplace layout / congestion
+- META[LIFE_SAVING_RULES]: Driving - Follow safe driving rules
+- META[LOSS_POTENTIAL]: 2.0
+- META[LOCATION_CODE]: TFMC408
+- META[WORK_RELATIONSHIP]: Work related case
+- META[TFMC_OWNERSHIP]: TFMC owned operation
 
 Output:
 ("entity"{tuple_delimiter}ACCIDENT 324 - 20TON FORKLIFT DENTED PARKING DELIVERY TRUCK{tuple_delimiter}INCIDENT_TYPE{tuple_delimiter}Forklift struck parked truck)

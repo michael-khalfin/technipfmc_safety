@@ -4,10 +4,6 @@ Data modification module for safety incident data processing.
 
 This module provides functionality to transform safety incident data,
 convert columns to descriptive sentences, and clean datasets for analysis.
-When `onlyDescriptions=True`, the output `text` column is now a structured
-block that combines the narrative with bullet-pointed metadata so downstream
-pipelines (GraphRAG, KG builders, etc.) no longer require an extra
-post-processing step.
 """
 
 import csv
@@ -23,17 +19,14 @@ META_FACT_LIMIT = 12
 # Mapping from consolidated column names to canonical fact labels
 COLUMN_FACT_LABELS = {
     "TYPE": ("INCIDENT_TYPE", "entity"),
-    "IMPACT_TYPE": ("IMPACT_TYPE", "meta"),
-    "SEVERITY_DESCRIPTION": ("SEVERITY_DESC", "meta"),
-    "SEVERITY_VALUE": ("SEVERITY_SCORE", "meta"),
-    "LIKELIHOOD_TYPE": ("LIKELIHOOD_DESC", "meta"),
-    "LIKELIHOOD_DESCRIPTION": ("LIKELIHOOD_RANGE", "meta"),
-    "LIKELIHOOD_VALUE": ("LIKELIHOOD_SCORE", "meta"),
-    "CRITICALITY": ("CRITICALITY", "meta"),
+    "IMPACT_TYPE": ("IMPACT_TYPE", "entity"),
+    "SEVERITY_DESCRIPTION": ("SEVERITY_DESC", "entity"),
+    "LIKELIHOOD_TYPE": ("LIKELIHOOD_DESC", "entity"),
+    "LIKELIHOOD_DESCRIPTION": ("LIKELIHOOD_RANGE", "entity"),
     "RISK_COLOR": ("RISK_COLOR", "meta"),
     "MITIGATED_RISK": ("MITIGATED_RISK", "meta"),
-    "MITIGATED_RISK_COLOR": ("MITIGATED_RISK_COLOR", "meta"),
-    "SYSTEM_OF_RECORD": ("SOURCE_SYSTEM", "meta"),
+    # "MITIGATED_RISK_COLOR": ("MITIGATED_RISK_COLOR", "meta"),
+    # "SYSTEM_OF_RECORD": ("SOURCE_SYSTEM", "meta"),
     "DATE_TIME_OF_INCIDENT": ("EVENT_DATETIME", "entity"),
     "TITLE": ("TITLE", "meta"),
     "GBU": ("GENERAL_BUSINESS_UNIT", "meta"),
@@ -42,18 +35,17 @@ COLUMN_FACT_LABELS = {
     "PROJECT": ("PROJECT", "meta"),
     "CLIENT": ("CLIENT", "entity"),
     "CASE_CATEGORIZATION": ("CASE_CATEGORIZATION", "meta"),
-    "WORK_PROCESS": ("WORK_PROCESS", "meta"),
+    "WORK_PROCESS": ("WORK_PROCESS", "entity"),
     "LIFE_SAVING_RULES": ("LIFE_SAVING_RULES", "meta"),
     "DATE_REPORTED": ("REPORTED_DATE", "entity"),
-    "STATUS": ("STATUS", "meta"),
     "LOSS_POTENTIAL_SEVERITY": ("LOSS_POTENTIAL", "meta"),
-    "DATE_OF_APPROVAL": ("APPROVED_DATE", "meta"),
-    "DATE_OF_CLOSURE": ("CLOSED_DATE", "meta"),
-    "DUE_DATE": ("DEADLINE", "meta"),
-    "OPERATING_CENTER": ("OPERATING_CENTER", "meta"),
+    "OPERATING_CENTER": ("OPERATING_CENTER", "entity"),
     "LOCATION_CODE": ("LOCATION_CODE", "meta"),
-    "PERSON_RESPONSIBLE_STATUS": ("PERSON_RESPONSIBLE_STATUS", "meta"),
 }
+
+
+# To Map 
+
 
 # Boolean columns need bespoke phrasing
 BOOLEAN_FACT_LABELS = {
@@ -62,9 +54,6 @@ BOOLEAN_FACT_LABELS = {
     "SIF_PREVENTION": ("SIF_PREVENTION", "Significant Incident Failure potential", "Not a Significant Incident Failure potential"),
     "STOPPED_WORK": ("WORK_INTERRUPTION", "Work stopped due to event", "Work continued during event"),
 }
-
-# Define Regex Rules for Dates, etc
-rx = re.compile(r"(DATE|TIME)", re.IGNORECASE)
 
 class DataModifier:
     """
@@ -86,7 +75,6 @@ class DataModifier:
         """
         self.df = df
         self.onlyDescriptions = onlyDescriptions
-        self.date_list = [c for c in df.columns if rx.search(c)]
 
         # Values That Are to be set by user
         self.to_drop = set()
@@ -155,6 +143,7 @@ class DataModifier:
             return value.replace("\n", "\\n")
 
         def _build_structured_text(row: pd.Series) -> str:
+            # Build INcident Label via Type and Title
             record_id = _format_value(row.get(RECORD_NO_COL)) or "UNKNOWN"
             incident_type = (_format_value(row.get("TYPE")) or "INCIDENT").upper()
             title = _format_value(row.get("TITLE")) or "UNTITLED INCIDENT"
@@ -162,11 +151,11 @@ class DataModifier:
             if title and title.upper() not in incident_label:
                 incident_label = f"{incident_label} - {title}"
 
+            # Extract Narrative
             narrative = row.get(DESCRIPTION_COL, "")
             narrative = narrative.strip() if isinstance(narrative, str) else str(narrative).strip()
-            if not narrative:
-                narrative = "Narrative not provided."
 
+            # Identify Entity and Meta Facts (meta are used strictly for context to the LLM)
             entity_facts = []
             meta_facts = []
             for col, (label, role) in COLUMN_FACT_LABELS.items():
@@ -178,6 +167,7 @@ class DataModifier:
                     else:
                         meta_facts.append(f"- META[{label}]: {formatted}")
 
+            # Coerce Booleans Into Text Data
             for col, (label, true_desc, false_desc) in BOOLEAN_FACT_LABELS.items():
                 if col not in row.index or pd.isna(row[col]):
                     continue
@@ -187,10 +177,11 @@ class DataModifier:
                 elif val is False:
                     meta_facts.append(f"- META[{label}]: {false_desc}")
 
-            if len(entity_facts) > ENTITY_FACT_LIMIT:
-                entity_facts = entity_facts[:ENTITY_FACT_LIMIT]
-            if len(meta_facts) > META_FACT_LIMIT:
-                meta_facts = meta_facts[:META_FACT_LIMIT]
+            # Set A Limit For Each Incident
+            # if len(entity_facts) > ENTITY_FACT_LIMIT:
+            #     entity_facts = entity_facts[:ENTITY_FACT_LIMIT]
+            # if len(meta_facts) > META_FACT_LIMIT:
+            #     meta_facts = meta_facts[:META_FACT_LIMIT]
 
             lines = [
                 f"INCIDENT_LABEL: {incident_label}",

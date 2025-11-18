@@ -104,9 +104,16 @@ class DataLoader:
             # incidents = self.attach_action_files(incidents, master_key)
 
 
+        description_cols = [
+                col for col in incidents.columns
+                if any(kw in col.lower() for kw in ["description", "descrp", "desc"])
+            ]
+        print(f"Description Cols: {description_cols}")
+
         # Coerce Types N Drop Rows That Don't Contain Description
         incidents = self._coarce_boolean(incidents)
         incidents = incidents[incidents["DESCRIPTION"].notna()]
+        
         
         # Final summary
         if self.verbose:
