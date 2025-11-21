@@ -206,5 +206,22 @@ st.subheader("Word Cloud of Incident Titles")
 wordcloud = generate_chart("wordcloud", filter_requirements)
 st.plotly_chart(wordcloud, use_container_width=True)
 
+sample_ratio = st.slider(
+    "Sample Ratio (default 10%)",
+    min_value=0.01,
+    max_value=1.0,
+    value=0.10,
+    step=0.01
+)
+fig = generate_chart(
+    "event_cluster",
+    filter_requirements,
+    sample_ratio=sample_ratio,
+    color_column="CASE_CATEGORIZATION"  # optional
+)
+st.plotly_chart(fig)
+
+
+
 st.markdown("---")
 st.caption("© 2025 Safety Event Dashboard | Powered by Streamlit + Plotly")

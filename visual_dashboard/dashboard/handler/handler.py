@@ -21,11 +21,12 @@ from graph_makers import (
     generate_wordcloud,
     generate_temporal_distribution,
     generate_stacked_bar_chart,
-    get_data_quality_info
+    get_data_quality_info,
+    generate_event_cluster_plot
 )
 
 # Path to data file
-DATA_FILE = Path(__file__).parent.parent.parent.parent / "data" / "merged_incidents.csv"
+DATA_FILE = Path(__file__).parent.parent.parent.parent / "data" / "merged_incidents_tsne.csv"
 
 # Cache for loaded data
 _data_cache = None
@@ -337,6 +338,30 @@ def generate_chart(chart_type, filter_requirements=None, return_metadata=False, 
             return {'chart': result['figure'], 'data_quality': result['data_quality']}
         return result
     
+    elif chart_type == 'event_cluster':
+        x_col = kwargs.get('x_col', 'tsne_x')
+        y_col = kwargs.get('y_col', 'tsne_y')
+        sample_ratio = kwargs.get('sample_ratio', 0.1)
+        color_column = kwargs.get('color_column', None)
+        title = kwargs.get('title', 'Event Cluster Visualization')
+
+        result = generate_event_cluster_plot(
+            df,
+            x_col=x_col,
+            y_col=y_col,
+            sample_ratio=sample_ratio,
+            color_column=color_column,
+            return_metadata=return_metadata
+        )
+
+        if return_metadata:
+            return {
+                "chart": result["figure"],
+                "data_quality": result["data_quality"]
+            }
+        return result
+
+
     else:
         raise ValueError(f"Unknown chart type: {chart_type}. "
                         f"Available types: statistical_summary, temporal_distribution, "

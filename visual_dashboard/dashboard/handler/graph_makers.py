@@ -383,3 +383,53 @@ def generate_stacked_bar_chart(df, category_column, stack_column, title=None, re
     if return_metadata:
         return {'figure': fig, 'data_quality': get_data_quality_info(df, category_column)}
     return fig
+
+def generate_event_cluster_plot(df, x_col='tsne_x', y_col='tsne_y',
+                                title="Event Cluster Visualization",
+                                sample_ratio=0.1, color_column=None,
+                                return_metadata=False):
+    """
+    Generate event cluster scatter plot using tsne_x and tsne_y.
+
+    Args:
+        df: filtered dataframe
+        x_col, y_col: columns for coordinates
+        sample_ratio: percent of events to visualize (0~1)
+        color_column: optional column used to color the nodes
+
+    Returns:
+        Plotly figure (or dict with metadata)
+    """
+
+    # 1. 必须存在 tsne_x / tsne_y
+    if x_col not in df.columns or y_col not in df.columns:
+        raise ValueError("tsne_x / tsne_y columns not found in dataframe.")
+
+    # 2. 清理：跳过坐标为空的 event
+    df = df.dropna(subset=[x_col, y_col])
+    if len(df) == 0:
+        raise ValueError("No events with valid tsne_x/tsne_y values.")
+
+    # 3. 控制采样规模
+    if sample_ratio < 1:
+        n = int(len(df) * sample_ratio)
+        df = df.sample(n=n, random_state=42)
+
+    # 4. 画图
+    fig = px.scatter(
+        df,
+        x=x_col,
+        y=y_col,
+        color=df[color_column] if color_column else None,
+        title=title,
+        opacity=0.7
+    )
+    fig.update_layout(template='plotly_white', height=700)
+
+    if return_metadata:
+        return {
+            "figure": fig,
+            "data_quality": get_data_quality_info(df, x_col)
+        }
+
+    return fig
