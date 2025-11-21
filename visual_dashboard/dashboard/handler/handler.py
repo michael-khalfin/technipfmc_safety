@@ -26,6 +26,7 @@ from graph_makers import (
 )
 
 # Path to data file
+# please find this file at /projects/dsci435/fmcsafetyevents_fa25/data/merged_incidents_tsne.csv
 DATA_FILE = Path(__file__).parent.parent.parent.parent / "data" / "merged_incidents_tsne.csv"
 
 # Cache for loaded data
