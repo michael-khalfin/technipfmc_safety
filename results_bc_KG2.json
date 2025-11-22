@@ -1,0 +1,1036 @@
+{
+  "global_summary": {
+    "B": 20,
+    "edge_bootstrap": "sample",
+    "sample_ratio": 0.9,
+    "graph_neigh": "khop",
+    "k_sem": 10,
+    "k_graph": 10,
+    "khop": 2,
+    "alpha": null,
+    "mean_of_means": 0.0004935514414670838,
+    "std_of_means": 3.591484278749639e-05,
+    "min_mean": 0.00042738073114574897,
+    "max_mean": 0.000547513440868454
+  },
+  "per_type_summary": {
+    "Other": {
+      "B_covered": 20,
+      "mean_of_means": 0.0004927400479671977,
+      "std_of_means": 3.535344118677051e-05,
+      "min_mean": 0.00042578796788608417,
+      "max_mean": 0.0005442512953943731
+    },
+    "Action": {
+      "B_covered": 20,
+      "mean_of_means": 0.0,
+      "std_of_means": 0.0,
+      "min_mean": 0.0,
+      "max_mean": 0.0
+    },
+    "Person": {
+      "B_covered": 20,
+      "mean_of_means": 0.0014354066985645933,
+      "std_of_means": 0.001454401126202538,
+      "min_mean": 0.0,
+      "max_mean": 0.004784688995215311
+    },
+    "Equipment": {
+      "B_covered": 20,
+      "mean_of_means": 0.0003413200723327306,
+      "std_of_means": 0.00042985528357700583,
+      "min_mean": 0.0,
+      "max_mean": 0.0009041591320072332
+    },
+    "NaN": {
+      "B_covered": 20,
+      "mean_of_means": 0.0,
+      "std_of_means": 0.0,
+      "min_mean": 0.0,
+      "max_mean": 0.0
+    },
+    "State": {
+      "B_covered": 20,
+      "mean_of_means": 0.002864923747276689,
+      "std_of_means": 0.004657165325439809,
+      "min_mean": 0.0,
+      "max_mean": 0.011111111111111112
+    },
+    "Location": {
+      "B_covered": 20,
+      "mean_of_means": 0.0,
+      "std_of_means": 0.0,
+      "min_mean": 0.0,
+      "max_mean": 0.0
+    },
+    "Event": {
+      "B_covered": 20,
+      "mean_of_means": 0.0,
+      "std_of_means": 0.0,
+      "min_mean": 0.0,
+      "max_mean": 0.0
+    }
+  },
+  "bootstraps": [
+    {
+      "bootstrap_id": 0,
+      "global_mean": 0.0005184898754815913,
+      "global_std": 0.006080003122117941,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005194691487594083,
+          "std": 0.006088167664024487
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.001594896331738437,
+          "std": 0.00916198189240515
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31563
+    },
+    {
+      "bootstrap_id": 1,
+      "global_mean": 0.00042738073114574897,
+      "global_std": 0.005296968870682127,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.00042578796788608417,
+          "std": 0.005288068891885749
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.001594896331738437,
+          "std": 0.00916198189240515
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0009041591320072332,
+          "std": 0.0080363421494716
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31473
+    },
+    {
+      "bootstrap_id": 2,
+      "global_mean": 0.000526366583643821,
+      "global_std": 0.0060033647769587965,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005289501892572558,
+          "std": 0.006017967022325683
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31520
+    },
+    {
+      "bootstrap_id": 3,
+      "global_mean": 0.0004867052953007805,
+      "global_std": 0.0057834829323945205,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.00048540371936517515,
+          "std": 0.005777638065432984
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.001594896331738437,
+          "std": 0.00916198189240515
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0009041591320072332,
+          "std": 0.0080363421494716
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31533
+    },
+    {
+      "bootstrap_id": 4,
+      "global_mean": 0.0004744346212526843,
+      "global_std": 0.005685293062074748,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0004751976547355296,
+          "std": 0.005692028397975186
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.001594896331738437,
+          "std": 0.00916198189240515
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31534
+    },
+    {
+      "bootstrap_id": 5,
+      "global_mean": 0.0005044113085764634,
+      "global_std": 0.005977472061352996,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005049039668120789,
+          "std": 0.005981144549799422
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0008438818565400844,
+          "std": 0.0075005860061734915
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31592
+    },
+    {
+      "bootstrap_id": 6,
+      "global_mean": 0.00045423897802169676,
+      "global_std": 0.0056725814570753675,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0004533372131918195,
+          "std": 0.0056721377485202135
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.003189792663476874,
+          "std": 0.012752939068356837
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31591
+    },
+    {
+      "bootstrap_id": 7,
+      "global_mean": 0.0004390175706456874,
+      "global_std": 0.005525728178978542,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0004391892517644961,
+          "std": 0.005527397787942063
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0008438818565400844,
+          "std": 0.0075005860061734915
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31540
+    },
+    {
+      "bootstrap_id": 8,
+      "global_mean": 0.000496596485731749,
+      "global_std": 0.0060696305961857,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0004971747347841568,
+          "std": 0.006075004350174969
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0007911392405063291,
+          "std": 0.007031799380787651
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31450
+    },
+    {
+      "bootstrap_id": 9,
+      "global_mean": 0.0004337569542097193,
+      "global_std": 0.005393943898573298,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.00043588599685145555,
+          "std": 0.005407080025048745
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31399
+    },
+    {
+      "bootstrap_id": 10,
+      "global_mean": 0.00047187512425610884,
+      "global_std": 0.005787444820459047,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.00047419126524558586,
+          "std": 0.00580153667854336
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31549
+    },
+    {
+      "bootstrap_id": 11,
+      "global_mean": 0.000510954297886434,
+      "global_std": 0.005885242541530243,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005103309132260497,
+          "std": 0.005885847229225933
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.003189792663476874,
+          "std": 0.012752939068356837
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31497
+    },
+    {
+      "bootstrap_id": 12,
+      "global_mean": 0.0004866697297834738,
+      "global_std": 0.005735200469492502,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0004838837170828294,
+          "std": 0.005723311683224944
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.001594896331738437,
+          "std": 0.009161981892405151
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0007911392405063291,
+          "std": 0.007031799380787651
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.004901960784313725,
+          "std": 0.01698089027028311
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31537
+    },
+    {
+      "bootstrap_id": 13,
+      "global_mean": 0.00047184841737383447,
+      "global_std": 0.005702803143346791,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0004694674158276832,
+          "std": 0.005695411679073867
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.004784688995215311,
+          "std": 0.015365110740030058
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31497
+    },
+    {
+      "bootstrap_id": 14,
+      "global_mean": 0.0005029539849088238,
+      "global_std": 0.005928852631206067,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005003572681590335,
+          "std": 0.005901993705255937
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.001594896331738437,
+          "std": 0.00916198189240515
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.00980392156862745,
+          "std": 0.03396178054056622
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31508
+    },
+    {
+      "bootstrap_id": 15,
+      "global_mean": 0.0005313082281807167,
+      "global_std": 0.0060989024359946135,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005278248855131749,
+          "std": 0.0060583515309412875
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0009041591320072332,
+          "std": 0.0080363421494716
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.011111111111111112,
+          "std": 0.03849001794597505
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31533
+    },
+    {
+      "bootstrap_id": 16,
+      "global_mean": 0.0005214183812195334,
+      "global_std": 0.005988281615156559,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005191067243550268,
+          "std": 0.00596570203432864
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.001594896331738437,
+          "std": 0.009161981892405151
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.009259259259259259,
+          "std": 0.032075014954979206
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31429
+    },
+    {
+      "bootstrap_id": 17,
+      "global_mean": 0.0005211088390414193,
+      "global_std": 0.006086345303219953,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.000516568931474004,
+          "std": 0.006044650179227832
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.003189792663476874,
+          "std": 0.012752939068356837
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.011111111111111112,
+          "std": 0.03849001794597505
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31628
+    },
+    {
+      "bootstrap_id": 18,
+      "global_mean": 0.0005439799818129348,
+      "global_std": 0.0063207882739108176,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005435186996587343,
+          "std": 0.006323417852775733
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.003189792663476874,
+          "std": 0.012752939068356839
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31459
+    },
+    {
+      "bootstrap_id": 19,
+      "global_mean": 0.000547513440868454,
+      "global_std": 0.0060996403383804755,
+      "per_type": {
+        "Other": {
+          "count": 33616,
+          "mean": 0.0005442512953943731,
+          "std": 0.006060708651492119
+        },
+        "Action": {
+          "count": 34,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Person": {
+          "count": 33,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Equipment": {
+          "count": 79,
+          "mean": 0.0008438818565400844,
+          "std": 0.0075005860061734915
+        },
+        "NaN": {
+          "count": 1,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "State": {
+          "count": 12,
+          "mean": 0.011111111111111112,
+          "std": 0.03849001794597505
+        },
+        "Location": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "Event": {
+          "count": 3,
+          "mean": 0.0,
+          "std": 0.0
+        }
+      },
+      "edges_bootstrapped": 31637
+    }
+  ]
+}

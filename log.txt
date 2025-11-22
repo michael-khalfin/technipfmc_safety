@@ -1,23 +1,17 @@
 Processing nodes...
 Processing 33780 unique entities...
 
-Starting entity type classification:
-Total unique entities: 33780
-Processing 337 entities (1.0% sample)
-Estimated completion time: 16:58:56
-Estimated duration: 0:02:48.500000
-
-Classifying sample entities: 100%|████| 337/337 [06:05<00:00,  1.08s/it]
+Classifying sample entities: 100%|█████████████████| 33780/33780 [11:55:36<00:00,  1.27s/it]
+Checkpoint saved: checkpoints\entity_types_full.json
 
 Entity classification completed!
 
 Type distribution:
-Other: 33616 (99.5%)
-Equipment: 79 (0.2%)
-Action: 34 (0.1%)
-Person: 33 (0.1%)
-State: 12 (0.0%)
-Location: 3 (0.0%)
-Event: 3 (0.0%)
-Processing edges...
-Transformation completed. Files saved in 'trans' directory.
+OTHER: 25625 (75.9%)
+EQUIPMENT: 4346 (12.9%)
+ORGANIZATION: 1591 (4.7%)
+LOCATION: 1228 (3.6%)
+INCIDENT_TYPE: 534 (1.6%)
+INJURY_TYPE: 246 (0.7%)
+BODY_PART: 182 (0.5%)
+DATE: 28 (0.1%)
