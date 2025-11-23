@@ -50,7 +50,7 @@ if filter_by_month:
     month_range = st.sidebar.slider("Month Range", 1, 12, (1, 12))
 else:
     # Year range slider when filtering by year
-    year_range = st.sidebar.slider("Year Range", 2015, 2025, (2020, 2024))
+    year_range = st.sidebar.slider("Year Range", 2015, 2025, (2015, 2025))
 
 st.sidebar.markdown("---")
 # Incident Types
