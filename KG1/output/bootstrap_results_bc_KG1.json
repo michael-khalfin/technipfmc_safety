@@ -1,0 +1,287 @@
+{
+  "global_summary": {
+    "B": 20,
+    "edge_bootstrap": "sample",
+    "sample_ratio": 0.9,
+    "graph_neigh": "khop",
+    "k_sem": 10,
+    "k_graph": 10,
+    "khop": 2,
+    "alpha": null,
+    "mean_of_means": 0.01777024123529745,
+    "std_of_means": 0.0007703600484156619,
+    "min_mean": 0.016772895359277142,
+    "max_mean": 0.01941725252030572
+  },
+  "per_type_summary": {
+    "entity": {
+      "B_covered": 20,
+      "mean_of_means": 0.01777024123529745,
+      "std_of_means": 0.0007703600484156619,
+      "min_mean": 0.016772895359277142,
+      "max_mean": 0.01941725252030572
+    }
+  },
+  "bootstraps": [
+    {
+      "bootstrap_id": 0,
+      "global_mean": 0.016772895359277142,
+      "global_std": 0.05462539230213135,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.016772895359277142,
+          "std": 0.05462539230213135
+        }
+      },
+      "edges_bootstrapped": 8513
+    },
+    {
+      "bootstrap_id": 1,
+      "global_mean": 0.017486015157526073,
+      "global_std": 0.05826717678195556,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.017486015157526073,
+          "std": 0.05826717678195556
+        }
+      },
+      "edges_bootstrapped": 8471
+    },
+    {
+      "bootstrap_id": 2,
+      "global_mean": 0.0172994090555399,
+      "global_std": 0.05593102461925397,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.0172994090555399,
+          "std": 0.05593102461925397
+        }
+      },
+      "edges_bootstrapped": 8499
+    },
+    {
+      "bootstrap_id": 3,
+      "global_mean": 0.01691349895110894,
+      "global_std": 0.055713775610203076,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.01691349895110894,
+          "std": 0.055713775610203076
+        }
+      },
+      "edges_bootstrapped": 8420
+    },
+    {
+      "bootstrap_id": 4,
+      "global_mean": 0.01750914905196313,
+      "global_std": 0.05721177362169966,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.01750914905196313,
+          "std": 0.05721177362169966
+        }
+      },
+      "edges_bootstrapped": 8502
+    },
+    {
+      "bootstrap_id": 5,
+      "global_mean": 0.0181021981676312,
+      "global_std": 0.059918629297633114,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.0181021981676312,
+          "std": 0.059918629297633114
+        }
+      },
+      "edges_bootstrapped": 8502
+    },
+    {
+      "bootstrap_id": 6,
+      "global_mean": 0.01941725252030572,
+      "global_std": 0.06255340274779886,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.01941725252030572,
+          "std": 0.06255340274779886
+        }
+      },
+      "edges_bootstrapped": 8522
+    },
+    {
+      "bootstrap_id": 7,
+      "global_mean": 0.016884358254103244,
+      "global_std": 0.05499454222449975,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.016884358254103244,
+          "std": 0.05499454222449975
+        }
+      },
+      "edges_bootstrapped": 8515
+    },
+    {
+      "bootstrap_id": 8,
+      "global_mean": 0.016868100778032344,
+      "global_std": 0.05564863777157482,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.016868100778032344,
+          "std": 0.05564863777157482
+        }
+      },
+      "edges_bootstrapped": 8505
+    },
+    {
+      "bootstrap_id": 9,
+      "global_mean": 0.017392528535411865,
+      "global_std": 0.0571128171254888,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.017392528535411865,
+          "std": 0.0571128171254888
+        }
+      },
+      "edges_bootstrapped": 8493
+    },
+    {
+      "bootstrap_id": 10,
+      "global_mean": 0.018066142025721217,
+      "global_std": 0.06005386878668214,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.018066142025721217,
+          "std": 0.06005386878668214
+        }
+      },
+      "edges_bootstrapped": 8472
+    },
+    {
+      "bootstrap_id": 11,
+      "global_mean": 0.01693083447943314,
+      "global_std": 0.055818389352010105,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.01693083447943314,
+          "std": 0.055818389352010105
+        }
+      },
+      "edges_bootstrapped": 8529
+    },
+    {
+      "bootstrap_id": 12,
+      "global_mean": 0.017617728250753344,
+      "global_std": 0.0570429437392543,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.017617728250753344,
+          "std": 0.0570429437392543
+        }
+      },
+      "edges_bootstrapped": 8431
+    },
+    {
+      "bootstrap_id": 13,
+      "global_mean": 0.01837494399652213,
+      "global_std": 0.05996910310850963,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.01837494399652213,
+          "std": 0.05996910310850963
+        }
+      },
+      "edges_bootstrapped": 8510
+    },
+    {
+      "bootstrap_id": 14,
+      "global_mean": 0.018453734487830952,
+      "global_std": 0.060171791783985136,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.018453734487830952,
+          "std": 0.060171791783985136
+        }
+      },
+      "edges_bootstrapped": 8496
+    },
+    {
+      "bootstrap_id": 15,
+      "global_mean": 0.017808356531684298,
+      "global_std": 0.05911513539591078,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.017808356531684298,
+          "std": 0.05911513539591078
+        }
+      },
+      "edges_bootstrapped": 8486
+    },
+    {
+      "bootstrap_id": 16,
+      "global_mean": 0.017843091428016877,
+      "global_std": 0.057256134872341054,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.017843091428016877,
+          "std": 0.057256134872341054
+        }
+      },
+      "edges_bootstrapped": 8493
+    },
+    {
+      "bootstrap_id": 17,
+      "global_mean": 0.018775930308112157,
+      "global_std": 0.0594607373517484,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.018775930308112157,
+          "std": 0.0594607373517484
+        }
+      },
+      "edges_bootstrapped": 8510
+    },
+    {
+      "bootstrap_id": 18,
+      "global_mean": 0.019164374663743246,
+      "global_std": 0.061080191568014384,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.019164374663743246,
+          "std": 0.061080191568014384
+        }
+      },
+      "edges_bootstrapped": 8528
+    },
+    {
+      "bootstrap_id": 19,
+      "global_mean": 0.01772428270323211,
+      "global_std": 0.057734759070534825,
+      "per_type": {
+        "entity": {
+          "count": 11400,
+          "mean": 0.01772428270323211,
+          "std": 0.057734759070534825
+        }
+      },
+      "edges_bootstrapped": 8454
+    }
+  ]
+}
