@@ -1,0 +1,52 @@
+{
+  "entity_consistency": {
+    "unique_entity_rate": 0.96041078464832,
+    "type_consistency_rate": 0.993081195122708,
+    "name_ambiguity_entropy": 0.003649573139271893,
+    "n_clusters": 32231,
+    "n_nodes": 33781
+  },
+  "topology": {
+    "connectivity": {
+      "n_nodes": 37276,
+      "n_components": 20046,
+      "giant_component_size": 16423,
+      "giant_component_ratio": 0.44057838823908146,
+      "avg_component_size": 1.8595230968771825,
+      "median_component_size": 1.0
+    },
+    "paths": {
+      "avg_shortest_path": 3.9939144935419106,
+      "diameter": 13
+    },
+    "clustering": {
+      "avg_clustering": 0.0,
+      "global_transitivity": 0
+    },
+    "community": {
+      "n_communities": 1,
+      "modularity": null,
+      "top_communities": [
+        {
+          "id": 0,
+          "size": 37276
+        }
+      ],
+      "community_sizes": [
+        37276
+      ]
+    },
+    "degree": {
+      "mean_degree": 2.169492434810602,
+      "median_degree": 0.0,
+      "max_degree": 2388,
+      "frac_degree_1": 0.3137139178023393,
+      "degree_assortativity": -0.1324985561141615
+    }
+  },
+  "semantic_similarity": {
+    "spearman_r": -0.03538558121247611,
+    "p_value": 0.11779969116840264,
+    "n_samples": 1955
+  }
+}

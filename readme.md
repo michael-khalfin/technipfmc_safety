@@ -2,10 +2,11 @@
 use sentence-transformers(all-MiniLM-L6-v2) & k-means method
 metrics: Unique Entity Rate & Type Consistency Rate
 
-## method 2: link_prediction_holdout.py
-metrics: PR-AUC/ROC-AUC/P@K/R@K/MAP
-Randomly occlude p% of the real edges as the "positive sample - test set"; Then negatively sample the same amount of "negative samples" from the non-edges. 
-Score the "candidate edges" using a set of scorers (Adamic-Adar, Jaccard, RA, personalized PageRank, or embedded dot product).
+
+## method 2 : topology robustness (evaluate_all.py)
+metrics: Giant Component Ratio, #components, avg/median component size, avg shortest path, diameter, clustering coefficient, transitivity, #communities, modularity, degree stats, assortativity
+Analyze the structural robustness of the graph, including connectivity, clustering, community structure, degree distribution, etc., to reveal whether the graph forms an effective information flow framework, whether it is fragmented, and whether there are functional clusters.
+
 
 ## method 3: semantic_similar_distance.py
 metrics: spearman_r & p_value

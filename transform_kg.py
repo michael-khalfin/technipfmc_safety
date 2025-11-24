@@ -150,7 +150,7 @@ def batch_get_entity_types(entities: List[str], batch_size: int = 4, use_full_da
             for entity in selected_entities
         }
         
-        # 使用tqdm显示进度
+        # tqdm
         with tqdm(total=len(selected_entities), desc="Classifying sample entities", 
                  bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]') as pbar:
             for future in as_completed(future_to_entity):
@@ -174,7 +174,7 @@ def batch_get_entity_types(entities: List[str], batch_size: int = 4, use_full_da
     
     print("\nEntity classification completed!")
     
-    # 显示统计信息
+
     type_counts = pd.Series(entity_types.values()).value_counts()
     print("\nType distribution:")
     for type_name, count in type_counts.items():
