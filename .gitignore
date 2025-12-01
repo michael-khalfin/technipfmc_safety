@@ -53,3 +53,7 @@ KG_Plumber/**
 # GraphRAG
 graphRAG/cache/*
 graphRAG/shard
+
+
+# Draft Files 
+draft

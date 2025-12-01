@@ -14,6 +14,8 @@ models:
     api_base: "http://127.0.0.1:11434" #https://<instance>.openai.azure.com
     # api_version: 2024-05-01-preview
     #model_supports_json: true # recommended if this is available for your model.
+    timeout: 600
+    request_timeout: 600
     model_parameters:
       temperature: 0.1
       top_p: 0.9
@@ -23,10 +25,10 @@ models:
       tfs_z: 1.0
       mirostat: 0
       num_predict: 250
-    concurrent_requests: 16 # increase parallelism on NOTS
+    concurrent_requests: 3 # increase parallelism on NOTS
     async_mode: asyncio # thread scheduling overhead avoided
     retry_strategy: exponential_backoff
-    max_retries: 10
+    max_retries: 8
     tokens_per_minute: null
     requests_per_minute: null
   default_embedding_model:
@@ -37,7 +39,7 @@ models:
     model: nomic-embed-text
     api_base: "http://127.0.0.1:11434"
     # api_version: 2024-05-01-preview
-    concurrent_requests: 16 # embeddings are cheaper, allow more overlap
+    concurrent_requests: 12 # embeddings are cheaper, allow more overlap
     async_mode: asyncio # match chat model behavior
     retry_strategy: exponential_backoff
     max_retries: 10

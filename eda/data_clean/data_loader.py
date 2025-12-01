@@ -77,13 +77,14 @@ class DataLoader:
             print(f"{'='*70}")
         
         # Only stack files with 0% overlap
-        incident_files = ["ACCIDENTS_translated", "HAZARD_OBSERVATIONS_translated", "NEAR_MISSES_translated"]
+        # incident_files = ["ACCIDENTS_translated", "HAZARD_OBSERVATIONS_translated", "NEAR_MISSES_translated"]
+        incident_files = ["ACCIDENTS_translated", "NEAR_MISSES_translated"]
         for file_name in incident_files:
             df = pd.read_csv(self._file_path(file_name), low_memory = False)
             df[BASE_FILE_RECORD] = df[BASE_FILE_RECORD].astype("string").str.replace(r"\.0$", "", regex=True)
 
             df["SOURCE_FILE"] = file_name
-            if self.verbose: print(f"\t{file_name}: {len(df):,} rows, {len(df.columns)} cols")
+            if self.verbose: print(f"PROCESSING {file_name}: {len(df):,} rows, {len(df.columns)} cols")
 
             analysis = self.equalizer.analyze_columns(incidents, df, BASE_FILE_RECORD, BASE_FILE_RECORD, verbose=self.verbose)
             incidents = self.coalescer.merge_and_coalescese(incidents, df, main_key, BASE_FILE_RECORD, file_name, analysis["safe"],

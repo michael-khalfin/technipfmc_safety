@@ -6,7 +6,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=10G
-#SBATCH --time=06:20:00
+#SBATCH --time=08:20:00
 #SBATCH --partition=commons
 #SBATCH --gres=gpu:lovelace:1
 
@@ -90,7 +90,7 @@ fi
 # ---------------------
 echo "Preparing Input File"
 mkdir -p ./graphRAG/input
-head -n 1001 ./data/cleaned_description_translated.csv > ./graphRAG/input/dev_sample.csv
+# head -n 1001 ./data/cleaned_description_translated.csv > ./graphRAG/input/dev_sample.csv
 
 echo "Preparing GraphRAG workspace..."
 mkdir -p ./graphRAG/input
