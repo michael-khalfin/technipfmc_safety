@@ -217,7 +217,7 @@ fig = generate_chart(
     "event_cluster",
     filter_requirements,
     sample_ratio=sample_ratio,
-    color_column="CASE_CATEGORIZATION"  # optional
+    color_column="IMPACT_TYPE"  # optional
 )
 st.plotly_chart(fig)
 

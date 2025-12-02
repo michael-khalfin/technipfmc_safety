@@ -21,6 +21,7 @@ from graph_makers import (
     generate_wordcloud,
     generate_temporal_distribution,
     generate_stacked_bar_chart,
+    generate_stacked_bar_chart_top_k,
     get_data_quality_info,
     generate_event_cluster_plot
 )
@@ -204,10 +205,10 @@ def generate_chart(chart_type, filter_requirements=None, return_metadata=False, 
     elif chart_type == 'top_locations':
         k = kwargs.get('k', 10)
         location_column = kwargs.get('location_column', 'WORKPLACE_CITY')
-        title = kwargs.get('title', f'Top {k} Locations by Incident Count')
-        horizontal = kwargs.get('horizontal', False)
-        result = generate_bar_chart_top_k(df, location_column, k=k, title=title, 
-                                         horizontal=horizontal, return_metadata=return_metadata)
+        stack_column = kwargs.get('stack_column', 'IMPACT_TYPE')
+        title = kwargs.get('title', f'Top {k} Locations by Incident Count (Stacked by {stack_column})')
+        result = generate_stacked_bar_chart_top_k(df, location_column, stack_column, k=k, 
+                                                  title=title, return_metadata=return_metadata)
         if return_metadata:
             return {'chart': result['figure'], 'data_quality': result['data_quality']}
         return result
