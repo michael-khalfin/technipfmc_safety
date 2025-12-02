@@ -1,3 +1,4 @@
+
 """
 Graph generation functions for the safety events dashboard.
 All functions are designed to accept filtered data to allow user customization.
@@ -338,12 +339,29 @@ def generate_stacked_bar_chart(df, category_column, stack_column, title=None, re
     if category_column not in df.columns or stack_column not in df.columns:
         raise ValueError(f"One or both columns not found in dataframe")
 
-    crosstab = pd.crosstab(df[category_column], df[stack_column])
+    # Create a copy to avoid modifying the original dataframe
+    df_processed = df.copy()
+    
+    # Handle IMPACT_TYPE: merge duplicate types
+    if stack_column.upper() == 'IMPACT_TYPE':
+        # Combine "Financial Impact" and "Damage - Financial Impact"
+        df_processed[stack_column] = df_processed[stack_column].replace(
+            'Damage - Financial impact', 'Financial Impact'
+        )
+        # Combine "Injury" and "Injury/Illness"
+        df_processed[stack_column] = df_processed[stack_column].replace(
+            'Injury/Illness', 'Injury'
+        )
+        # Drop rows where stack_column is NaN
+        df_processed = df_processed.dropna(subset=[stack_column])
+
+    crosstab = pd.crosstab(df_processed[category_column], df_processed[stack_column])
     melted = crosstab.reset_index().melt(id_vars=category_column, var_name=stack_column, value_name='Count')
 
-    # Define color mapping for risk colors (matching impact type pie chart colors)
-    # Environment (#fb8072) -> Red, Injury (#8dd3c7) -> Green, Injury/Illness (#ffffb3) -> Yellow
+    # Define color mapping and stacking order
     color_discrete_map = None
+    ordered_stack_values = None
+    
     if stack_column.upper() == 'RISK_COLOR':
         color_discrete_map = {
             'Red': '#FF0000',
@@ -357,7 +375,76 @@ def generate_stacked_bar_chart(df, category_column, stack_column, title=None, re
         severity_order = ['Green', 'GREEN', 'green', 'Yellow', 'YELLOW', 'yellow', 'Red', 'RED', 'red']
         ordered_stack_values = [v for v in severity_order if v in unique_stack_values]
         ordered_stack_values.extend([v for v in unique_stack_values if v not in ordered_stack_values])
+    
+    elif stack_column.upper() == 'IMPACT_TYPE':
+        # Get all unique impact types
+        unique_stack_values = sorted(melted[stack_column].unique())
+        # Ensure Injury is at the end (top of stack and top of legend)
+        if 'Injury' in unique_stack_values:
+            unique_stack_values.remove('Injury')
+            unique_stack_values.append('Injury')  # Injury at the end = top of stack
+        ordered_stack_values = unique_stack_values
         
+        # Set color mapping: Injury = Red, others = unique non-red colors
+        # Predefined unique colors for common impact types (all non-red, no overlaps)
+        predefined_colors = {
+            'Financial Impact': '#4A90E2',  # Blue
+            'Environment': '#8B4513',  # Brown
+            'Property Damage': '#FFA500',  # Orange
+            'Damage': '#00CED1',  # Dark Turquoise (different from Property Damage)
+        }
+        
+        # Extended non-red color palette for other types (all unique colors)
+        non_red_colors = [
+            '#32CD32',  # Lime Green
+            '#9370DB',  # Medium Purple
+            '#20B2AA',  # Light Sea Green
+            '#FFD700',  # Gold
+            '#FF69B4',  # Hot Pink
+            '#00FA9A',  # Medium Spring Green
+            '#1E90FF',  # Dodger Blue
+            '#FF6347',  # Tomato
+            '#9ACD32',  # Yellow Green
+            '#BA55D3',  # Medium Orchid
+            '#4682B4',  # Steel Blue
+            '#DC143C',  # Crimson (but we'll skip this as it's too red-like)
+        ]
+        
+        # Build color map: Injury = Red, others = unique non-red colors
+        color_discrete_map = {}
+        used_colors = {'#FF0000'}  # Track used colors to avoid duplicates
+        color_index = 0
+        
+        # First, assign colors to non-Injury types
+        for impact_type in unique_stack_values:
+            if impact_type != 'Injury':
+                if impact_type in predefined_colors:
+                    color = predefined_colors[impact_type]
+                    if color not in used_colors:
+                        color_discrete_map[impact_type] = color
+                        used_colors.add(color)
+                    else:
+                        # If color already used, find next available
+                        while color_index < len(non_red_colors) and non_red_colors[color_index] in used_colors:
+                            color_index += 1
+                        if color_index < len(non_red_colors):
+                            color_discrete_map[impact_type] = non_red_colors[color_index]
+                            used_colors.add(non_red_colors[color_index])
+                            color_index += 1
+                else:
+                    # Find next available color
+                    while color_index < len(non_red_colors) and non_red_colors[color_index] in used_colors:
+                        color_index += 1
+                    if color_index < len(non_red_colors):
+                        color_discrete_map[impact_type] = non_red_colors[color_index]
+                        used_colors.add(non_red_colors[color_index])
+                        color_index += 1
+        
+        # Finally, assign red to Injury (will appear at top of legend)
+        color_discrete_map['Injury'] = '#FF0000'  # Red for severity
+    
+    # Create the bar chart
+    if color_discrete_map and ordered_stack_values:
         fig = px.bar(
             melted,
             x=category_column,
@@ -379,7 +466,204 @@ def generate_stacked_bar_chart(df, category_column, stack_column, title=None, re
         )
     
     fig.update_layout(template='plotly_white', height=600)
+    
+    # Ensure Injury appears at top of legend for IMPACT_TYPE
+    if stack_column.upper() == 'IMPACT_TYPE' and ordered_stack_values and 'Injury' in ordered_stack_values:
+        # Reorder traces to put Injury trace last (which makes it appear first in legend)
+        if len(fig.data) > 0:
+            # Get trace names
+            trace_names = [trace.name for trace in fig.data]
+            # Find Injury trace index
+            if 'Injury' in trace_names:
+                injury_idx = trace_names.index('Injury')
+                # Move Injury trace to the end
+                traces = list(fig.data)
+                injury_trace = traces.pop(injury_idx)
+                traces.append(injury_trace)
+                fig.data = traces
 
+    if return_metadata:
+        return {'figure': fig, 'data_quality': get_data_quality_info(df, category_column)}
+    return fig
+
+def generate_stacked_bar_chart_top_k(df, category_column, stack_column, k=10, title=None, return_metadata=False):
+    """
+    Generate a stacked bar chart for the top K categories by total count.
+    
+    Args:
+        df: DataFrame
+        category_column: Column for x-axis categories
+        stack_column: Column to stack (e.g., LOSS_POTENTIAL_SEVERITY)
+        k: Number of top categories to show
+        title: Chart title
+        return_metadata: If True, return dict with 'figure' and 'data_quality' keys
+    
+    Returns:
+        Plotly Figure object, or dict with 'figure' and 'data_quality' if return_metadata=True
+    """
+    if category_column not in df.columns or stack_column not in df.columns:
+        raise ValueError(f"One or both columns not found in dataframe")
+    
+    # Get top K categories by total count
+    top_categories = df[category_column].value_counts().head(k).index.tolist()
+    
+    # Filter data to only include top K categories
+    df_filtered = df[df[category_column].isin(top_categories)].copy()
+    
+    # Handle IMPACT_TYPE: merge duplicate types
+    if stack_column.upper() == 'IMPACT_TYPE':
+        # Combine "Financial Impact" and "Damage - Financial Impact"
+        df_filtered[stack_column] = df_filtered[stack_column].replace(
+            'Damage - Financial Impact', 'Financial Impact'
+        )
+        # Combine "Injury" and "Injury/Illness"
+        df_filtered[stack_column] = df_filtered[stack_column].replace(
+            'Injury/Illness', 'Injury'
+        )
+        # Drop rows where stack_column is NaN
+        df_filtered = df_filtered.dropna(subset=[stack_column])
+    
+    # Handle LOSS_POTENTIAL_SEVERITY: convert to numeric for proper ordering
+    elif stack_column.upper() == 'LOSS_POTENTIAL_SEVERITY':
+        df_filtered[stack_column] = pd.to_numeric(df_filtered[stack_column], errors='coerce')
+        # Drop rows where stack_column is NaN after conversion
+        df_filtered = df_filtered.dropna(subset=[stack_column])
+    
+    # Create crosstab
+    crosstab = pd.crosstab(df_filtered[category_column], df_filtered[stack_column])
+    
+    # Reorder rows to match the top K order (by total count)
+    crosstab = crosstab.reindex(top_categories)
+    
+    # Melt for plotting
+    melted = crosstab.reset_index().melt(id_vars=category_column, var_name=stack_column, value_name='Count')
+    
+    # Filter out zero counts for cleaner visualization
+    melted = melted[melted['Count'] > 0]
+    
+    # Determine stack order and color mapping
+    color_discrete_map = None
+    stack_order = None
+    
+    if stack_column.upper() == 'LOSS_POTENTIAL_SEVERITY':
+        # Sort stack values numerically (low to high for bottom to top stacking)
+        try:
+            stack_values_numeric = pd.to_numeric(melted[stack_column], errors='coerce')
+            stack_order = sorted(stack_values_numeric.dropna().unique())
+            # Convert back to string for category_orders
+            stack_order = [str(v) for v in stack_order]
+        except:
+            stack_order = sorted(melted[stack_column].unique().astype(str))
+    
+    elif stack_column.upper() == 'IMPACT_TYPE':
+        # Get all unique impact types
+        unique_stack_values = sorted(melted[stack_column].unique())
+        # Ensure Injury is at the end (top of stack and top of legend)
+        if 'Injury' in unique_stack_values:
+            unique_stack_values.remove('Injury')
+            unique_stack_values.append('Injury')  # Injury at the end = top of stack
+        stack_order = unique_stack_values
+        
+        # Set color mapping: Injury = Red, others = unique non-red colors
+        # Predefined unique colors for common impact types (all non-red, no overlaps)
+        predefined_colors = {
+            'Financial Impact': '#4A90E2',  # Blue
+            'Environment': '#8B4513',  # Brown
+            'Property Damage': '#FFA500',  # Orange
+            'Damage': '#00CED1',  # Dark Turquoise (different from Property Damage)
+        }
+        
+        # Extended non-red color palette for other types (all unique colors)
+        non_red_colors = [
+            '#32CD32',  # Lime Green
+            '#9370DB',  # Medium Purple
+            '#20B2AA',  # Light Sea Green
+            '#FFD700',  # Gold
+            '#FF69B4',  # Hot Pink
+            '#00FA9A',  # Medium Spring Green
+            '#1E90FF',  # Dodger Blue
+            '#FF6347',  # Tomato
+            '#9ACD32',  # Yellow Green
+            '#BA55D3',  # Medium Orchid
+            '#4682B4',  # Steel Blue
+        ]
+        
+        # Build color map: Injury = Red, others = unique non-red colors
+        color_discrete_map = {}
+        used_colors = {'#FF0000'}  # Track used colors to avoid duplicates
+        color_index = 0
+        
+        # First, assign colors to non-Injury types
+        for impact_type in unique_stack_values:
+            if impact_type != 'Injury':
+                if impact_type in predefined_colors:
+                    color = predefined_colors[impact_type]
+                    if color not in used_colors:
+                        color_discrete_map[impact_type] = color
+                        used_colors.add(color)
+                    else:
+                        # If color already used, find next available
+                        while color_index < len(non_red_colors) and non_red_colors[color_index] in used_colors:
+                            color_index += 1
+                        if color_index < len(non_red_colors):
+                            color_discrete_map[impact_type] = non_red_colors[color_index]
+                            used_colors.add(non_red_colors[color_index])
+                            color_index += 1
+                else:
+                    # Find next available color
+                    while color_index < len(non_red_colors) and non_red_colors[color_index] in used_colors:
+                        color_index += 1
+                    if color_index < len(non_red_colors):
+                        color_discrete_map[impact_type] = non_red_colors[color_index]
+                        used_colors.add(non_red_colors[color_index])
+                        color_index += 1
+        
+        # Finally, assign red to Injury (will appear at top of legend)
+        color_discrete_map['Injury'] = '#FF0000'  # Red for severity
+    
+    else:
+        stack_order = sorted(melted[stack_column].unique().astype(str))
+    
+    # Create the stacked bar chart
+    if color_discrete_map:
+        fig = px.bar(
+            melted,
+            x=category_column,
+            y='Count',
+            color=stack_column,
+            title=title or f"Top {k} {category_column} by {stack_column} (Stacked)",
+            barmode='stack',
+            color_discrete_map=color_discrete_map,
+            category_orders={stack_column: stack_order} if stack_order else None
+        )
+    else:
+        fig = px.bar(
+            melted,
+            x=category_column,
+            y='Count',
+            color=stack_column,
+            title=title or f"Top {k} {category_column} by {stack_column} (Stacked)",
+            barmode='stack',
+            category_orders={stack_column: stack_order} if stack_order else None
+        )
+    
+    fig.update_layout(template='plotly_white', height=600, xaxis_tickangle=-45)
+    
+    # Ensure Injury appears at top of legend for IMPACT_TYPE
+    if stack_column.upper() == 'IMPACT_TYPE' and stack_order and 'Injury' in stack_order:
+        # Reorder traces to put Injury trace last (which makes it appear first in legend)
+        if len(fig.data) > 0:
+            # Get trace names
+            trace_names = [trace.name for trace in fig.data]
+            # Find Injury trace index
+            if 'Injury' in trace_names:
+                injury_idx = trace_names.index('Injury')
+                # Move Injury trace to the end
+                traces = list(fig.data)
+                injury_trace = traces.pop(injury_idx)
+                traces.append(injury_trace)
+                fig.data = traces
+    
     if return_metadata:
         return {'figure': fig, 'data_quality': get_data_quality_info(df, category_column)}
     return fig
@@ -433,3 +717,4 @@ def generate_event_cluster_plot(df, x_col='tsne_x', y_col='tsne_y',
         }
 
     return fig
+
