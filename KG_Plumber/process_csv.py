@@ -8,7 +8,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
-
 import requests
 
 # Default Modules 
@@ -96,11 +95,10 @@ def submit_request(
     """
     endpoint = f"{base_url.rstrip('/')}/run"
     response = requests.post(endpoint, json=payload, timeout=timeout)
-    if response.status_code != 200:
-        raise RuntimeError(f"Plumber API returned {response.status_code}: {response.text}")
+    if response.status_code != 200: raise RuntimeError(f"Plumber API returned {response.status_code}: {response.text}")
     data = response.json()
-    if not isinstance(data, list):
-        raise RuntimeError(f"Unexpected response payload: {data}")
+
+    if not isinstance(data, list): raise RuntimeError(f"Unexpected response payload: {data}")
     return data
 
 def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
@@ -114,7 +112,7 @@ def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
     """
     text = row.get(TEXT_COLUMN, "")
     payload = build_payload(text, EXTRACTORS, LINKERS, RESOLVERS)
-    for attempt in range(1, max(1, RETRIES) + 1):
+    for attempt in range(1, max(1 , RETRIES) + 1):
         try:
             triples = submit_request(PLUMBER_URL, payload, REQUEST_TIMEOUT)
             break
@@ -137,8 +135,6 @@ def _normalize_triple(item: Dict):
 
     Returns:Normalized components
     """
-    if not isinstance(item, dict):
-        return None
     s = item.get("subject") or item.get("s") or item.get("subj")
     p = item.get("predicate") or item.get("p") or item.get("rel") or item.get("relation")
     o = item.get("object") or item.get("o") or item.get("obj")
@@ -167,8 +163,7 @@ def process_csv(
 
     Returns: None
     """
-    if not csv_path.exists():
-        raise FileNotFoundError(f"Input CSV not found: {csv_path}")
+    if not csv_path.exists(): raise FileNotFoundError(f"Input CSV not found: {csv_path}")
 
     # Prepare graph outputs
     nodes_csv = nodes_csv or (OUTPUT_JSONL.parent / "nodes.csv")
@@ -222,6 +217,8 @@ def process_csv(
         edges_writer = csv.DictWriter(edges_file, fieldnames=edge_fields)
         edges_writer.writeheader()
 
+
+        # TODO: Move This Outside, dependency on node/edge writers
         def _add_node(label: str, ntype: str = "entity") -> str:
             """Add a node record if missing and return its stable ID.
 
@@ -230,19 +227,9 @@ def process_csv(
                 ntype: Node category, defaulting to 'entity'.
             Returns: Stable node identifier.
             """
-            def _node_id(label: str, ntype: str = "entity") -> str:
-                """Generatenode identifier from label and type.
-
-                Args:
-                    label: label for the node.
-                    ntype: Node category, defaulting to 'entity'.
-                Returns: Stable node identifier.
-                """
-                key = f"{ntype}|{label}".lower().strip()
-                h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
-                return f"node:{h}"
-
-            nid = _node_id(label, ntype)
+            key = f"{ntype}|{label}".lower().strip()
+            h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
+            nid = f"node:{h}"
             if nid not in nodes:
                 node_rec = {"id": nid, "label": label, "type": ntype}
                 nodes[nid] = node_rec
@@ -257,7 +244,7 @@ def process_csv(
                 for fut in as_completed(futs):
                     idx, row = futs[fut]
                     try:
-                        i, rec = fut.result()
+                        i,  rec = fut.result()
                         results[i] = rec
                     except Exception as e:
                         errors += 1
@@ -286,7 +273,6 @@ def process_csv(
                         edge_count += 1
 
                     processed += 1
-
                     if processed % max(1, LOG_EVERY) == 0:
                         elapsed = time.time() - start_time
                         avg = elapsed / processed if processed else 0.0
@@ -309,11 +295,5 @@ def process_csv(
     print(f"Nodes CSV: {nodes_csv} (unique nodes: {len(nodes)})")
     print(f"Edges CSV: {edges_csv} (edges: {edge_count})")
 
-
-def main() -> None:
-    """entry point fr"""
-    process_csv()
-
-
 if __name__ == "__main__":
-    main()
+    process_csv()

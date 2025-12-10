@@ -125,38 +125,6 @@ class Extractor:
         self.merged = merged
         return merged
 
-
-    # def merge(self):
-    #     """
-    #     Gather Triplets from Entities & Relations -> Match to Text Units -> Match to Documents
-
-    #     It seems that we don't need to merge to documents? Can't we just merge along Text Units as it contains the 
-    #     RECORD_NO_LOSS_POTENTIAL which corresponds to a singular incident?
-    #     """
-
-    #     # Rename ID For Relationships & Explode Text Unit IDs
-    #     rel_df = self._rename_row(self.relationships, self.ID, self.REL_ID)
-    #     rel_df = rel_df.explode(self.TEXT_UNIT_IDS).dropna(subset = [self.TEXT_UNIT_IDS])
-    #     rel_df = self._rename_row(rel_df, self.TEXT_UNIT_IDS, self.TEXT_UNIT_ID)
-
-    #     # Rename ID For Documents & Explode Document IDs
-    #     tu_df = self._rename_row(self.text_units, self.ID, self.TEXT_UNIT_ID)
-    #     tu_df = self._rename_row(tu_df, self.INCIDENT_ID_COL, self.INCIDENT_ID)
-
-    #     # Merge
-    #     merged = rel_df.merge(tu_df, on = self.TEXT_UNIT_ID, how="left").dropna(subset=[self.INCIDENT_ID])
-    #     colsToKeep = [self.INCIDENT_ID, self.source_col, self.rel_col, self.target_col, self.TEXT_UNIT_ID, self.REL_ID, "document_ids"]
-    #     merged = merged[colsToKeep].sort_values([self.INCIDENT_ID])
-
-
-    #     # Save 
-    #     csv_path = self.output_dir / self.OUTPUT_CSV
-    #     csv_path.parent.mkdir(parents=True, exist_ok=True)
-    #     merged.to_csv(csv_path, index=False)
-    #     print(f"Saved flattened triples to {csv_path} (rows={len(merged)})")
-    #     self.merged = merged
-    #     return merged
-
     def describe(self, inDepth = False):
         if self.merged is None:
             print("Must run merge() before describe().")
