@@ -7,7 +7,7 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import requests
 
 # Default Modules 
@@ -149,10 +149,7 @@ def _normalize_triple(item: Dict):
     return None
 
 
-def process_csv(
-    csv_path: Path = CSV_PATH,
-    nodes_csv: Path = NODES_CSV_PATH,
-    edges_csv: Path = EDGES_CSV_PATH,
+def process_csv(csv_path: Path = CSV_PATH, nodes_csv: Path = NODES_CSV_PATH,edges_csv: Path = EDGES_CSV_PATH,
 ) -> None:
     """Process incident text with Plumber
 
@@ -273,7 +270,7 @@ def process_csv(
                         edge_count += 1
 
                     processed += 1
-                    if processed % max(1, LOG_EVERY) == 0:
+                    if processed % max(1 , LOG_EVERY) == 0:
                         elapsed = time.time() - start_time
                         avg = elapsed / processed if processed else 0.0
                         remaining = max(0, total - processed)

@@ -140,6 +140,12 @@ if TOP_N_NODES is not None and H.number_of_nodes() > TOP_N_NODES:
     H = H.subgraph(keep_nodes).copy()
     print(f"Filtered to top {TOP_N_NODES} nodes for plotting.")
 
+    # Remove Top N Nodes Isolated Nodes (happens since it has all connections outside the top N)
+    isolates = list(nx.isolates(H))
+    if isolates:
+        H.remove_nodes_from(isolates)
+        print(f"Removed {len(isolates)} isolated nodes from visualization graph.")
+
 print(f"Plotting subgraph: Nodes={H.number_of_nodes()}, Edges={H.number_of_edges()}")
 pos = nx.spring_layout(H, seed=SEED, k=0.8)
 node_labels = {n: H.nodes[n].get("title", str(n)) for n in H.nodes()}
