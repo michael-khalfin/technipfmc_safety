@@ -26,7 +26,11 @@ This project provides a complete pipeline for analyzing safety incident data, in
 │   └── main.py                 # Main EDA execution script
 ├── graphRAG/                   # GraphRAG knowledge graph generation
 │   ├── input/                  # Input data processing
-│   ├── output/                 # Generated knowledge graphs
+│   ├── output/                 # Generated knowledge graph on 30,000 Incidents 
+│   ├── output_1k_only/         # Generated knowledge graph on 1,000 Incidents 
+│   ├── prompts/                # Prompts used for graphRAG (Graph Extraction, Summarization, etc)
+│   ├── extract.py              # Extracts Triplets Per Incident
+│   ├── postprocess.py          # Removes (outlier) nodes from generated KG
 │   └── settings.yaml           # GraphRAG configuration
 ├── evaluation/                 # Knowledge graph evaluation framework
 │   ├── KG1/                    # Example KG folder (includes nodes.csv, edges.csv)
@@ -318,6 +322,8 @@ Modify visualization parameters in `viz.py`:
 - `eda/visualization/`: Generated visualization files
 
 ### Knowledge Graph Outputs
+- `graphRAG/output/` Holds KG generated from 30,000 Incidents
+- `graphRAG/output_1k_only/` Holds KG generated from 1,000 Incidents
 - `graphRAG/output/entities.parquet`: Extracted entities
 - `graphRAG/output/relationships.parquet`: Relationship data
 - `graphRAG/output/_viz/`: Interactive graph visualizations
