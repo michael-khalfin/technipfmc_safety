@@ -30,7 +30,7 @@ DROP_RELATIONS = {
 
 DROP_NODES = {
     "WORK RELATED CASE",
-    "NOT A SIGNIFICANT INCIDENT FAILURE POTENTIAL",
+    # "NOT A SIGNIFICANT INCIDENT FAILURE POTENTIAL",
     "NA - N/A - NON PROJECT SPECIFIC",
     "NOT APPLICABLE"
 }
@@ -58,34 +58,38 @@ class PostProcess:
 
         if not self.source_col or not self.target_col:
             raise ValueError("Could not locate source/target columns in relationships parquet.")
-        
+
+        # Detect core entity columns( different GraphRAG versions, happens more than expected lol)
+        self.title_col = next((c for c in [TITLE_COL, "label", "name"] if c in self.entities.columns),None,)
+        self.type_col = next((c for c in [TYPE_COL, "category", "node_type"] if c in self.entities.columns), None,)
+        self.degree_col = DEGREE if DEGREE in self.entities.columns else None
     
     def drop_k_degree_nodes(self, k_degree : Optional[int] = None):
         if not k_degree:
             k_degree = int(len(self.entities) * (0.9)) # Hit's > 90% of nodes or more 
         
         print(f"Removing Nodes with k-degree: {k_degree}")
-        mask = ~(self.entities[DEGREE] >= k_degree)
+        mask = ~(self.entities[self.degree_col] >= k_degree)
         self.entities = self.entities[mask].copy()
         self._prune_edges()
     
     def drop_isolated_nodes(self):
         before = len(self.entities)
-        mask = ~(self.entities[DEGREE] == 0)
+        mask = ~(self.entities[self.degree_col] == 0)
         self.entities = self.entities[mask].copy()
         print(f"Dropped {before - len(self.entities)} ISOLATED nodes.")
         self._prune_edges()
 
     def drop_meta(self):
         before = len(self.entities)
-        mask = ~self._normalize(self.entities[TITLE_COL]).str.startswith("META[")
+        mask = ~self._normalize(self.entities[self.title_col]).str.startswith("META[")
         self.entities = self.entities[mask].copy()
         print(f"Dropped {before - len(self.entities)} META nodes.")
         self._prune_edges()
 
     def keep_only_allowed(self, allowed_types: set[str]):
         before = len(self.entities)
-        mask = self._normalize(self.entities[TYPE_COL]).isin(allowed_types)
+        mask = self._normalize(self.entities[self.type_col]).isin(allowed_types)
         self.entities = self.entities[mask].copy()
         print(f"Dropped {before - len(self.entities)} nodes outside allowed types.")
         self._prune_edges()
@@ -101,15 +105,16 @@ class PostProcess:
 
     def drop_node(self, node_name: str):
         norm_name = node_name.strip().upper()
-        mask = self._normalize(self.entities[TITLE_COL]) == norm_name
+        mask = self._normalize(self.entities[self.title_col]) == norm_name
         if not mask.any():
-            raise ValueError(f"Node '{node_name}' does not exist in entities.parquet.")
+            print(f"Warning: Node '{node_name}' does not exist in entities.parquet; skipping.")
+            return
         self.entities = self.entities[~mask].copy()
         print(f"Dropped node '{node_name}'.")
         self._prune_edges()
 
     def _prune_edges(self):
-        keep_nodes = set(self._normalize(self.entities[TITLE_COL]))
+        keep_nodes = set(self._normalize(self.entities[self.title_col]))
         before = len(self.relationships)
         src_norm = self._normalize(self.relationships[self.source_col])
         tgt_norm = self._normalize(self.relationships[self.target_col])

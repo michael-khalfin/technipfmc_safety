@@ -210,6 +210,29 @@ pip freeze > requirements.txt
 run_graphrag.sbatch
 ```
 
+### GraphRAG Postprocessing & Incident Triplet Extraction
+After GraphRAG finishes, it will write parquet outputs under `graphRAG/output/` ( `entities.parquet`, `relationships.parquet`, `text_units.parquet`, `documents.parquet`).  
+Use the graphRAG/postprocess.py to clean the graph by dropping metadata-heavy nodes/edges and graphRAG/extractor.py to extract triples per incident:
+
+```bash
+python graphRAG/postprocess.py -A -D
+```
+- Drops META nodes whose titles start with `META[`.
+- Removes very high-degree nodes (top ~10% by degree, clears "noisy" nodes).
+- If `-A/--allowed` is set, keeps only entities whose type is in `ALLOWED_TYPES`.
+- If `-D/--drop-labels` is set, removes relationships whose label is in `DROP_RELATIONS`.
+- Writes filtered outputs to:
+  - `graphRAG/output/entities_filtered.parquet`
+  - `graphRAG/output/relationships_filtered.parquet`
+
+```bash
+python graphRAG/extract.py
+```
+- A flattened CSV of triples per incident at:
+  - `graphRAG/output/incident_triples.csv`
+- Each row includes: `incident_id`, `source`, `description` (relation), `target`, `text_unit_id`, `relationship_id`, and `document_id`.
+- Prints the average number of triplets per incident. Can enable detailed printing per incident by editing `DESCRIPTIVE` in `graphRAG/extract.py`.
+
 ### Graph Visualization
 ```bash
 # Generate interactive graph visualizations
