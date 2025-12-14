@@ -49,6 +49,13 @@ This project provides a complete pipeline for analyzing safety incident data, in
 ├── translator/                      # Multi-language translation tools
 │   ├── csv_translator_m2m100_gpu.py    # Translates CSV columns using M2M100 with GPU
 │   └── run_translate.sbatch            # SLURM script for translation on HPC
+├── visual_dashboard/             # Interactive Streamlit dashboard
+│   └── dashboard/                # Dashboard application
+│       ├── app.py                # Main Streamlit application
+│       ├── handler/              # Chart generation handlers
+│       │   ├── handler.py        # Main chart handler with filtering
+│       │   └── graph_makers.py   # Chart generation functions
+│       └── preprocessing/        # Data preprocessing utilities
 ├── data/                       # Safety incident data (gitignored)
 └── viz.py                      # Graph visualization utilities
 ```
@@ -67,6 +74,22 @@ This project provides a complete pipeline for analyzing safety incident data, in
 - **Correlation Analysis**: Heatmaps and correlation pair identification
 - **Text Analysis**: N-gram analysis and word clouds for incident descriptions
 - **Variance Analysis**: Feature variance visualization for model selection
+
+### 2.a Interactive Web Dashboard
+- **Streamlit-based Dashboard**: Real-time interactive web interface for safety event analysis
+- **Advanced Filtering**: Multi-dimensional filtering by year/month, incident type, status, risk color, GBU, location, severity, and likelihood
+- **Comprehensive Visualizations**: 
+  - Statistical summary with key metrics (total incidents, high risk percentage, average severity/likelihood, open actions)
+  - Temporal distribution charts (by year or month)
+  - Top locations and units analysis
+  - Incident type and impact type distributions (pie charts)
+  - Risk color distribution by severity (stacked bar charts)
+  - Top causes/hazards analysis
+  - Severity vs Likelihood heatmaps
+  - Word cloud visualization of incident titles
+  - Event cluster visualization with t-SNE
+- **Dynamic Data Filtering**: All visualizations update in real-time based on selected filters
+- **Data Quality Tracking**: Built-in data quality metrics for each visualization
 
 ### 3. Knowledge Graph Generation
 - **GraphRAG Integration**: Automated knowledge graph creation from safety data
@@ -251,6 +274,28 @@ python viz.py
 python translator/csv_translator_m2m100_gpu.py --csv input.csv --columns "TITLE,DESCRIPTION" --out output.csv
 ```
 
+### Interactive Web Dashboard
+```bash
+# Launch the Streamlit dashboard
+streamlit run visual_dashboard/dashboard/app.py
+```
+
+The dashboard provides an interactive web interface for exploring safety incident data with:
+- **Sidebar Filters**: Filter data by year/month range, incident types, status, impact type, risk color, GBU, workplace country, severity, and likelihood
+- **Real-time Updates**: All charts update automatically when filters are changed
+- **Multiple Visualizations**: 
+  - Statistical summary metrics
+  - Temporal distribution (yearly or monthly)
+  - Top locations and units
+  - Incident type and impact type distributions
+  - Risk color analysis
+  - Top causes/hazards
+  - Severity vs Likelihood heatmap
+  - Word cloud of incident titles
+  - Event cluster visualization with customizable sampling ratio
+
+**Note**: The dashboard requires `merged_incidents_tsne.csv` in the `data/` directory. Ensure this file exists before running the dashboard.
+
 ## Module Documentation
 
 ### Data Cleaning Modules (`eda/data_clean/`)
@@ -277,6 +322,34 @@ python translator/csv_translator_m2m100_gpu.py --csv input.csv --columns "TITLE,
 - Interactive graph visualization using NetworkX and PyVis
 - Static and dynamic graph generation
 - Community detection and analysis
+
+### Interactive Web Dashboard (`visual_dashboard/`)
+
+- **`app.py`**: Main Streamlit application that provides the web interface
+  - Sidebar filters for data filtering
+  - Multiple chart visualizations
+  - Real-time data updates
+  
+- **`handler/handler.py`**: Chart generation handler
+  - Data loading and caching
+  - Filter application logic
+  - Chart type routing and generation
+  
+- **`handler/graph_makers.py`**: Chart generation functions
+  - Statistical summary generation
+  - Bar charts (all categories, top K, stacked)
+  - Pie charts
+  - Heatmaps
+  - Word clouds
+  - Temporal distribution charts
+  - Event cluster visualization (t-SNE based)
+  - Data quality tracking for each visualization
+
+**Key Features**:
+- Supports filtering by numerical ranges (min/max) and categorical values (single or multiple)
+- All charts are generated using Plotly for interactive exploration
+- Data quality metrics are tracked and can be returned with visualizations
+- Efficient data caching to improve performance
 
 ### Plumber-Based Extraction (`KG_Plumber/`)
 
@@ -321,6 +394,7 @@ Modify visualization parameters in `viz.py`:
 ### Data Analysis Outputs
 - `data/cleaned_data.csv`: Cleaned and integrated dataset
 - `data/cleaned_description_translated.csv`: Translated descriptions
+- `data/merged_incidents_tsne.csv`: Merged incidents data with t-SNE coordinates (required for dashboard)
 - `eda/visualization/`: Generated visualization files
 
 ### Knowledge Graph Outputs
@@ -340,6 +414,9 @@ Key Python packages:
 - `transformers`: M2M100 translation model
 - `graphrag`: Knowledge graph generation
 - `scikit-learn`: Machine learning utilities
+- `streamlit`: Interactive web dashboard framework
+- `plotly`: Interactive chart generation for dashboard
+- `wordcloud`: Word cloud generation for text analysis
 
 ## Contributing
 
