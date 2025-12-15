@@ -56,9 +56,6 @@ class PostProcess:
         self.target_col = next((c for c in ["target", "target_id", "dst_id"] if c in self.relationships.columns), None)
         self.relation_label_col = next((c for c in ["description", "relation", "label"] if c in self.relationships.columns), None)
 
-        if not self.source_col or not self.target_col:
-            raise ValueError("Could not locate source/target columns in relationships parquet.")
-
         # Detect core entity columns( different GraphRAG versions, happens more than expected lol)
         self.title_col = next((c for c in [TITLE_COL, "label", "name"] if c in self.entities.columns),None,)
         self.type_col = next((c for c in [TYPE_COL, "category", "node_type"] if c in self.entities.columns), None,)
@@ -67,10 +64,10 @@ class PostProcess:
     def drop_k_degree_nodes(self, k_degree : Optional[int] = None):
         if not k_degree:
             k_degree = int(len(self.entities) * (0.9)) # Hit's > 90% of nodes or more 
-        
-        print(f"Removing Nodes with k-degree: {k_degree}")
+        before = len(self.entities)
         mask = ~(self.entities[self.degree_col] >= k_degree)
         self.entities = self.entities[mask].copy()
+        print(f"Dropped Nodes(K={k_degree}): {before - len(self.entities)}")
         self._prune_edges()
     
     def drop_isolated_nodes(self):
@@ -157,6 +154,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    # output_path = Path("graphRAG/output_1k_only")
     output_path = Path("graphRAG/output")
     processor = PostProcess(output_path)
 
