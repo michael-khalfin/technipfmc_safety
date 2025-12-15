@@ -7,7 +7,7 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import requests
 
 # Default Modules 
@@ -96,10 +96,7 @@ def submit_request(
     endpoint = f"{base_url.rstrip('/')}/run"
     response = requests.post(endpoint, json=payload, timeout=timeout)
     if response.status_code != 200: raise RuntimeError(f"Plumber API returned {response.status_code}: {response.text}")
-    if response.status_code != 200: raise RuntimeError(f"Plumber API returned {response.status_code}: {response.text}")
     data = response.json()
-
-    if not isinstance(data, list): raise RuntimeError(f"Unexpected response payload: {data}")
 
     if not isinstance(data, list): raise RuntimeError(f"Unexpected response payload: {data}")
     return data
@@ -115,7 +112,6 @@ def _submit(idx: int, row: Dict[str, str]) -> Tuple[int, Dict]:
     """
     text = row.get(TEXT_COLUMN, "")
     payload = build_payload(text, EXTRACTORS, LINKERS, RESOLVERS)
-    for attempt in range(1, max(1 , RETRIES) + 1):
     for attempt in range(1, max(1 , RETRIES) + 1):
         try:
             triples = submit_request(PLUMBER_URL, payload, REQUEST_TIMEOUT)
@@ -165,7 +161,6 @@ def process_csv(csv_path: Path = CSV_PATH, nodes_csv: Path = NODES_CSV_PATH,edge
     Returns: None
     """
     if not csv_path.exists(): raise FileNotFoundError(f"Input CSV not found: {csv_path}")
-    if not csv_path.exists(): raise FileNotFoundError(f"Input CSV not found: {csv_path}")
 
     # Prepare graph outputs
     nodes_csv = nodes_csv or (OUTPUT_JSONL.parent / "nodes.csv")
@@ -184,7 +179,6 @@ def process_csv(csv_path: Path = CSV_PATH, nodes_csv: Path = NODES_CSV_PATH,edge
         # Use our configs yay
         if MAX_CHARS is not None and len(text) > MAX_CHARS:
             text = text[:MAX_CHARS]
-        row = dict(row)
         row[TEXT_COLUMN] = text
         if idx >= START_INDEX:
             collected.append((idx, row))
@@ -221,19 +215,9 @@ def process_csv(csv_path: Path = CSV_PATH, nodes_csv: Path = NODES_CSV_PATH,edge
 
 
         # TODO: Move This Outside, dependency on node/edge writers
-
-        # TODO: Move This Outside, dependency on node/edge writers
         def _add_node(label: str, ntype: str = "entity") -> str:
             """Add a node record if missing and return its stable ID.
 
-            Args:
-                label: label for the node.
-                ntype: Node category, defaulting to 'entity'.
-            Returns: Stable node identifier.
-            """
-            key = f"{ntype}|{label}".lower().strip()
-            h = hashlib.sha1(key.encode("utf-8")).hexdigest()[:16]
-            nid = f"node:{h}"
             Args:
                 label: label for the node.
                 ntype: Node category, defaulting to 'entity'.
@@ -256,7 +240,6 @@ def process_csv(csv_path: Path = CSV_PATH, nodes_csv: Path = NODES_CSV_PATH,edge
                 for fut in as_completed(futs):
                     idx, row = futs[fut]
                     try:
-                        i,  rec = fut.result()
                         i,  rec = fut.result()
                         results[i] = rec
                     except Exception as e:
@@ -285,29 +268,23 @@ def process_csv(csv_path: Path = CSV_PATH, nodes_csv: Path = NODES_CSV_PATH,edge
                         edges_file.flush()
                         edge_count += 1
 
+                    # Log Progress
                     processed += 1
-                    if processed % max(1, LOG_EVERY) == 0:
+                    if processed % max(1 , LOG_EVERY) == 0:
                         elapsed = time.time() - start_time
                         avg = elapsed / processed if processed else 0.0
                         remaining = max(0, total - processed)
                         eta_sec = remaining * avg
                         pct = (processed / total) * 100.0
-                        print(
-                            f"[progress] {processed}/{total} ({pct:0.1f}%) | avg {avg:0.2f}s/row | elapsed {elapsed:0.1f}s | ETA {eta_sec:0.1f}s | errors {errors}"
-                        )
+                        print(f"[progress] {processed}/{total} ({pct:0.1f}%) | avg {avg:0.2f}s/row | elapsed {elapsed:0.1f}s | ETA {eta_sec:0.1f}s | errors {errors}")
 
                     if SLEEP_SECONDS:
                         time.sleep(SLEEP_SECONDS)
 
     total_elapsed = time.time() - start_time
-    rps = processed / total_elapsed if total_elapsed > 0 and processed > 0 else 0.0
-    print(
-        f"Processed {processed} rows in {total_elapsed:0.1f}s ({rps:0.2f} rows/s); errors={errors}; results saved to {OUTPUT_JSONL}"
-    )
-
+    print(f"Processed {processed} rows in {total_elapsed:0.1f}s; errors={errors}; results saved to {OUTPUT_JSONL}")
     print(f"Nodes CSV: {nodes_csv} (unique nodes: {len(nodes)})")
     print(f"Edges CSV: {edges_csv} (edges: {edge_count})")
 
-if __name__ == "__main__":
 if __name__ == "__main__":
     process_csv()
