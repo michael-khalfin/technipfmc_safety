@@ -27,7 +27,8 @@ This project provides a complete pipeline for analyzing safety incident data, in
 ├── graphRAG/                   # GraphRAG knowledge graph generation
 │   ├── input/                  # Input data processing
 │   ├── output/                 # Generated knowledge graph on 30,000 Incidents 
-│   ├── output_1k_only/         # Generated knowledge graph on 1,000 Incidents 
+│   ├── output_1k_mistral/      # Generated knowledge graph on 1,000 Incidents (Mistral:7b-instruct)
+│   ├── output_1k_phi/          # Generated knowledge graph on 1,000 Incidents (Phi3:Mini)
 │   ├── prompts/                # Prompts used for graphRAG (Graph Extraction, Summarization, etc)
 │   ├── extract.py              # Extracts Triplets Per Incident
 │   ├── postprocess.py          # Removes (outlier) nodes from generated KG
@@ -416,7 +417,8 @@ Modify visualization parameters in `viz.py`:
 
 ### Knowledge Graph Outputs
 - `graphRAG/output/` Holds KG generated from 30,000 Incidents
-- `graphRAG/output_1k_only/` Holds KG generated from 1,000 Incidents
+- `graphRAG/output_1k_mistral/` Holds KG generated from 1,000 Incidents (mistral:7b-intruct)
+- `graphRAG/output_1k_phi/` Holds KG generated from 1,000 Incidents (phi3:mini)
 - `graphRAG/output/entities.parquet`: Extracted entities
 - `graphRAG/output/relationships.parquet`: Relationship data
 - `graphRAG/output/_viz/`: Interactive graph visualizations
