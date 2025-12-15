@@ -6,6 +6,7 @@ Usage:
 """
 import pandas as pd
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 DESCRIPTIVE  = False
 ENTITIES_FILE = "entities_filtered.parquet"
@@ -33,6 +34,7 @@ class Extractor:
     
     def __init__(self, output_dir:Path, isDescriptive: bool ):
         self.output_dir = output_dir
+        self.viz_dir = self.output_dir / "_viz"
         self.incident_csv = output_dir.parent / "input" / "dev_sample.csv"
         self.isDescriptive = isDescriptive
         self.merged = None
@@ -125,6 +127,64 @@ class Extractor:
         self.merged = merged
         return merged
 
+    def analyze_triplets(self, top_k: int = 10):
+        df = self.merged.copy()
+
+        # TODO: Make this so this only called once throughout the class  
+        triplets_per_incident = (
+            df.groupby(self.INCIDENT_ID)
+            .size()
+            .rename("triplet_count")
+        )
+
+        # Find da metrics
+        mean_count, var_count, std_count = triplets_per_incident.mean(), triplets_per_incident.var(), triplets_per_incident.std()
+
+        print(f"\nTRIPLETS STATISTICS ({self.output_dir})")
+        print(f"Incidents: {len(triplets_per_incident)}")
+        print(f"Mean: {mean_count:.2f}")
+        print(f"Variance: {var_count:.2f}")
+        print(f"Std Dev: {std_count:.2f}")
+        print(f"Min: {triplets_per_incident.min()}")
+        print(f"Max: {triplets_per_incident.max()}")
+
+    
+        # Histogram for Triplets Per Incident
+        plt.figure(figsize=(10, 6))
+        plt.hist(triplets_per_incident, bins=30)
+        plt.title("Distribution of Triplets per Incident")
+        plt.xlabel("Number of Triplets")
+        plt.ylabel("Number of Incidents")
+        plt.tight_layout()
+        plt.savefig(self.viz_dir / "triplets_per_incident_hist.png")
+        plt.close()
+
+
+        # Top K Predicates (TODO: Make this into a small topk function to reduce repeated code)
+        most_common_predicates = df[self.rel_col].value_counts().head( top_k)
+        top_predicates = most_common_predicates.sort_values(ascending=True)
+        plt.figure(figsize=(10, 6))
+        plt.barh(top_predicates.index, top_predicates.values)
+        plt.title(f"Top {top_k} Most Frequent Predicates")
+        plt.xlabel("Frequency")
+        plt.ylabel("Predicate")
+        plt.tight_layout()
+        plt.savefig(self.viz_dir / "top_predicates.png")
+        plt.close()
+
+        # Top K Objects
+        most_common_objects = df[self.target_col].value_counts().head(top_k )
+        top_objects = most_common_objects.sort_values(ascending=True)
+        plt.figure(figsize=(10, 6))
+        plt.barh(top_objects.index, top_objects.values)
+        plt.title(f"Top {top_k} Most Frequent Objects")
+        plt.xlabel("Frequency")
+        plt.ylabel("Object")
+        plt.tight_layout()
+        plt.savefig(self.viz_dir / "top_objects.png")
+        plt.close()
+
+
     def describe(self, inDepth = False):
         if self.merged is None:
             print("Must run merge() before describe().")
@@ -148,9 +208,11 @@ class Extractor:
 
 def main():
     out_dir = Path("graphRAG/output")
+    
     extractor = Extractor(out_dir, DESCRIPTIVE)
     extractor.merge()
     extractor.describe(inDepth= False)
+    extractor.analyze_triplets(top_k=10)
 
 
 if __name__ == "__main__":
