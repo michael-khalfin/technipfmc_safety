@@ -46,6 +46,14 @@ This project provides a complete pipeline for analyzing safety incident data, in
 ├── KG_spaCy/                        # Rule-based triple extraction using spaCy/Textacy
 │   ├── KG_test.py                   # Extracts subject–verb–object triples from text
 │   └── triple_clean.py              # Cleans and normalizes extracted triples
+├── incident-embedding-analysis/     # Incident-level embedding & comparison
+│   ├── text_embedding.py            # Text-based incident embedding
+│   ├── graph_embedding.py           # Graph-based (Node2Vec) embedding
+│   ├── transe_embedding.py          # Knowledge graph embedding (TransE)
+│   └── analysis/                    # Embedding alignment & analysis
+│       ├── align.py                 # Align embeddings by incident ID
+│       ├── correlation.py           # Correlation analysis
+│       └── heatmap.py               # Similarity heatmap visualization
 ├── translator/                      # Multi-language translation tools
 │   ├── csv_translator_m2m100_gpu.py    # Translates CSV columns using M2M100 with GPU
 │   └── run_translate.sbatch            # SLURM script for translation on HPC
@@ -127,6 +135,16 @@ This project provides a complete pipeline for analyzing safety incident data, in
 - **Translation Pipeline**: M2M100-based translation for international data
 - **Language Detection**: Automatic source language detection
 - **GPU Acceleration**: CUDA-optimized translation processing
+
+### 6. Incident Embedding & Representation Analysis
+This module constructs **incident-level embeddings** from multiple perspectives and analyzes their relationships.
+* **Text Embedding**: Semantic representations from incident descriptions
+* **Graph Embedding**: Structural representations using Node2Vec
+* **TransE Embedding**: Relational representations from incident knowledge graphs
+
+The embeddings are aligned and compared using:
+* Pairwise similarity correlation (Pearson / Spearman)
+* Clustered cosine-similarity heatmaps for qualitative inspection
 
 ## Setup Instructions
 
