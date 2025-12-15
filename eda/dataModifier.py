@@ -13,8 +13,6 @@ import re
 # Column constants
 DESCRIPTION_COL = "text"
 RECORD_NO_COL = "RECORD_NO_LOSS_POTENTIAL"
-ENTITY_FACT_LIMIT = 12
-META_FACT_LIMIT = 12
 
 # Mapping from consolidated column names to canonical fact labels
 COLUMN_FACT_LABELS = {
@@ -41,18 +39,6 @@ COLUMN_FACT_LABELS = {
     "LOSS_POTENTIAL_SEVERITY": ("LOSS_POTENTIAL", "meta"),
     "OPERATING_CENTER": ("OPERATING_CENTER", "entity"),
     "LOCATION_CODE": ("LOCATION_CODE", "meta"),
-}
-
-
-# To Map 
-
-
-# Boolean columns need bespoke phrasing
-BOOLEAN_FACT_LABELS = {
-    "WORK_RELATED": ("WORK_RELATIONSHIP", "Work related case", "Not work related case"),
-    "TFMC_OWNED": ("TFMC_OWNERSHIP", "TFMC owned operation", "Non-TFMC owned operation"),
-    "SIF_PREVENTION": ("SIF_PREVENTION", "Significant Incident Failure potential", "Not a Significant Incident Failure potential"),
-    "STOPPED_WORK": ("WORK_INTERRUPTION", "Work stopped due to event", "Work continued during event"),
 }
 
 class DataModifier:
@@ -84,7 +70,6 @@ class DataModifier:
                 "PERSON_RESPONSIBLE", "PERSON_RESPONSIBLE_NAME", "SOURCE_FILE", 
                 "RECORD_NO_HAZARD_OBSERVATIONS", "RECORD_NO_NEAR_MISSES"
             }
-
 
         # Just General Things We Do Before Modiying the Code 
         self.df.rename(columns={"DESCRIPTION": "text"}, inplace=True)
@@ -166,23 +151,7 @@ class DataModifier:
                         entity_facts.append(f"- {label}: {formatted}")
                     else:
                         meta_facts.append(f"- META[{label}]: {formatted}")
-
-            # Coerce Booleans Into Text Data
-            for col, (label, true_desc, false_desc) in BOOLEAN_FACT_LABELS.items():
-                if col not in row.index or pd.isna(row[col]):
-                    continue
-                val = row[col]
-                if val is True:
-                    meta_facts.append(f"- META[{label}]: {true_desc}")
-                elif val is False:
-                    meta_facts.append(f"- META[{label}]: {false_desc}")
-
-            # Set A Limit For Each Incident
-            # if len(entity_facts) > ENTITY_FACT_LIMIT:
-            #     entity_facts = entity_facts[:ENTITY_FACT_LIMIT]
-            # if len(meta_facts) > META_FACT_LIMIT:
-            #     meta_facts = meta_facts[:META_FACT_LIMIT]
-
+    
             lines = [
                 f"INCIDENT_LABEL: {incident_label}",
                 f"INCIDENT_ID: {record_id}",
@@ -202,8 +171,6 @@ class DataModifier:
         self.df = self.df[[RECORD_NO_COL, DESCRIPTION_COL]]
         return self.df
 
-
-    # Main Function that would hot-one encode, drop_cols, etc 
     def clean(self):
         """
         Main cleaning function that processes the DataFrame.
@@ -217,9 +184,6 @@ class DataModifier:
             pd.DataFrame: Cleaned DataFrame
         """
         if self.onlyDescriptions:
-            # mask = (self.df["TYPE"] == "Hazard Observation")
-            # rows_of_interest_idx = self.df[mask].index
-            # print(self.df.loc[rows_of_interest_idx, DESCRIPTION_COL])
             description_only_df = self.translateColumnsToSentences()
             description_only_df.to_csv(
                 "data/cleaned_description_translated.csv",
@@ -227,8 +191,6 @@ class DataModifier:
                 quoting=csv.QUOTE_ALL,
                 lineterminator="\n",
             )
-            # idx = rows_of_interest_idx[0]  
-            # print(description_only_df.loc[idx, DESCRIPTION_COL])
 
         if self.to_drop:
             print("Dropped columns:")
