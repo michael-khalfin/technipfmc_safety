@@ -1,0 +1,22 @@
+# Core
+numpy
+pandas
+scikit-learn
+scipy
+
+# Text embedding
+sentence-transformers
+torch
+transformers
+
+# Graph embedding
+torch-geometric
+
+# Knowledge graph embedding
+pykeen
+
+# Visualization
+matplotlib
+
+# NLP utilities
+nltk

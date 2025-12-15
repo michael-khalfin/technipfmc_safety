@@ -50,6 +50,7 @@ This project provides a complete pipeline for analyzing safety incident data, in
 │   ├── text_embedding.py            # Text-based incident embedding
 │   ├── graph_embedding.py           # Graph-based (Node2Vec) embedding
 │   ├── transe_embedding.py          # Knowledge graph embedding (TransE)
+│   ├── requirements.txt             # Dependencies for embedding & analysis
 │   └── analysis/                    # Embedding alignment & analysis
 │       ├── align.py                 # Align embeddings by incident ID
 │       ├── correlation.py           # Correlation analysis
